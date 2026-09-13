@@ -29,22 +29,31 @@ export function parsePobXml(xml: string): BuildSnapshot {
     throw new PobParseError('Decoded payload is not valid XML', e)
   }
 
-  const root = doc.PathOfBuilding
-  if (!root || typeof root !== 'object') {
-    throw new PobParseError('XML root element <PathOfBuilding> not found')
+  // PoE1 community PoB uses <PathOfBuilding>, the PoE2 fork uses <PathOfBuilding2>.
+  const rootObj = (asObj(doc.PathOfBuilding2) ?? asObj(doc.PathOfBuilding)) as Record<string, unknown> | undefined
+  if (!rootObj) {
+    throw new PobParseError('XML root element <PathOfBuilding2> not found')
   }
-  const rootObj = root as Record<string, unknown>
 
   const buildEl = asObj(rootObj.Build)
-  const passiveNodes = parseNodeList(buildEl?.['@nodes'])
-  const treeSpecUrls = parseSpecUrls(rootObj.Tree)
+  const treeEl = asObj(rootObj.Tree)
+  const specRaw = treeEl?.Spec
+  const specs = Array.isArray(specRaw) ? specRaw : specRaw ? [specRaw] : []
+  const activeSpec = asObj(specs[0])
+  const treeVersion = strOrNull(activeSpec?.['@treeVersion'])
+
+  // PoE2 codes keep the allocated node list on <Spec nodes>; older PoE1-style
+  // codes put it on <Build nodes>. Accept both.
+  const passiveNodes =
+    parseNodeList(activeSpec?.['@nodes']) ?? parseNodeList(buildEl?.['@nodes']) ?? []
 
   return {
     className: strOrNull(buildEl?.['@className']),
     ascendClassName: strOrNull(buildEl?.['@ascendClassName']),
     level: intOrNull(buildEl?.['@level']),
+    treeVersion,
     passiveNodes,
-    treeSpecUrls,
+    treeSpecUrls: parseSpecUrls(rootObj.Tree),
     skills: parseSkills(rootObj.Skills),
     items: parseItems(rootObj.Items),
   }
@@ -63,8 +72,8 @@ function intOrNull(v: unknown): number | null {
   return Number.isFinite(n) ? Math.trunc(n) : null
 }
 
-function parseNodeList(raw: unknown): number[] {
-  if (typeof raw !== 'string' || raw.trim() === '') return []
+function parseNodeList(raw: unknown): number[] | null {
+  if (typeof raw !== 'string' || raw.trim() === '') return null
   const ids: number[] = []
   for (const part of raw.split(',')) {
     const id = Number(part.trim())
@@ -98,13 +107,16 @@ function parseSkills(skillsEl: unknown): SkillGroup[] {
       const gemRaw = asObj(skill)?.Gem
       const gemList = Array.isArray(gemRaw) ? gemRaw : gemRaw ? [gemRaw] : []
       const gems: GemLine[] = gemList.map((gem) => ({
-        name: strOrNull(asObj(gem)?.['@name']) ?? 'unknown gem',
+        // PoE2 writes the gem name to @nameSpec; keep @name for older codes.
+        name: strOrNull(asObj(gem)?.['@nameSpec']) ?? strOrNull(asObj(gem)?.['@name']) ?? 'unknown gem',
         level: intOrNull(asObj(gem)?.['@level']),
         quality: intOrNull(asObj(gem)?.['@quality']),
         enabled: asObj(gem)?.['@enabled'] !== 'false',
       }))
       if (gems.length > 0) {
-        groups.push({ label: strOrNull(asObj(skill)?.['@mainActiveSkill']) ?? strOrNull(asObj(skill)?.['@label']), gems })
+        const label = strOrNull(asObj(skill)?.['@label'])
+        const mainGem = gems.find((g) => g.enabled)
+        groups.push({ label: label ?? mainGem?.name ?? null, gems })
       }
     }
   }

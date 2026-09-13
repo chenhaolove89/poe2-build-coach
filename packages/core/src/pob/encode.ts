@@ -12,12 +12,18 @@ export function buildToShareCode(build: BuildSnapshot): string {
   const parts: string[] = []
 
   parts.push(
-    `<Build level="${build.level ?? ''}" className="${esc(build.className ?? '')}" ascendClassName="${esc(build.ascendClassName ?? '')}" nodes="${build.passiveNodes.join(',')}" mainSkillGroupIndex="0"/>`,
+    `<Build level="${build.level ?? ''}" className="${esc(build.className ?? '')}" ascendClassName="${esc(build.ascendClassName ?? '')}" mainSocketGroup="1"/>`,
   )
 
-  if (build.treeSpecUrls.length > 0) {
-    const specs = build.treeSpecUrls.map((url) => `<Spec title="Default" url="${esc(url)}"><URL>${esc(url)}</URL></Spec>`).join('')
-    parts.push(`<Tree>${specs}</Tree>`)
+  if (build.treeSpecUrls.length > 0 || build.passiveNodes.length > 0 || build.treeVersion) {
+    const nodesAttr = build.passiveNodes.length > 0 ? ` nodes="${build.passiveNodes.join(',')}"` : ''
+    const versionAttr = build.treeVersion ? ` treeVersion="${esc(build.treeVersion)}"` : ''
+    const urls = build.treeSpecUrls
+      .map((url) => `<Spec${nodesAttr}${versionAttr}><URL>${esc(url)}</URL></Spec>`)
+      .join('')
+    const specWithoutUrl =
+      urls.length > 0 ? '' : `<Spec${nodesAttr}${versionAttr}/>`
+    parts.push(`<Tree>${urls}${specWithoutUrl}</Tree>`)
   }
 
   if (build.skills.length > 0) {
@@ -48,5 +54,5 @@ export function buildToShareCode(build: BuildSnapshot): string {
     parts.push(`<Items>${itemEls}${slotEls}</Items>`)
   }
 
-  return encodeShareCode(`<PathOfBuilding>${parts.join('')}</PathOfBuilding>`)
+  return encodeShareCode(`<PathOfBuilding2>${parts.join('')}</PathOfBuilding2>`)
 }

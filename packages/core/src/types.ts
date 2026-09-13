@@ -85,7 +85,9 @@ export interface BuildSnapshot {
   className: string | null
   ascendClassName: string | null
   level: number | null
-  /** Target passive node ids (from <Build nodes="..."/>). */
+  /** Tree data version this build targets (e.g. "0_5"), from <Spec treeVersion>. */
+  treeVersion: string | null
+  /** Target passive node ids (from <Spec nodes>, falling back to <Build nodes>). */
   passiveNodes: number[]
   /** Passive tree spec URL(s), kept raw for tree-code decoding later. */
   treeSpecUrls: string[]

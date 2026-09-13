@@ -9,6 +9,7 @@ const SAMPLE: BuildSnapshot = {
   className: 'Witch',
   ascendClassName: 'Infernalist',
   level: 92,
+  treeVersion: '0_5',
   passiveNodes: [12345, 23456, 34567, 61198],
   treeSpecUrls: ['https://poe2db.tw/passive-tree/AAAAexample'],
   skills: [
@@ -65,12 +66,32 @@ describe('parsePobCode', () => {
     expect(parsed.className).toBe('Witch')
     expect(parsed.ascendClassName).toBe('Infernalist')
     expect(parsed.level).toBe(92)
+    expect(parsed.treeVersion).toBe('0_5')
     expect(parsed.passiveNodes).toEqual([12345, 23456, 34567, 61198])
     expect(parsed.treeSpecUrls).toEqual(['https://poe2db.tw/passive-tree/AAAAexample'])
     expect(parsed.skills).toHaveLength(2)
     expect(parsed.skills[0].label).toBe('Fireball')
     expect(parsed.skills[0].gems[2]).toMatchObject({ name: 'Arcane Tempo', enabled: false })
     expect(parsed.items[0]).toMatchObject({ rarity: 'UNIQUE', name: 'Mailbreaker', base: 'Ancient Spirit Helmet', slot: 'Helmet' })
+  })
+
+  it('accepts the PoE2 <PathOfBuilding2> root with Spec-level nodes and nameSpec gems', () => {
+    const xml =
+      '<PathOfBuilding2>' +
+      '<Build level="100" className="Huntress" ascendClassName="Spirit Walker" mainSocketGroup="13"/>' +
+      '<Skills><SkillSet id="1"><Skill enabled="true" label="" mainActiveSkill="1">' +
+      '<Gem nameSpec="Vivid Stampede" level="20" quality="0" enabled="true"/>' +
+      '<Gem nameSpec="Overcharge" level="1" quality="0" enabled="true"/>' +
+      '</Skill></SkillSet></Skills>' +
+      '<Tree activeSpec="1"><Spec ascendClassId="2" classId="8" nodes="535,1823,1841" treeVersion="0_5"></Spec></Tree>' +
+      '</PathOfBuilding2>'
+    const parsed = parsePobXml(xml)
+    expect(parsed.className).toBe('Huntress')
+    expect(parsed.ascendClassName).toBe('Spirit Walker')
+    expect(parsed.treeVersion).toBe('0_5')
+    expect(parsed.passiveNodes).toEqual([535, 1823, 1841])
+    expect(parsed.skills[0].label).toBe('Vivid Stampede')
+    expect(parsed.skills[0].gems.map((g) => g.name)).toEqual(['Vivid Stampede', 'Overcharge'])
   })
 
   it('tolerates minimal XML with only a Build element', () => {
