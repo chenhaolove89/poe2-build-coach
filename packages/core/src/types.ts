@@ -185,3 +185,15 @@ export interface ModTranslationRule {
   re: string
   zh: string
 }
+
+/** Sentence rule for stat lines; `phrases` lists capture groups run through the phrase dictionary. */
+export interface StatSentenceRule {
+  re: string
+  zh: string
+  phrases?: number[]
+}
+
+export interface StatTranslationData {
+  sentences: StatSentenceRule[]
+  phrases: Record<string, string>
+}
