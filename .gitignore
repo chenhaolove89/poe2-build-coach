@@ -2,5 +2,5 @@ node_modules/
 dist/
 *.local
 .DS_Store
-src-tauri/target/
-src-tauri/gen/
+**/src-tauri/target/
+**/src-tauri/gen/
