@@ -179,3 +179,9 @@ export interface PriorityCheck {
   coreMissing: string[]
   goodHits: string[]
 }
+
+/** One ordered regex template for translating mod lines to Chinese. */
+export interface ModTranslationRule {
+  re: string
+  zh: string
+}

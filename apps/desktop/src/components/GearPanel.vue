@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { compareItems, itemPriorityCheck, itemResistances, parseItemText } from '@poe2coach/core'
+import { compareItems, itemPriorityCheck, itemResistances, parseItemText, translateMod } from '@poe2coach/core'
 import type { GameItem, ItemDiff } from '@poe2coach/core'
 import priorityJson from '@poe2coach/data/affix-priorities.json'
+import translationJson from '@poe2coach/data/mod-translations.json'
 
 const PRIORITY = priorityJson as unknown as Parameters<typeof itemPriorityCheck>[1]
+const TRANSLATIONS = translationJson as unknown as Parameters<typeof translateMod>[1]
+
+function zhOf(text: string): string | null {
+  return translateMod(text, TRANSLATIONS)
+}
 
 const KEYWORD_LABEL: Record<string, string> = {
   'maximum Life': '生命',
@@ -120,7 +126,10 @@ function resDeltaClass(v: number): string {
       <div v-if="selectedIndex === i" class="mods">
         <div v-for="(mod, mi) in item.mods" :key="mi" class="mod">
           <span class="kind" :style="{ color: KIND_COLOR[mod.kind] }">{{ KIND_LABEL[mod.kind] || '' }}</span>
-          <span :style="{ color: KIND_COLOR[mod.kind] }">{{ mod.text }}</span>
+          <span :style="{ color: KIND_COLOR[mod.kind] }">
+            <template v-if="zhOf(mod.text)">{{ zhOf(mod.text) }}<span class="en">{{ mod.text }}</span></template>
+            <template v-else>{{ mod.text }}</template>
+          </span>
         </div>
         <div v-if="selectedRes" class="dim res-line">抗性贡献:{{ resText(selectedRes) }}</div>
       </div>
@@ -146,8 +155,12 @@ function resDeltaClass(v: number): string {
 
       <template v-if="diff">
         <div class="diff-title dim">相比「{{ selected!.name ?? selected!.base }}」:</div>
-        <div v-for="(m, i) in diff.added" :key="'a' + i" class="mod-line up">+ {{ m.text }}</div>
-        <div v-for="(m, i) in diff.removed" :key="'r' + i" class="mod-line down">− {{ m.text }}</div>
+        <div v-for="(m, i) in diff.added" :key="'a' + i" class="mod-line up">
+          + <template v-if="zhOf(m.text)">{{ zhOf(m.text) }}<span class="en">{{ m.text }}</span></template><template v-else>{{ m.text }}</template>
+        </div>
+        <div v-for="(m, i) in diff.removed" :key="'r' + i" class="mod-line down">
+          − <template v-if="zhOf(m.text)">{{ zhOf(m.text) }}<span class="en">{{ m.text }}</span></template><template v-else>{{ m.text }}</template>
+        </div>
         <div class="mod-line dim">抗性变化:火 <b :class="resDeltaClass(diff.resistances.fire)">{{ diff.resistances.fire }}</b> · 冰 <b :class="resDeltaClass(diff.resistances.cold)">{{ diff.resistances.cold }}</b> · 电 <b :class="resDeltaClass(diff.resistances.lightning)">{{ diff.resistances.lightning }}</b> · 混沌 <b :class="resDeltaClass(diff.resistances.chaos)">{{ diff.resistances.chaos }}</b></div>
       </template>
     </div>
@@ -212,6 +225,12 @@ h2 {
 .mod {
   font-size: 12px;
   padding: 1px 0;
+}
+.en {
+  display: block;
+  color: #5b6379;
+  font-size: 10px;
+  margin-left: 2px;
 }
 .kind {
   display: inline-block;
