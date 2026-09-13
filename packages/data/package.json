@@ -1,0 +1,9 @@
+{
+  "name": "@poe2coach/data",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Versioned PoE2 game data packs. tree.json from PathOfBuildingCommunity/PathOfBuilding-PoE2 (MIT), TreeData/0_5.",
+  "files": [
+    "trees"
+  ]
+}

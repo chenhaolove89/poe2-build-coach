@@ -1,0 +1,14 @@
+{
+  "name": "poe2-build-coach",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "vitest run --root packages/core",
+    "build": "npm run build -w @poe2coach/core && npm run build -w @poe2coach/desktop",
+    "dev": "npm run dev -w @poe2coach/desktop"
+  }
+}

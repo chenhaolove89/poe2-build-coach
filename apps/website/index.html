@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PoE2 Build Coach — 跟着 Build 走,不再翻文档</title>
+  <meta name="description" content="粘贴 Path of Building 分享码,即刻得到流放之路2 Build 的天赋目标点法、装备词缀清单与升级路线。纯离线桌面工具。" />
+  <style>
+    :root { color-scheme: dark; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0b0d12;
+      color: #cfd4e4;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      line-height: 1.7;
+    }
+    .hero { max-width: 880px; margin: 0 auto; padding: 96px 24px 48px; text-align: center; }
+    h1 { font-size: 40px; color: #e8b04b; letter-spacing: 1px; }
+    .tagline { font-size: 18px; color: #8a93ad; margin-top: 12px; }
+    .cta { margin-top: 36px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 13px 34px; border-radius: 8px;
+      font-size: 16px; font-weight: 600; text-decoration: none; transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: #e8b04b; color: #14120a; box-shadow: 0 6px 24px rgba(232,176,75,.25); }
+    .btn-ghost { border: 1px solid #39415a; color: #cfd4e4; }
+    .features { max-width: 960px; margin: 40px auto; padding: 0 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+    .card { background: #10131b; border: 1px solid #232939; border-radius: 12px; padding: 24px; }
+    .card h3 { color: #e8b04b; font-size: 16px; margin-bottom: 8px; }
+    .card p { font-size: 14px; color: #9aa3bd; }
+    .steps { max-width: 720px; margin: 48px auto; padding: 0 24px; }
+    .steps ol { padding-left: 22px; }
+    .steps li { margin: 10px 0; font-size: 15px; }
+    .steps code { background: #1a1f2c; padding: 2px 8px; border-radius: 4px; font-size: 13px; color: #e8b04b; }
+    .note { max-width: 720px; margin: 40px auto 0; padding: 18px 24px 64px; font-size: 12px; color: #5b6379; text-align: center; }
+    .note a { color: #7a8299; }
+    .version { margin-top: 14px; font-size: 13px; color: #5b6379; }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <h1>PoE2 Build Coach</h1>
+    <p class="tagline">别人给你 Build,我给你"现在第一步干什么"。<br/>粘贴 PoB 分享码,天赋、装备、宝石全量对照,纯离线运行。</p>
+    <div class="cta">
+      <!-- Release 工作流打 tag 后自动上传安装包,此链接始终指向最新版本 -->
+      <a class="btn btn-primary" href="https://github.com/chenhaolove89/poe2-build-coach/releases/latest">下载 Windows 版</a>
+      <a class="btn btn-ghost" href="https://github.com/chenhaolove89/poe2-build-coach">GitHub 仓库</a>
+    </div>
+    <p class="version">v0.1.0 · Windows 10/11 · 免安装版与安装版均可 · 数据:PoB2 TreeData 0_5</p>
+  </section>
+
+  <section class="features">
+    <div class="card">
+      <h3>🎯 天赋教练</h3>
+      <p>全树可视化渲染,目标点法金色高亮;按等级分段的逐级点法,跟着点不迷路。</p>
+    </div>
+    <div class="card">
+      <h3>🛡 装备清单</h3>
+      <p>每个槽位的词缀优先级与达标判定;游戏内 Ctrl+C 复制物品粘贴即比对,抗性缺口一目了然。</p>
+    </div>
+    <div class="card">
+      <h3>💎 宝石配置</h3>
+      <p>每个技能槽的主动+辅助组合清单,等级品质要求与替代方案。</p>
+    </div>
+    <div class="card">
+      <h3>📴 纯离线</h3>
+      <p>数据包本地运行,不读内存、不注入、不自动化游戏,只做规划对照。</p>
+    </div>
+  </section>
+
+  <section class="steps">
+    <h2 style="color:#e8b04b; font-size:20px; margin-bottom:16px;">三步开始</h2>
+    <ol>
+      <li>在 Path of Building(PoE2 版)里打开你要学的 Build,导出分享码</li>
+      <li>粘贴到 PoE2 Build Coach,点击解析</li>
+      <li>对照天赋点法与装备清单开玩,双击天赋树可复位视图</li>
+    </ol>
+  </section>
+
+  <div class="note">
+    本工具为社区粉丝作品,与 Grinding Gear Games 无关。<br/>
+    Path of Exile 及相关标识是 Grinding Gear Games 的商标。天赋树数据来自
+    <a href="https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2">PathOfBuilding-PoE2</a>(MIT License)。
+  </div>
+</body>
+</html>
