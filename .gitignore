@@ -5,3 +5,5 @@ dist/
 .tmp/
 **/src-tauri/target/
 **/src-tauri/gen/
+.tmp
+.tmp-*
