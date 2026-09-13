@@ -12,10 +12,14 @@ export interface TreeNode {
   isKeystone?: boolean
   isNotable?: boolean
   isMastery?: boolean
-  isAscendancyNode?: boolean
+  /** Present on ascendancy tree nodes (also used as the ascendancy marker). */
+  ascendancyName?: string
+  isAscendancyStart?: boolean
   connections?: { id: number; orbit?: number }[]
   stringId?: string
   skill?: number
+  /** Class start marker: PoE1/PoE2 class names sharing this start node. */
+  classesStart?: string[]
 }
 
 export interface TreeGroup {

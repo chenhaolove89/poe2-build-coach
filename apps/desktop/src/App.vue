@@ -5,6 +5,7 @@ import type { BuildSnapshot, GameItem, TreeData } from '@poe2coach/core'
 import TreeCanvas from './components/TreeCanvas.vue'
 import ResistancePanel from './components/ResistancePanel.vue'
 import GearPanel from './components/GearPanel.vue'
+import LevelingPanel from './components/LevelingPanel.vue'
 import { loadTree } from './treeData'
 
 const tree: TreeData = loadTree()
@@ -121,6 +122,8 @@ const summary = computed(() => {
           </div>
         </div>
         <div v-if="build!.skills.length === 0" class="dim">—</div>
+
+        <LevelingPanel :tree="tree" :build="build!" />
 
         <GearPanel :items="gameItems" />
       </template>

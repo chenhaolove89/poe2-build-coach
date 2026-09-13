@@ -30,7 +30,7 @@ let resizeObs: ResizeObserver | null = null
 const hoverHtml = computed(() => {
   const h = hover.value
   if (!h) return ''
-  const kind = h.node.isKeystone ? 'Keystone' : h.node.isNotable ? 'Notable' : h.node.isAscendancyNode ? 'Ascendancy' : 'Passive'
+  const kind = h.node.isKeystone ? 'Keystone' : h.node.isNotable ? 'Notable' : h.node.ascendancyName ? 'Ascendancy' : 'Passive'
   const activeMark = props.active.has(h.node.id) ? ' · <b style="color:#e8b04b">已规划</b>' : ''
   const stats = h.node.stats.slice(0, 5).map((s) => `<div>${escapeHtml(s)}</div>`).join('')
   return `<b>${escapeHtml(h.node.name)}</b> <span style="color:#7a8299">(${kind})</span>${activeMark}${stats}`
@@ -104,7 +104,7 @@ function draw() {
     const pos = positions.get(node.id)
     if (!pos) continue
     const isActive = active.has(node.id)
-    const kindR = node.isKeystone ? 7.5 : node.isNotable ? 5 : node.isAscendancyNode ? 3.5 : 2.8
+    const kindR = node.isKeystone ? 7.5 : node.isNotable ? 5 : node.ascendancyName ? 3.5 : 2.8
     const r = (isActive ? kindR + 2.5 : kindR) / scale
     if (pos.x < (0 - panX) / scale - r * 2 || pos.x > (w - panX) / scale + r * 2) continue
     if (pos.y < (0 - panY) / scale - r * 2 || pos.y > (h - panY) / scale + r * 2) continue
