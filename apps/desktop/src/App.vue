@@ -7,18 +7,23 @@ import ResistancePanel from './components/ResistancePanel.vue'
 import GearPanel from './components/GearPanel.vue'
 import LevelingPanel from './components/LevelingPanel.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
+import MapsPanel from './components/MapsPanel.vue'
 import { loadTree } from './treeData'
 import { addBuild, loadBuilds, removeBuild } from './buildStore'
 import type { StoredBuild } from './buildStore'
+import mapsJson from '@poe2coach/data/maps.json'
 
-type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling'
+const MAP_COUNT = (mapsJson as unknown as { maps: unknown[] }).maps.length
 
-const NAV: { key: View; label: string }[] = [
+type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps'
+
+const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'home', label: '主页' },
-  { key: 'tree', label: '天赋树' },
-  { key: 'gear', label: '装备' },
-  { key: 'skills', label: '技能' },
-  { key: 'leveling', label: '升级' },
+  { key: 'tree', label: '天赋树', requiresBuild: true },
+  { key: 'gear', label: '装备', requiresBuild: true },
+  { key: 'skills', label: '技能', requiresBuild: true },
+  { key: 'leveling', label: '升级', requiresBuild: true },
+  { key: 'maps', label: '地图' },
 ]
 
 const tree: TreeData = loadTree()
@@ -147,8 +152,8 @@ function deleteStored(id: string) {
           v-for="n in NAV"
           :key="n.key"
           class="tab"
-          :class="{ active: view === n.key, disabled: n.key !== 'home' && !hasBuild }"
-          :disabled="n.key !== 'home' && !hasBuild"
+          :class="{ active: view === n.key, disabled: n.requiresBuild && !hasBuild }"
+          :disabled="n.requiresBuild && !hasBuild"
           @click="view = n.key"
         >
           {{ n.label }}
@@ -208,6 +213,12 @@ function deleteStored(id: string) {
         <p class="go">进入 →</p>
       </button>
 
+      <button class="card feature" @click="view = 'maps'">
+        <h3>🗺 地图</h3>
+        <p class="desc">{{ MAP_COUNT }} 个异界地区 · 跑图评分/布局/Boss 一览</p>
+        <p class="go">进入 →</p>
+      </button>
+
       <section class="card span-2">
         <div class="lib-head">
           <h3>我的 Build 库({{ builds.length }})</h3>
@@ -237,6 +248,10 @@ function deleteStored(id: string) {
 
     <main v-else-if="view === 'leveling'" class="centered">
       <LevelingPanel v-model:currentPoints="currentPoints" :tree="tree" :build="build!" :plan="plan!" />
+    </main>
+
+    <main v-else-if="view === 'maps'" class="centered">
+      <MapsPanel />
     </main>
   </div>
 </template>

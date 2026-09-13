@@ -1,0 +1,1114 @@
+{
+  "source": "POE2WAY (poe2way.com/atlas) — navigation/backtracking are community ratings (4=easiest/best)",
+  "maps": [
+    {
+      "name": "Headland",
+      "navigation": 4,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Faridun City",
+        "Mountain",
+        "Faridun City",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Hask, the Fallen Son"
+    },
+    {
+      "name": "Creek",
+      "navigation": 4,
+      "backtracking": 2,
+      "layout": "open",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [
+        "Breach"
+      ],
+      "boss": "Tierney, the Hateful"
+    },
+    {
+      "name": "Slick",
+      "navigation": 4,
+      "backtracking": 4,
+      "layout": "open",
+      "biomes": [
+        "Grass",
+        "Desert",
+        "Mountain",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Vorrik, The Infernal Engineer"
+    },
+    {
+      "name": "Ravine",
+      "navigation": 4,
+      "backtracking": 4,
+      "layout": "linear",
+      "biomes": [
+        "Mountain",
+        "Mountain",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Tetzcatl, the Blazing Guardian"
+    },
+    {
+      "name": "Rupture",
+      "navigation": 4,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": "Zekoa the Headcrusher"
+    },
+    {
+      "name": "Bloodwood",
+      "navigation": 4,
+      "backtracking": 2,
+      "layout": "linear",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Gorian, the Moving Earth"
+    },
+    {
+      "name": "Rustbowl",
+      "navigation": 4,
+      "backtracking": 2,
+      "layout": "open",
+      "biomes": [
+        "Desert"
+      ],
+      "recommended": [
+        "Breach"
+      ],
+      "boss": "Gozen, Rebellious Rustlord"
+    },
+    {
+      "name": "Savannah",
+      "navigation": 4,
+      "backtracking": 3,
+      "layout": "open",
+      "biomes": [
+        "Grass",
+        "Desert"
+      ],
+      "recommended": [
+        "Breach"
+      ],
+      "boss": "Caedron, the Hyena Lord"
+    },
+    {
+      "name": "Wetlands",
+      "navigation": 4,
+      "backtracking": 3,
+      "layout": "open",
+      "biomes": [
+        "Swamp",
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": "Gorian, The Moving Earth"
+    },
+    {
+      "name": "Steppe",
+      "navigation": 4,
+      "backtracking": 4,
+      "layout": "open",
+      "biomes": [
+        "Grass"
+      ],
+      "recommended": [
+        "Breach"
+      ],
+      "boss": "Gozen, Rebellious Rustlord"
+    },
+    {
+      "name": "Lofty Summit",
+      "navigation": 4,
+      "backtracking": 4,
+      "layout": "linear",
+      "biomes": [
+        "Mountain"
+      ],
+      "recommended": [],
+      "boss": "Oloton, the Remorseless"
+    },
+    {
+      "name": "Crimson Shores",
+      "navigation": 4,
+      "backtracking": 4,
+      "layout": "linear",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Sandspit",
+      "navigation": 4,
+      "backtracking": 4,
+      "layout": "linear",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "The Sandstrider"
+    },
+    {
+      "name": "Steaming Springs",
+      "navigation": 4,
+      "backtracking": 4,
+      "layout": "open",
+      "biomes": [
+        "Grass",
+        "Forest",
+        "Mountain",
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Manassa, the Serpent Queen"
+    },
+    {
+      "name": "Riverside",
+      "navigation": 3,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Zekoa, the Headcrusher"
+    },
+    {
+      "name": "Crypt",
+      "navigation": 3,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Grass",
+        "Desert",
+        "Mountain",
+        "Grass",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Meltwax, Mockery of Faith"
+    },
+    {
+      "name": "Decay",
+      "navigation": 3,
+      "backtracking": 2,
+      "layout": "maze",
+      "biomes": [
+        "Swamp",
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "The Fungus Behemoth"
+    },
+    {
+      "name": "Fortress",
+      "navigation": 3,
+      "backtracking": 2,
+      "layout": "linear",
+      "biomes": [
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Pirasha, the Forgotten Prisoner"
+    },
+    {
+      "name": "Augury",
+      "navigation": 3,
+      "backtracking": 1,
+      "layout": "maze",
+      "biomes": [
+        "Swamp",
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Solas, Architect of the Nightmare"
+    },
+    {
+      "name": "Penitentiary",
+      "navigation": 3,
+      "backtracking": 1,
+      "layout": "linear",
+      "biomes": [
+        "Ezomyte City",
+        "Grass",
+        "Ezomyte City"
+      ],
+      "recommended": [],
+      "boss": "Incarnation of Death"
+    },
+    {
+      "name": "Forge",
+      "navigation": 3,
+      "backtracking": 2,
+      "layout": "linear",
+      "biomes": [
+        "Grass",
+        "Desert",
+        "Mountain",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Vastweld, the Colossal Guardian"
+    },
+    {
+      "name": "Cenotes",
+      "navigation": 3,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Mountain",
+        "Swamp",
+        "Mountain"
+      ],
+      "recommended": [],
+      "boss": "Bahlak, the Sky Seer"
+    },
+    {
+      "name": "Cliffside",
+      "navigation": 3,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "Brakkus the Juggernaut"
+    },
+    {
+      "name": "Willow",
+      "navigation": 3,
+      "backtracking": 3,
+      "layout": "open",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [
+        "Breach"
+      ],
+      "boss": "Connal, the Tormented"
+    },
+    {
+      "name": "Oasis",
+      "navigation": 3,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Faridun City",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Ishtaroth, the Perennial"
+    },
+    {
+      "name": "The Copper Citadel",
+      "navigation": 3,
+      "backtracking": 2,
+      "layout": "linear",
+      "biomes": [
+        "Faridun City"
+      ],
+      "recommended": [],
+      "boss": "Jamanra, the Abomination"
+    },
+    {
+      "name": "Blooming Field",
+      "navigation": 3,
+      "backtracking": 2,
+      "layout": "open",
+      "biomes": [
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "The Black Crow"
+    },
+    {
+      "name": "Sun Temple",
+      "navigation": 3,
+      "backtracking": 3,
+      "layout": "maze",
+      "biomes": [
+        "Vaal City",
+        "Vaal City",
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": "Tonqui, Seer of the Sun"
+    },
+    {
+      "name": "Burial Bog",
+      "navigation": 3,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": "Grudgelash, Vile Ent"
+    },
+    {
+      "name": "Vaal City",
+      "navigation": 3,
+      "backtracking": 2,
+      "layout": "maze",
+      "biomes": [
+        "Vaal City",
+        "Vaal City",
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": "Viper Napuatzi"
+    },
+    {
+      "name": "Channel",
+      "navigation": 2,
+      "backtracking": 2,
+      "layout": "maze",
+      "biomes": [
+        "Faridun City",
+        "Faridun City",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Hask, The Fallen Son"
+    },
+    {
+      "name": "Woodland",
+      "navigation": 2,
+      "backtracking": 2,
+      "layout": "maze",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Murtagh, the Engorged"
+    },
+    {
+      "name": "Backwash",
+      "navigation": 2,
+      "backtracking": 3,
+      "layout": "open",
+      "biomes": [
+        "Swamp",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Yaota, The Loathsome"
+    },
+    {
+      "name": "Necropolis",
+      "navigation": 2,
+      "backtracking": 2,
+      "layout": "maze",
+      "biomes": [
+        "Ezomyte City",
+        "Forest",
+        "Ezomyte City"
+      ],
+      "recommended": [],
+      "boss": "Tycho, the Black Praetor"
+    },
+    {
+      "name": "Hive",
+      "navigation": 2,
+      "backtracking": 2,
+      "layout": "linear",
+      "biomes": [
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Sump",
+      "navigation": 2,
+      "backtracking": 1,
+      "layout": "open",
+      "biomes": [
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": "Brakka, the Withered Crone"
+    },
+    {
+      "name": "Grimhaven",
+      "navigation": 2,
+      "backtracking": 2,
+      "layout": "open",
+      "biomes": [
+        "Ezomyte City",
+        "Grass",
+        "Ezomyte City"
+      ],
+      "recommended": [],
+      "boss": "Asinia, The Praetor's Consort"
+    },
+    {
+      "name": "Hidden Grotto",
+      "navigation": 2,
+      "backtracking": 1,
+      "layout": "linear",
+      "biomes": [
+        "Swamp",
+        "Grass",
+        "Forest",
+        "Swamp",
+        "Mountain",
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Zar Wali, the Bone Tyrant"
+    },
+    {
+      "name": "Rockpools",
+      "navigation": 2,
+      "backtracking": 2,
+      "layout": "linear",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "Brughor, the Insatiable"
+    },
+    {
+      "name": "Spider Woods",
+      "navigation": 2,
+      "backtracking": 2,
+      "layout": "open",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Rootgrasp, the Hateful Forest"
+    },
+    {
+      "name": "Sulphuric Caverns",
+      "navigation": 2,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Swamp",
+        "Mountain",
+        "Desert",
+        "Swamp",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "The Bone Colossus"
+    },
+    {
+      "name": "Deserted",
+      "navigation": 2,
+      "backtracking": 2,
+      "layout": "open",
+      "biomes": [
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "The Iron Citadel",
+      "navigation": 2,
+      "backtracking": 3,
+      "layout": "linear",
+      "biomes": [
+        "Ezomyte City"
+      ],
+      "recommended": [],
+      "boss": "Count Geonor"
+    },
+    {
+      "name": "Seepage",
+      "navigation": 1,
+      "backtracking": 1,
+      "layout": "linear",
+      "biomes": [
+        "Swamp",
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "The Fungus Behemoth"
+    },
+    {
+      "name": "Mire",
+      "navigation": 1,
+      "backtracking": 1,
+      "layout": "maze",
+      "biomes": [
+        "Swamp",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Riona, Winters Cackle"
+    },
+    {
+      "name": "Canyon",
+      "navigation": 1,
+      "backtracking": 1,
+      "layout": "linear",
+      "biomes": [
+        "Mountain",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Morvak the Infernal"
+    },
+    {
+      "name": "Molten Vault",
+      "navigation": 1,
+      "backtracking": 4,
+      "layout": "linear",
+      "biomes": [
+        "Vaal City",
+        "Mountain",
+        "Vaal City",
+        "Mountain",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Gulzal the Living Furnace"
+    },
+    {
+      "name": "The Stone Citadel",
+      "navigation": 1,
+      "backtracking": 1,
+      "layout": "maze",
+      "biomes": [
+        "Vaal City"
+      ],
+      "recommended": [],
+      "boss": "Doryani, Royal Thaumaturge"
+    },
+    {
+      "name": "Spring",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Manassa the Serpent Queen"
+    },
+    {
+      "name": "Mineshaft",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Faridun City",
+        "Mountain",
+        "Faridun City",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Vorrik The Infernal Engineer"
+    },
+    {
+      "name": "Marrow",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "maze",
+      "biomes": [
+        "Grass",
+        "Desert",
+        "Mountain",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Zar Wali, the Bone Tyrant"
+    },
+    {
+      "name": "Mesa",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Faridun City",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Karash The Dune Dweller"
+    },
+    {
+      "name": "Epitaph",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Mountain",
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Saphira The Dread Consort"
+    },
+    {
+      "name": "Stronghold",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "The Shackled Horror"
+    },
+    {
+      "name": "Bluff",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Grass"
+      ],
+      "recommended": [],
+      "boss": "Gressor-Kul the Apex"
+    },
+    {
+      "name": "Trenches",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Swamp",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Gorian the Moving Earth"
+    },
+    {
+      "name": "Riverhold",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Thariel the Umbral Wraith"
+    },
+    {
+      "name": "Sinkhole",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "Yama The White"
+    },
+    {
+      "name": "Rugosa",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "Syvora Daughter of the Deep"
+    },
+    {
+      "name": "Bastille",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Veynar, the Frostbane"
+    },
+    {
+      "name": "Castaway",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "open",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "Torrek of the Drowned Fleet"
+    },
+    {
+      "name": "Inferno",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "[DNT-UNUSED] Dog Trader"
+    },
+    {
+      "name": "Caldera",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "open",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "The Ravenous Fang"
+    },
+    {
+      "name": "Flotsam",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Malgor the Nautilord"
+    },
+    {
+      "name": "Confluence",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Manassa the Serpent Queen"
+    },
+    {
+      "name": "Lost Towers",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Chetza, the Feathered Plague"
+    },
+    {
+      "name": "Sinking Spire",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Vaal City",
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": "Stormgore the Guardian"
+    },
+    {
+      "name": "Azmerian Ranges",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Mountain",
+        "Mountain",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Morwyn the Kinslayer"
+    },
+    {
+      "name": "Frozen Falls",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Mountain"
+      ],
+      "recommended": [],
+      "boss": "Thraeven Wing of Winter"
+    },
+    {
+      "name": "The Ezomyte Megaliths",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Razed Fields",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "open",
+      "biomes": [
+        "Grass"
+      ],
+      "recommended": [],
+      "boss": "Ignatia the Flame-Sworn, Gelida the Frost-Tongue"
+    },
+    {
+      "name": "Vaults of Kamasa",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Vaal City"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Sacred Reservoir",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Zahmir the Blade Sovereign"
+    },
+    {
+      "name": "The Ziggurat Refuge",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Swamp",
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Alpine Ridge",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Mountain",
+        "Ezomyte City"
+      ],
+      "recommended": [],
+      "boss": "Ignatia, the Flame-Sworn"
+    },
+    {
+      "name": "Wayward Isle",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "Lord of the Pit"
+    },
+    {
+      "name": "Overgrown",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Tetzcatl the Blazing Guardian"
+    },
+    {
+      "name": "The Silent Cave",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Mountain",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Derelict Mansion",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Swamp",
+        "Grass",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": "Varloch the Ashen Lord, Avelyne the Withered Rose"
+    },
+    {
+      "name": "The Fractured Lake",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Ornate Chambers",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Mountain",
+        "Desert"
+      ],
+      "recommended": [],
+      "boss": "Serath the Scaled One"
+    },
+    {
+      "name": "Sealed Vault",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Mountain"
+      ],
+      "recommended": [],
+      "boss": "Ytzara Blood Oracle, Maztli Flesh-Shaper"
+    },
+    {
+      "name": "The Viridian Wildwood",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Swamp",
+        "Forest"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Untainted Paradise",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Vaal Village",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Vaal City",
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": "[DNT-UNUSED] Dog Trader"
+    },
+    {
+      "name": "Digsite",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Grass"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "The Jade Isles",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Water"
+      ],
+      "recommended": [],
+      "boss": "Manoki the Chosen, Manoki the Fevered, Manoki the Defiled"
+    },
+    {
+      "name": "Ice Cave",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Mountain"
+      ],
+      "recommended": [],
+      "boss": "The Frostborn Fiend"
+    },
+    {
+      "name": "Outlands",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Faridun City"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "The Assembly",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Vaal City",
+        "Grass"
+      ],
+      "recommended": [],
+      "boss": "Tetzcatl the Blazing Guardian"
+    },
+    {
+      "name": "Prison Hideout",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Swamp"
+      ],
+      "recommended": [],
+      "boss": null
+    },
+    {
+      "name": "Farmlands Hideout",
+      "navigation": null,
+      "backtracking": null,
+      "layout": "special",
+      "biomes": [
+        "Grass"
+      ],
+      "recommended": [],
+      "boss": null
+    }
+  ]
+}
