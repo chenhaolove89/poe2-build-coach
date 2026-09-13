@@ -6,12 +6,23 @@ import TreeCanvas from './components/TreeCanvas.vue'
 import ResistancePanel from './components/ResistancePanel.vue'
 import GearPanel from './components/GearPanel.vue'
 import LevelingPanel from './components/LevelingPanel.vue'
+import SkillsPanel from './components/SkillsPanel.vue'
 import { loadTree } from './treeData'
 import { addBuild, loadBuilds, removeBuild } from './buildStore'
 import type { StoredBuild } from './buildStore'
 
-const tree: TreeData = loadTree()
+type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling'
 
+const NAV: { key: View; label: string }[] = [
+  { key: 'home', label: '主页' },
+  { key: 'tree', label: '天赋树' },
+  { key: 'gear', label: '装备' },
+  { key: 'skills', label: '技能' },
+  { key: 'leveling', label: '升级' },
+]
+
+const tree: TreeData = loadTree()
+const view = ref<View>('home')
 const codeInput = ref('')
 const error = ref<string | null>(null)
 const build = ref<BuildSnapshot | null>(null)
@@ -29,34 +40,41 @@ const progressSet = computed(() => {
   return new Set(plan.value.steps.slice(0, n).map((s) => s.nodeId))
 })
 
+const hasBuild = computed(() => !!build.value)
+const buildTitle = computed(() => {
+  const b = build.value
+  if (!b) return ''
+  return `${b.className ?? '未知'} · ${b.ascendClassName ?? ''} Lv${b.level ?? '?'}`
+})
+
+const summary = computed(() => {
+  const b = build.value
+  if (!b) return null
+  return [
+    { k: '职业', v: b.className ?? '—' },
+    { k: '升华', v: b.ascendClassName ?? '—' },
+    { k: '等级', v: b.level ?? '—' },
+    { k: '目标树版本', v: b.treeVersion ?? '—' },
+    { k: '天赋节点', v: b.passiveNodes.length },
+    { k: '技能组', v: b.skills.length },
+    { k: '装备', v: b.items.length },
+  ]
+})
+
+const totalGems = computed(() => (build.value?.skills ?? []).reduce((s, g) => s + g.gems.length, 0))
+
 function onParse() {
   error.value = null
   try {
     currentPoints.value = null
     build.value = parsePobCode(codeInput.value)
+    view.value = 'home'
   } catch (e) {
     build.value = null
     error.value = e instanceof PobParseError ? e.message : String(e)
   }
 }
 
-function saveCurrent() {
-  const b = build.value
-  if (!b) return
-  const name = `${b.className ?? '未知'} · ${b.ascendClassName ?? ''} Lv${b.level ?? '?'}`
-  builds.value = addBuild(builds.value, name.trim(), codeInput.value.trim()).list
-}
-
-function loadStored(stored: StoredBuild) {
-  codeInput.value = stored.code
-  onParse()
-}
-
-function deleteStored(id: string) {
-  builds.value = removeBuild(builds.value, id)
-}
-
-/** Demo fixture: a connected blob of nodes from the real tree, re-encoded as a share code. */
 function loadDemo() {
   const firstKeystone = Object.values(tree.nodes).find((n) => n.isKeystone && !n.ascendancyName)
   const picked: number[] = []
@@ -104,109 +122,243 @@ function loadDemo() {
   onParse()
 }
 
-const summary = computed(() => {
+function saveCurrent() {
   const b = build.value
-  if (!b) return null
-  return [
-    { k: '职业', v: b.className ?? '—' },
-    { k: '升华', v: b.ascendClassName ?? '—' },
-    { k: '等级', v: b.level ?? '—' },
-    { k: '目标树版本', v: b.treeVersion ?? '—' },
-    { k: '天赋节点', v: b.passiveNodes.length },
-    { k: '技能组', v: b.skills.length },
-    { k: '装备', v: b.items.length },
-  ]
-})
+  if (!b) return
+  builds.value = addBuild(builds.value, buildTitle.value.trim(), codeInput.value.trim()).list
+}
+
+function loadStored(stored: StoredBuild) {
+  codeInput.value = stored.code
+  onParse()
+}
+
+function deleteStored(id: string) {
+  builds.value = removeBuild(builds.value, id)
+}
 </script>
 
 <template>
   <div class="app">
-    <aside class="panel">
-      <h1>PoE2 Build Coach</h1>
-      <p class="sub">粘贴 PoB 分享码,即刻得到这份 Build 的天赋目标与执行清单。数据:PoB2 TreeData 0_5(MIT)。</p>
+    <header class="nav">
+      <span class="logo" @click="view = 'home'">PoE2 Build Coach</span>
+      <nav class="tabs">
+        <button
+          v-for="n in NAV"
+          :key="n.key"
+          class="tab"
+          :class="{ active: view === n.key, disabled: n.key !== 'home' && !hasBuild }"
+          :disabled="n.key !== 'home' && !hasBuild"
+          @click="view = n.key"
+        >
+          {{ n.label }}
+        </button>
+      </nav>
+      <span v-if="hasBuild" class="build-badge">{{ buildTitle }}</span>
+    </header>
 
-      <textarea v-model="codeInput" rows="5" placeholder="粘贴 Path of Building 分享码…" spellcheck="false" />
-      <div class="btn-row">
-        <button class="primary" :disabled="!codeInput.trim()" @click="onParse">解析 Build</button>
-        <button @click="loadDemo">加载示例</button>
-      </div>
-      <p v-if="error" class="error">{{ error }}</p>
-
-      <div class="lib">
-        <div class="lib-head">
-          <span class="dim">我的 Build 库({{ builds.length }})</span>
-          <button v-if="build" class="lib-save" @click="saveCurrent">+ 保存当前</button>
+    <!-- ===================== 主页 ===================== -->
+    <main v-if="view === 'home'" class="home">
+      <section class="hero-card">
+        <h2>导入 Build</h2>
+        <textarea v-model="codeInput" rows="5" placeholder="粘贴 Path of Building 分享码…" spellcheck="false" />
+        <div class="btn-row">
+          <button class="primary" :disabled="!codeInput.trim()" @click="onParse">解析 Build</button>
+          <button @click="loadDemo">加载示例</button>
         </div>
-        <div v-for="b in builds" :key="b.id" class="lib-item">
-          <span class="lib-name" :title="'载入这份 Build'" @click="loadStored(b)">{{ b.name }}</span>
-          <span class="lib-date dim">{{ new Date(b.savedAt).toLocaleDateString() }}</span>
-          <span class="lib-del" title="删除" @click="deleteStored(b.id)">✕</span>
-        </div>
-        <div v-if="!builds.length" class="dim lib-empty">保存后多份 Build 可随时切换,刷新不丢。</div>
-      </div>
+        <p v-if="error" class="error">{{ error }}</p>
+      </section>
 
-      <template v-if="summary">
-        <h2>概览</h2>
+      <section v-if="hasBuild" class="card span-2">
+        <h3>概览</h3>
         <div class="kv">
           <div v-for="row in summary" :key="row.k" class="kv-row">
             <span class="k">{{ row.k }}</span>
             <span class="v">{{ row.v }}</span>
           </div>
         </div>
+      </section>
 
-        <h2>抗性(装备合计,上限75%)</h2>
+      <section v-if="hasBuild" class="card">
+        <h3>元素抗性</h3>
         <ResistancePanel :items="gameItems" />
+      </section>
 
-        <h2>技能组</h2>
-        <div v-for="(g, i) in build!.skills" :key="i" class="skill-group">
-          <div class="skill-label">{{ g.label ?? '未命名技能组' }}</div>
-          <div v-for="gem in g.gems" :key="gem.name" class="gem" :class="{ off: !gem.enabled }">
-            {{ gem.name }}<span class="dim"> Lv{{ gem.level ?? '?' }}{{ gem.quality ? ` Q${gem.quality}` : '' }}{{ gem.enabled ? '' : ' ·停用' }}</span>
-          </div>
+      <button class="card feature" :disabled="!hasBuild" @click="view = 'tree'">
+        <h3>🌳 天赋树</h3>
+        <p class="desc">{{ hasBuild ? `${build!.passiveNodes.length} 个目标节点,悬停看中英对照` : '先导入一份 Build' }}</p>
+        <p class="go">进入 →</p>
+      </button>
+
+      <button class="card feature" :disabled="!hasBuild" @click="view = 'gear'">
+        <h3>🛡 装备</h3>
+        <p class="desc">{{ hasBuild ? `${build!.items.length} 件装备 · 词缀重心与换装比对` : '先导入一份 Build' }}</p>
+        <p class="go">进入 →</p>
+      </button>
+
+      <button class="card feature" :disabled="!hasBuild" @click="view = 'skills'">
+        <h3>💎 技能</h3>
+        <p class="desc">{{ hasBuild ? `${build!.skills.length} 组 · ${totalGems} 颗宝石` : '先导入一份 Build' }}</p>
+        <p class="go">进入 →</p>
+      </button>
+
+      <button class="card feature" :disabled="!hasBuild" @click="view = 'leveling'">
+        <h3>📈 升级</h3>
+        <p class="desc">{{ hasBuild ? `${plan!.steps.length} 步逐级点法 · 输入点数看进度` : '先导入一份 Build' }}</p>
+        <p class="go">进入 →</p>
+      </button>
+
+      <section class="card span-2">
+        <div class="lib-head">
+          <h3>我的 Build 库({{ builds.length }})</h3>
+          <button v-if="hasBuild" class="lib-save" @click="saveCurrent">+ 保存当前</button>
         </div>
-        <div v-if="build!.skills.length === 0" class="dim">—</div>
+        <div v-for="b in builds" :key="b.id" class="lib-item">
+          <span class="lib-name" title="载入这份 Build" @click="loadStored(b)">{{ b.name }}</span>
+          <span class="dim">{{ new Date(b.savedAt).toLocaleDateString() }}</span>
+          <span class="lib-del" title="删除" @click="deleteStored(b.id)">✕</span>
+        </div>
+        <div v-if="!builds.length" class="dim">保存后多份 Build 可随时切换,刷新不丢。</div>
+      </section>
+    </main>
 
-        <LevelingPanel v-model:currentPoints="currentPoints" :tree="tree" :build="build!" :plan="plan!" />
-
-        <GearPanel :items="gameItems" />
-      </template>
-    </aside>
-
-    <main class="tree-area">
+    <!-- ===================== 功能视图 ===================== -->
+    <main v-else-if="view === 'tree'" class="full">
       <TreeCanvas :tree="tree" :active="activeSet" :progress="progressSet" />
+    </main>
+
+    <main v-else-if="view === 'gear'" class="centered">
+      <GearPanel :items="gameItems" />
+    </main>
+
+    <main v-else-if="view === 'skills'" class="centered">
+      <SkillsPanel :build="build!" />
+    </main>
+
+    <main v-else-if="view === 'leveling'" class="centered">
+      <LevelingPanel v-model:currentPoints="currentPoints" :tree="tree" :build="build!" :plan="plan!" />
     </main>
   </div>
 </template>
 
 <style scoped>
 .app {
-  display: flex;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
-.panel {
-  width: 340px;
-  min-width: 340px;
-  overflow-y: auto;
-  padding: 18px 16px 32px;
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 18px;
+  height: 48px;
+  min-height: 48px;
   background: #10131b;
-  border-right: 1px solid #232939;
-}
-h1 {
-  font-size: 18px;
-  color: #e8b04b;
-  margin: 0 0 4px;
-}
-h2 {
-  font-size: 13px;
-  color: #8a93ad;
-  margin: 18px 0 8px;
   border-bottom: 1px solid #232939;
-  padding-bottom: 4px;
 }
-.sub {
+.logo {
+  color: #e8b04b;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+.tab {
+  background: none;
+  border: none;
+  color: #8a93ad;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tab:hover {
+  color: #cfd4e4;
+  background: #1a1f2c;
+}
+.tab.active {
+  color: #e8b04b;
+  background: #1f1a10;
+}
+.tab.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.build-badge {
+  margin-left: auto;
   font-size: 12px;
-  color: #6b7390;
-  line-height: 1.6;
+  color: #7dd087;
+  background: #14201a;
+  border: 1px solid #2f4a38;
+  border-radius: 10px;
+  padding: 3px 10px;
+}
+
+.home {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  align-content: start;
+}
+.card {
+  background: #10131b;
+  border: 1px solid #232939;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+.card h3 {
+  font-size: 14px;
+  color: #e8b04b;
+  margin-bottom: 10px;
+}
+.span-2 {
+  grid-column: span 2;
+}
+.feature {
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.feature:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: #e8b04b;
+}
+.feature:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.feature .desc {
+  font-size: 12px;
+  color: #9aa3bd;
+  flex: 1;
+}
+.feature .go {
+  font-size: 12px;
+  color: #e8b04b;
+}
+.hero-card {
+  grid-column: 1 / -1;
+  background: #10131b;
+  border: 1px solid #232939;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.hero-card h2 {
+  font-size: 14px;
+  color: #e8b04b;
+  margin-bottom: 10px;
 }
 textarea {
   width: 100%;
@@ -229,7 +381,12 @@ textarea:focus {
   gap: 8px;
   margin-top: 8px;
 }
-button {
+button.primary {
+  background: #e8b04b;
+  border: none;
+  color: #14120a;
+}
+.btn-row button {
   flex: 1;
   padding: 8px 0;
   border: 1px solid #2c3244;
@@ -239,13 +396,7 @@ button {
   cursor: pointer;
   font-size: 13px;
 }
-button.primary {
-  background: #e8b04b;
-  border-color: #e8b04b;
-  color: #14120a;
-  font-weight: 600;
-}
-button:disabled {
+.btn-row button.primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -263,37 +414,14 @@ button:disabled {
 .kv-row .k {
   color: #7a8299;
 }
-.skill-group {
-  margin-bottom: 10px;
-}
-.skill-label {
-  font-size: 13px;
-  color: #d9a441;
-  margin-bottom: 3px;
-}
-.gem {
-  font-size: 12px;
-  padding: 2px 0 2px 10px;
-  border-left: 2px solid #2c3244;
-}
-.gem.off {
-  color: #5b6379;
-  text-decoration: line-through;
-}
-.dim {
-  color: #6b7390;
-  font-size: 11px;
-}
-.lib {
-  margin-top: 12px;
-  border-top: 1px solid #232939;
-  padding-top: 8px;
-}
 .lib-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+}
+.lib-head h3 {
+  margin-bottom: 0;
 }
 .lib-save {
   background: #1a2c1f;
@@ -334,11 +462,24 @@ button:disabled {
 .lib-del:hover {
   color: #e06c6c;
 }
-.lib-empty {
-  padding: 2px 6px;
+.dim {
+  color: #6b7390;
+  font-size: 11px;
 }
-.tree-area {
+
+.full {
   flex: 1;
-  min-width: 0;
+  min-height: 0;
+}
+.centered {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+.centered > :deep(*) {
+  width: 100%;
+  max-width: 720px;
 }
 </style>
