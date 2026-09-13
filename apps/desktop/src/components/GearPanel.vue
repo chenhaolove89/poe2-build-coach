@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { compareItems, itemPriorityCheck, itemResistances, parseItemText, translateMod } from '@poe2coach/core'
-import type { GameItem, ItemDiff } from '@poe2coach/core'
+import { categoryCounts, compareItems, itemPriorityCheck, itemResistances, parseItemText, translateMod } from '@poe2coach/core'
+import type { GameItem, ItemDiff, ModCategory } from '@poe2coach/core'
 import priorityJson from '@poe2coach/data/affix-priorities.json'
 import translationJson from '@poe2coach/data/mod-translations.json'
 
@@ -24,6 +24,27 @@ const KEYWORD_LABEL: Record<string, string> = {
 }
 
 const props = defineProps<{ items: GameItem[] }>()
+
+const CAT_LABEL: Record<ModCategory, string> = {
+  life: '生命',
+  resistance: '抗性',
+  damage: '伤害',
+  defence: '防御',
+  utility: '功能',
+  other: '其他',
+}
+const CAT_COLOR: Record<ModCategory, string> = {
+  life: '#7dd087',
+  resistance: '#5aa0d0',
+  damage: '#e0885a',
+  defence: '#9a8ae0',
+  utility: '#d0c05a',
+  other: '#5b6379',
+}
+
+/** Gear focus profile: how this build's affixes distribute across families. */
+const profile = computed(() => categoryCounts(props.items.flatMap((i) => i.mods.map((m) => m.text))))
+const profileMax = computed(() => Math.max(1, ...profile.value.map((p) => p.count)))
 
 /** Flasks and jewelry-adjacent consumables carry no affix expectations. */
 function priorityApplies(item: GameItem): boolean {
@@ -102,6 +123,18 @@ function resDeltaClass(v: number): string {
 
 <template>
   <div>
+    <h2>装备重心(全装备词缀分布)</h2>
+    <div v-if="items.length" class="profile">
+      <div v-for="p in profile" :key="p.category" class="profile-row">
+        <span class="profile-label">{{ CAT_LABEL[p.category] }}</span>
+        <div class="profile-bar">
+          <div class="profile-fill" :style="{ width: (p.count / profileMax) * 100 + '%', background: CAT_COLOR[p.category] }" />
+        </div>
+        <span class="profile-count">{{ p.count }}</span>
+      </div>
+    </div>
+    <div v-else class="dim">—</div>
+
     <h2>装备 · 点击选中比对</h2>
     <div v-for="(item, i) in items" :key="i" class="gear-card" :class="{ active: selectedIndex === i }" @click="select(i)">
       <div class="gear-title">
@@ -174,6 +207,37 @@ h2 {
   margin: 18px 0 8px;
   border-bottom: 1px solid #232939;
   padding-bottom: 4px;
+}
+.profile {
+  margin-bottom: 4px;
+}
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.profile-label {
+  width: 32px;
+  font-size: 11px;
+  color: #8a93ad;
+}
+.profile-bar {
+  flex: 1;
+  height: 8px;
+  background: #171b26;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.profile-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+.profile-count {
+  width: 24px;
+  text-align: right;
+  font-size: 11px;
+  color: #cfd4e4;
 }
 .tip {
   font-size: 12px;

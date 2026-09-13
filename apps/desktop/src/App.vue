@@ -7,6 +7,8 @@ import ResistancePanel from './components/ResistancePanel.vue'
 import GearPanel from './components/GearPanel.vue'
 import LevelingPanel from './components/LevelingPanel.vue'
 import { loadTree } from './treeData'
+import { addBuild, loadBuilds, removeBuild } from './buildStore'
+import type { StoredBuild } from './buildStore'
 
 const tree: TreeData = loadTree()
 
@@ -14,6 +16,7 @@ const codeInput = ref('')
 const error = ref<string | null>(null)
 const build = ref<BuildSnapshot | null>(null)
 const currentPoints = ref<number | null>(null)
+const builds = ref<StoredBuild[]>(loadBuilds())
 
 const activeSet = computed(() => new Set(build.value?.passiveNodes ?? []))
 const gameItems = computed<GameItem[]>(() => (build.value?.items ?? []).map((i) => parseItemText(i.text)))
@@ -29,11 +32,28 @@ const progressSet = computed(() => {
 function onParse() {
   error.value = null
   try {
+    currentPoints.value = null
     build.value = parsePobCode(codeInput.value)
   } catch (e) {
     build.value = null
     error.value = e instanceof PobParseError ? e.message : String(e)
   }
+}
+
+function saveCurrent() {
+  const b = build.value
+  if (!b) return
+  const name = `${b.className ?? '未知'} · ${b.ascendClassName ?? ''} Lv${b.level ?? '?'}`
+  builds.value = addBuild(builds.value, name.trim(), codeInput.value.trim()).list
+}
+
+function loadStored(stored: StoredBuild) {
+  codeInput.value = stored.code
+  onParse()
+}
+
+function deleteStored(id: string) {
+  builds.value = removeBuild(builds.value, id)
 }
 
 /** Demo fixture: a connected blob of nodes from the real tree, re-encoded as a share code. */
@@ -111,6 +131,19 @@ const summary = computed(() => {
         <button @click="loadDemo">加载示例</button>
       </div>
       <p v-if="error" class="error">{{ error }}</p>
+
+      <div class="lib">
+        <div class="lib-head">
+          <span class="dim">我的 Build 库({{ builds.length }})</span>
+          <button v-if="build" class="lib-save" @click="saveCurrent">+ 保存当前</button>
+        </div>
+        <div v-for="b in builds" :key="b.id" class="lib-item">
+          <span class="lib-name" :title="'载入这份 Build'" @click="loadStored(b)">{{ b.name }}</span>
+          <span class="lib-date dim">{{ new Date(b.savedAt).toLocaleDateString() }}</span>
+          <span class="lib-del" title="删除" @click="deleteStored(b.id)">✕</span>
+        </div>
+        <div v-if="!builds.length" class="dim lib-empty">保存后多份 Build 可随时切换,刷新不丢。</div>
+      </div>
 
       <template v-if="summary">
         <h2>概览</h2>
@@ -250,6 +283,59 @@ button:disabled {
 .dim {
   color: #6b7390;
   font-size: 11px;
+}
+.lib {
+  margin-top: 12px;
+  border-top: 1px solid #232939;
+  padding-top: 8px;
+}
+.lib-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.lib-save {
+  background: #1a2c1f;
+  border: 1px solid #2f4a38;
+  color: #7dd087;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.lib-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.lib-item:hover {
+  background: #171b26;
+}
+.lib-name {
+  flex: 1;
+  color: #cfd4e4;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lib-name:hover {
+  color: #e8b04b;
+}
+.lib-del {
+  color: #7a5a5a;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.lib-del:hover {
+  color: #e06c6c;
+}
+.lib-empty {
+  padding: 2px 6px;
 }
 .tree-area {
   flex: 1;
