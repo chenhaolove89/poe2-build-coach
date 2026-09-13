@@ -156,3 +156,26 @@ export interface ItemDiff {
   removed: ItemMod[]
   resistances: ResistanceTotals
 }
+
+/** Keyword-based affix priority rule (generic template; build-specific later). */
+export interface PriorityRule {
+  /** Lowercase substrings matched against the item class; omitted on the "any" rule. */
+  match?: string[]
+  core: string[]
+  good?: string[]
+}
+
+export interface PriorityData {
+  any: PriorityRule
+  classes: PriorityRule[]
+}
+
+export interface PriorityCheck {
+  /** The full effective core keyword list, in UI display order. */
+  core: string[]
+  /** Core keywords present on the item. */
+  coreHits: string[]
+  /** Core keywords missing — the gap a player must fix. */
+  coreMissing: string[]
+  goodHits: string[]
+}

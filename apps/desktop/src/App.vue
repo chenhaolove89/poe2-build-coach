@@ -82,6 +82,7 @@ const summary = computed(() => {
     { k: '职业', v: b.className ?? '—' },
     { k: '升华', v: b.ascendClassName ?? '—' },
     { k: '等级', v: b.level ?? '—' },
+    { k: '目标树版本', v: b.treeVersion ?? '—' },
     { k: '天赋节点', v: b.passiveNodes.length },
     { k: '技能组', v: b.skills.length },
     { k: '装备', v: b.items.length },

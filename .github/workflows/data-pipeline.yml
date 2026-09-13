@@ -1,0 +1,43 @@
+name: Data pipeline
+
+on:
+  schedule:
+    # Weekly, Mondays 03:00 UTC — PoB2 tree data changes with game patches.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-tree-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Fetch new TreeData versions
+        run: node scripts/update-tree-data.mjs
+
+      - name: Commit new data pack
+        id: commit
+        run: |
+          git config user.name "poe2-coach-bot"
+          git config user.email "bot@users.noreply.github.com"
+          if git diff --quiet -- packages/data; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No data changes."
+          else
+            VERSION=$(node -p "JSON.parse(require('fs').readFileSync('packages/data/trees/index.json','utf8')).latest")
+            git add packages/data
+            git commit -m "data: add TreeData $VERSION (PoB2 MIT)"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push
+        if: steps.commit.outputs.changed == 'true'
+        run: git push origin HEAD:main

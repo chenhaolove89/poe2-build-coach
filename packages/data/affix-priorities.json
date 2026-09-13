@@ -1,0 +1,46 @@
+{
+  "_comment": "通用词缀优先级模板 v1 — 适用于所有 Build 的底线检查(生命/抗性/核心输出词缀)。Build 特化优先级是内容层,后续按 Build 深化。match 为 itemClass 小写包含匹配。",
+  "any": {
+    "core": ["maximum Life", "Resistances"]
+  },
+  "classes": [
+    {
+      "match": ["ring"],
+      "core": ["maximum Life", "Resistances"]
+    },
+    {
+      "match": ["amulet"],
+      "core": ["maximum Life", "Resistances"]
+    },
+    {
+      "match": ["belt"],
+      "core": ["maximum Life", "Resistances"]
+    },
+    {
+      "match": ["helmet"],
+      "core": ["maximum Life", "Resistances"]
+    },
+    {
+      "match": ["glove"],
+      "core": ["maximum Life", "Resistances"]
+    },
+    {
+      "match": ["body armour", "chest"],
+      "core": ["maximum Life", "Resistances"]
+    },
+    {
+      "match": ["boot"],
+      "core": ["maximum Life", "Resistances", "Movement Speed"]
+    },
+    {
+      "match": ["bow", "sword", "axe", "mace", "staff", "quarterstaff", "wand", "sceptre", "crossbow", "spear", "flail", "focus"],
+      "core": ["Damage", "Speed", "Critical"],
+      "good": ["maximum Mana", "Level of"]
+    },
+    {
+      "match": ["jewel"],
+      "core": [],
+      "good": ["Damage", "Life"]
+    }
+  ]
+}

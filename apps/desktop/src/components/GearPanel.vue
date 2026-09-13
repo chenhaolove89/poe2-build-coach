@@ -1,9 +1,31 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { compareItems, parseItemText, itemResistances } from '@poe2coach/core'
+import { compareItems, itemPriorityCheck, itemResistances, parseItemText } from '@poe2coach/core'
 import type { GameItem, ItemDiff } from '@poe2coach/core'
+import priorityJson from '@poe2coach/data/affix-priorities.json'
+
+const PRIORITY = priorityJson as unknown as Parameters<typeof itemPriorityCheck>[1]
+
+const KEYWORD_LABEL: Record<string, string> = {
+  'maximum Life': '生命',
+  Resistances: '抗性',
+  'Movement Speed': '移速',
+  Damage: '伤害',
+  Speed: '攻/施速',
+  Critical: '暴击',
+  'maximum Mana': '魔力',
+  'Level of': '+技能等级',
+}
 
 const props = defineProps<{ items: GameItem[] }>()
+
+function priorityOf(item: GameItem) {
+  return itemPriorityCheck(item, PRIORITY)
+}
+
+function kwLabel(kw: string): string {
+  return KEYWORD_LABEL[kw] ?? kw
+}
 
 const selectedIndex = ref<number | null>(null)
 const pasteText = ref('')
@@ -78,6 +100,17 @@ function resDeltaClass(v: number): string {
         {{ item.rarity }}{{ item.itemClass ? ` · ${item.itemClass}` : '' }}{{ item.corrupted ? ' · 已腐化' : ''
         }}{{ item.rune ? ` · ${item.rune}` : '' }} · {{ item.mods.length }} 词缀
       </div>
+      <div v-if="priorityOf(item).core.length" class="core-row">
+        <span
+          v-for="kw in priorityOf(item).core"
+          :key="kw"
+          class="core-badge"
+          :class="priorityOf(item).coreHits.includes(kw) ? 'has' : 'missing'"
+          :title="'核心词缀:' + kw"
+        >
+          {{ priorityOf(item).coreHits.includes(kw) ? '✓' : '✗' }} {{ kwLabel(kw) }}
+        </span>
+      </div>
       <div v-if="selectedIndex === i" class="mods">
         <div v-for="(mod, mi) in item.mods" :key="mi" class="mod">
           <span class="kind" :style="{ color: KIND_COLOR[mod.kind] }">{{ KIND_LABEL[mod.kind] || '' }}</span>
@@ -144,6 +177,26 @@ h2 {
 .meta {
   font-size: 11px;
   margin-top: 2px;
+}
+.core-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.core-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  border: 1px solid #2c3244;
+}
+.core-badge.has {
+  color: #7dd087;
+  border-color: #2f4a38;
+}
+.core-badge.missing {
+  color: #e06c6c;
+  border-color: #4a2f2f;
 }
 .mods {
   margin-top: 6px;
