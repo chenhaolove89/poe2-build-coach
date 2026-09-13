@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { PobParseError, buildToShareCode, parseItemText, parsePobCode } from '@poe2coach/core'
+import { PobParseError, buildLevelingPlan, buildToShareCode, parseItemText, parsePobCode, resolveStartNode } from '@poe2coach/core'
 import type { BuildSnapshot, GameItem, TreeData } from '@poe2coach/core'
 import TreeCanvas from './components/TreeCanvas.vue'
 import ResistancePanel from './components/ResistancePanel.vue'
@@ -13,9 +13,18 @@ const tree: TreeData = loadTree()
 const codeInput = ref('')
 const error = ref<string | null>(null)
 const build = ref<BuildSnapshot | null>(null)
+const currentPoints = ref<number | null>(null)
 
 const activeSet = computed(() => new Set(build.value?.passiveNodes ?? []))
 const gameItems = computed<GameItem[]>(() => (build.value?.items ?? []).map((i) => parseItemText(i.text)))
+const plan = computed(() =>
+  build.value ? buildLevelingPlan(tree, build.value.passiveNodes, resolveStartNode(tree, build.value.className)) : null,
+)
+const progressSet = computed(() => {
+  const n = currentPoints.value
+  if (!plan.value || n == null || n <= 0) return new Set<number>()
+  return new Set(plan.value.steps.slice(0, n).map((s) => s.nodeId))
+})
 
 function onParse() {
   error.value = null
@@ -124,14 +133,14 @@ const summary = computed(() => {
         </div>
         <div v-if="build!.skills.length === 0" class="dim">—</div>
 
-        <LevelingPanel :tree="tree" :build="build!" />
+        <LevelingPanel v-model:currentPoints="currentPoints" :tree="tree" :build="build!" :plan="plan!" />
 
         <GearPanel :items="gameItems" />
       </template>
     </aside>
 
     <main class="tree-area">
-      <TreeCanvas :tree="tree" :active="activeSet" />
+      <TreeCanvas :tree="tree" :active="activeSet" :progress="progressSet" />
     </main>
   </div>
 </template>

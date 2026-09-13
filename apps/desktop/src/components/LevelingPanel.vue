@@ -1,19 +1,21 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { buildLevelingPlan, resolveStartNode } from '@poe2coach/core'
-import type { BuildSnapshot, TreeData } from '@poe2coach/core'
+import { computed } from 'vue'
+import type { BuildSnapshot, LevelingPlan, TreeData } from '@poe2coach/core'
 
-const props = defineProps<{ tree: TreeData; build: BuildSnapshot }>()
-
-const plan = computed(() => buildLevelingPlan(props.tree, props.build.passiveNodes, resolveStartNode(props.tree, props.build.className)))
-const currentPoints = ref<number | null>(null)
+const props = defineProps<{
+  tree: TreeData
+  build: BuildSnapshot
+  plan: LevelingPlan
+  currentPoints: number | null
+}>()
 
 const shownSteps = computed(() => {
-  const steps = plan.value.steps
-  if (currentPoints.value == null || currentPoints.value <= 0) return { past: [], next: steps.slice(0, 12) }
+  const steps = props.plan.steps
+  const n = props.currentPoints ?? 0
+  if (n <= 0) return { past: [], next: steps.slice(0, 12) }
   return {
-    past: steps.slice(0, currentPoints.value),
-    next: steps.slice(currentPoints.value, currentPoints.value + 12),
+    past: steps.slice(0, n),
+    next: steps.slice(n, n + 12),
   }
 })
 </script>
@@ -23,8 +25,15 @@ const shownSteps = computed(() => {
     <h2>逐级点法(从{{ build.className }}起点出发)</h2>
     <div class="pts-row">
       <label class="dim">你当前已用点数:</label>
-      <input v-model.number="currentPoints" type="number" min="0" :max="plan.steps.length" />
-      <span class="dim">/ 共 {{ plan.steps.length }} 点</span>
+      <input
+        :value="currentPoints ?? ''"
+        type="number"
+        min="0"
+        :max="plan.steps.length"
+        placeholder="0"
+        @input="$emit('update:currentPoints', ($event.target as HTMLInputElement).value === '' ? null : Number(($event.target as HTMLInputElement).value))"
+      />
+      <span class="dim">/ 共 {{ plan.steps.length }} 点 · 树上亮金=应已点</span>
     </div>
 
     <template v-if="currentPoints != null && currentPoints > 0">

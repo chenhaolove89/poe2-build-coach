@@ -6,6 +6,8 @@ import type { TreeData, TreeNode } from '@poe2coach/core'
 const props = defineProps<{
   tree: TreeData
   active: Set<number>
+  /** Allocated-so-far subset of `active` (leveling progress) — drawn bright. */
+  progress?: Set<number>
 }>()
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
@@ -83,6 +85,7 @@ function draw() {
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * panX, dpr * panY)
 
   const active = props.active
+  const progress = props.progress ?? new Set<number>()
   ctx.lineCap = 'round'
 
   // Edges: screen-constant hairlines, bright enough to read when zoomed out.
@@ -90,9 +93,18 @@ function draw() {
   for (const [a, b] of edges) {
     const pa = positions.get(a)!
     const pb = positions.get(b)!
-    const both = active.has(a) && active.has(b)
-    ctx.strokeStyle = both ? 'rgba(240,186,88,0.95)' : 'rgba(122,136,176,0.7)'
-    ctx.lineWidth = both ? lw * 2.2 : lw
+    const inProgress = progress.has(a) && progress.has(b)
+    const inActive = active.has(a) && active.has(b)
+    if (inProgress) {
+      ctx.strokeStyle = 'rgba(240,186,88,0.95)'
+      ctx.lineWidth = lw * 2.2
+    } else if (inActive) {
+      ctx.strokeStyle = 'rgba(180,140,60,0.55)'
+      ctx.lineWidth = lw * 1.6
+    } else {
+      ctx.strokeStyle = 'rgba(122,136,176,0.7)'
+      ctx.lineWidth = lw
+    }
     ctx.beginPath()
     ctx.moveTo(pa.x, pa.y)
     ctx.lineTo(pb.x, pb.y)
@@ -104,20 +116,23 @@ function draw() {
     const pos = positions.get(node.id)
     if (!pos) continue
     const isActive = active.has(node.id)
+    const isProgress = progress.has(node.id)
     const kindR = node.isKeystone ? 7.5 : node.isNotable ? 5 : node.ascendancyName ? 3.5 : 2.8
-    const r = (isActive ? kindR + 2.5 : kindR) / scale
+    const r = (isProgress ? kindR + 3.5 : isActive ? kindR + 1 : kindR) / scale
     if (pos.x < (0 - panX) / scale - r * 2 || pos.x > (w - panX) / scale + r * 2) continue
     if (pos.y < (0 - panY) / scale - r * 2 || pos.y > (h - panY) / scale + r * 2) continue
 
-    if (isActive) {
-      ctx.shadowColor = 'rgba(232,176,75,0.85)'
+    if (isActive && isProgress) {
+      ctx.shadowColor = 'rgba(240,186,88,0.9)'
       ctx.shadowBlur = 12 / scale
-      ctx.fillStyle = '#e8b04b'
+      ctx.fillStyle = '#f0ba58'
+    } else if (isActive) {
+      ctx.fillStyle = '#8a6f35'
     } else if (node.isKeystone) {
       ctx.fillStyle = '#b0524e'
     } else if (node.isNotable) {
       ctx.fillStyle = '#6f7fb5'
-    } else if (node.isAscendancyNode) {
+    } else if (node.ascendancyName) {
       ctx.fillStyle = '#4a5270'
     } else {
       ctx.fillStyle = '#39415a'

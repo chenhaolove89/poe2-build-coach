@@ -19,6 +19,12 @@ const KEYWORD_LABEL: Record<string, string> = {
 
 const props = defineProps<{ items: GameItem[] }>()
 
+/** Flasks and jewelry-adjacent consumables carry no affix expectations. */
+function priorityApplies(item: GameItem): boolean {
+  const hay = `${item.itemClass ?? ''} ${item.base ?? ''}`.toLowerCase()
+  return !(hay.includes('flask') || hay.includes('jewel') || hay.includes('soul core'))
+}
+
 function priorityOf(item: GameItem) {
   return itemPriorityCheck(item, PRIORITY)
 }
@@ -100,7 +106,7 @@ function resDeltaClass(v: number): string {
         {{ item.rarity }}{{ item.itemClass ? ` · ${item.itemClass}` : '' }}{{ item.corrupted ? ' · 已腐化' : ''
         }}{{ item.rune ? ` · ${item.rune}` : '' }} · {{ item.mods.length }} 词缀
       </div>
-      <div v-if="priorityOf(item).core.length" class="core-row">
+      <div v-if="priorityApplies(item) && priorityOf(item).core.length" class="core-row">
         <span
           v-for="kw in priorityOf(item).core"
           :key="kw"
