@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import mapsJson from '@poe2coach/data/maps.json'
+import { nameZh, nameZhThenEn } from '../nameZh'
 
 interface MapEntry {
   name: string
@@ -41,7 +42,12 @@ const filtered = computed(() =>
     if (layoutFilter.value !== 'all' && m.layout !== layoutFilter.value) return false
     const q = query.value.trim().toLowerCase()
     if (!q) return true
-    return m.name.toLowerCase().includes(q) || (m.boss ?? '').toLowerCase().includes(q)
+    return (
+      m.name.toLowerCase().includes(q) ||
+      (nameZh(m.name) ?? '').includes(q) ||
+      (m.boss ?? '').toLowerCase().includes(q) ||
+      (nameZh(m.boss) ?? '').includes(q)
+    )
   }),
 )
 
@@ -53,6 +59,10 @@ function navLabel(n: number | null): string {
 
 function biomeZh(b: string): string {
   return BIOME_LABEL[b] ?? b
+}
+
+function bilingual(en: string): string {
+  return nameZhThenEn(en)
 }
 </script>
 
@@ -86,7 +96,7 @@ function biomeZh(b: string): string {
     <div class="map-grid">
       <div v-for="m in filtered" :key="m.name" class="map-card">
         <div class="map-head">
-          <span class="map-name">{{ m.name }}</span>
+          <span class="map-name">{{ bilingual(m.name) }}</span>
           <span class="layout-badge" :class="m.layout">{{ LAYOUT_LABEL[m.layout] }}</span>
         </div>
         <div v-if="m.layout !== 'special'" class="scores">
@@ -94,7 +104,7 @@ function biomeZh(b: string): string {
           <span class="score" title="回头路程度(4=几乎不回头)">回头 {{ navLabel(m.backtracking) }}</span>
         </div>
         <div class="row dim">生态:{{ m.biomes.map(biomeZh).join(' / ') || '—' }}</div>
-        <div v-if="m.boss" class="row boss">Boss:{{ m.boss }}</div>
+        <div v-if="m.boss" class="row boss">Boss:{{ bilingual(m.boss) }}</div>
         <div v-if="m.recommended.length" class="row mech">
           推荐机制:{{ m.recommended.map((r) => MECH_LABEL[r] ?? r).join(' / ') }}
         </div>

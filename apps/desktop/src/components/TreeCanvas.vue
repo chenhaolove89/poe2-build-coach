@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { buildEdges, nodePosition, treeBounds, translateStat } from '@poe2coach/core'
 import type { TreeData, TreeNode } from '@poe2coach/core'
 import statTranslationJson from '@poe2coach/data/stat-translations.json'
+import { nameZh } from '../nameZh'
 
 const STAT_TRANSLATIONS = statTranslationJson as unknown as Parameters<typeof translateStat>[1]
 
@@ -39,7 +40,13 @@ let resizeObs: ResizeObserver | null = null
 const hoverHtml = computed(() => {
   const h = hover.value
   if (!h) return ''
-  const kind = h.node.isKeystone ? 'Keystone' : h.node.isNotable ? 'Notable' : h.node.ascendancyName ? 'Ascendancy' : 'Passive'
+  const kind = h.node.isKeystone
+    ? '核心天赋 Keystone'
+    : h.node.isNotable
+      ? '显著天赋 Notable'
+      : h.node.ascendancyName
+        ? '升华天赋 Ascendancy'
+        : '普通天赋 Passive'
   const activeMark = props.active.has(h.node.id) ? ' · <b style="color:#e8b04b">已规划</b>' : ''
   const stats = h.node.stats
     .slice(0, 5)
@@ -50,8 +57,12 @@ const hoverHtml = computed(() => {
         : `<div>${escapeHtml(s)}</div>`
     })
     .join('')
-  const more = h.node.stats.length > 5 ? `<div class="en-stat">…+${h.node.stats.length - 5} more</div>` : ''
-  return `<b>${escapeHtml(h.node.name)}</b> <span style="color:#7a8299">(${kind})</span>${activeMark}${stats}${more}`
+  const more = h.node.stats.length > 5 ? `<div class="en-stat">…还有 ${h.node.stats.length - 5} 条</div>` : ''
+  const nameZhText = nameZh(h.node.name)
+  const nameHtml = nameZhText
+    ? `<b>${escapeHtml(nameZhText)}</b><span class="en-stat">${escapeHtml(h.node.name)}</span>`
+    : `<b>${escapeHtml(h.node.name)}</b>`
+  return `${nameHtml} <span style="color:#7a8299">(${kind})</span>${activeMark}${stats}${more}`
 })
 
 function escapeHtml(s: string): string {

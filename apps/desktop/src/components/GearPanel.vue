@@ -4,6 +4,7 @@ import { categoryCounts, compareItems, itemPriorityCheck, itemResistances, parse
 import type { GameItem, ItemDiff, ModCategory } from '@poe2coach/core'
 import priorityJson from '@poe2coach/data/affix-priorities.json'
 import translationJson from '@poe2coach/data/mod-translations.json'
+import { nameZh } from '../nameZh'
 
 const PRIORITY = priorityJson as unknown as Parameters<typeof itemPriorityCheck>[1]
 const TRANSLATIONS = translationJson as unknown as Parameters<typeof translateMod>[1]
@@ -24,6 +25,73 @@ const KEYWORD_LABEL: Record<string, string> = {
 }
 
 const props = defineProps<{ items: GameItem[] }>()
+
+const RARITY_ZH: Record<string, string> = {
+  NORMAL: '普通',
+  MAGIC: '魔法',
+  RARE: '稀有',
+  UNIQUE: '传奇',
+  RELIC: '圣物',
+  CURRENCY: '通货',
+  GEM: '宝石',
+}
+
+/** Item Class words, so a class like "Two Handed Axe" still reads Chinese-first. */
+const CLASS_WORD_ZH: Record<string, string> = {
+  'One Handed': '单手',
+  'Two Handed': '双手',
+  Axe: '斧',
+  Mace: '锤',
+  Sword: '剑',
+  Dagger: '匕首',
+  Claw: '爪',
+  Bow: '弓',
+  Crossbow: '弩',
+  Spear: '长矛',
+  Quarterstaff: '长棍',
+  Wand: '法杖',
+  Sceptre: '权杖',
+  Staff: '长杖',
+  Shield: '盾牌',
+  Buckler: '小圆盾',
+  Focus: '法器',
+  Quiver: '箭袋',
+  Armour: '护甲',
+  Helmet: '头盔',
+  Gloves: '手套',
+  Boots: '靴子',
+  Ring: '戒指',
+  Amulet: '项链',
+  Belt: '腰带',
+  Flask: '药剂',
+  Jewel: '珠宝',
+  Tincture: '酊剂',
+  Charm: '护符',
+  'Soul Core': '灵魂核心',
+}
+
+/** Game item classes arrive plural ("Helmets", "Body Armours"). */
+function classWord(w: string): string {
+  return CLASS_WORD_ZH[w] ?? (w.endsWith('s') ? CLASS_WORD_ZH[w.slice(0, -1)] ?? w : w)
+}
+
+function rarityZh(rarity: string | null | undefined): string {
+  if (!rarity) return ''
+  const zh = RARITY_ZH[rarity.toUpperCase()]
+  return zh ? `${zh} ${rarity}` : rarity
+}
+
+function classZh(cls: string | null | undefined): string {
+  if (!cls) return ''
+  const zh = cls.split(' ').map(classWord).join('')
+  return zh === cls ? cls : `${zh} ${cls}`
+}
+
+function bilingual(name: string | null | undefined): string {
+  if (!name) return ''
+  const zh = nameZh(name)
+  return zh ? `${zh} ${name}` : name
+}
 
 const CAT_LABEL: Record<ModCategory, string> = {
   life: '生命',
@@ -138,12 +206,18 @@ function resDeltaClass(v: number): string {
     <h2>装备 · 点击选中比对</h2>
     <div v-for="(item, i) in items" :key="i" class="gear-card" :class="{ active: selectedIndex === i }" @click="select(i)">
       <div class="gear-title">
-        <span :class="'rarity-' + (item.rarity ?? 'NORMAL').toLowerCase()">{{ item.name ?? item.base ?? '未知物品' }}</span>
-        <span class="dim" v-if="item.base && item.name"> · {{ item.base }}</span>
+        <span :class="'rarity-' + (item.rarity ?? 'NORMAL').toLowerCase()">
+          <template v-if="item.name ?? item.base">
+            <template v-if="nameZh(item.name ?? item.base)">{{ nameZh(item.name ?? item.base) }}<span class="en">{{ item.name ?? item.base }}</span></template>
+            <template v-else>{{ item.name ?? item.base }}</template>
+          </template>
+          <template v-else>未知物品</template>
+        </span>
+        <span class="dim" v-if="item.base && item.name"> · <template v-if="nameZh(item.base)">{{ nameZh(item.base) }}<span class="en">{{ item.base }}</span></template><template v-else>{{ item.base }}</template></span>
       </div>
       <div class="dim meta">
-        {{ item.rarity }}{{ item.itemClass ? ` · ${item.itemClass}` : '' }}{{ item.corrupted ? ' · 已腐化' : ''
-        }}{{ item.rune ? ` · ${item.rune}` : '' }} · {{ item.mods.length }} 词缀
+        {{ rarityZh(item.rarity) }}{{ item.itemClass ? ` · ${classZh(item.itemClass)}` : '' }}{{ item.corrupted ? ' · 已腐化' : ''
+        }}{{ item.rune ? ` · ${bilingual(item.rune)}` : '' }} · {{ item.mods.length }} 词缀
       </div>
       <div v-if="priorityApplies(item) && priorityOf(item).core.length" class="core-row">
         <span
@@ -170,7 +244,7 @@ function resDeltaClass(v: number): string {
 
     <h2>换装比对</h2>
     <p class="dim tip">
-      游戏内对物品按 Ctrl+C 复制,粘贴到这里。<template v-if="selected">将与选中的「{{ selected.name ?? selected.base }}」比对。</template>
+      游戏内对物品按 Ctrl+C 复制,粘贴到这里。<template v-if="selected">将与选中的「{{ bilingual(selected.name ?? selected.base) }}」比对。</template>
       <template v-else>先在上方点击选中一件 Build 装备再粘贴,可直接看差异。</template>
     </p>
     <textarea v-model="pasteText" rows="5" placeholder="粘贴游戏内物品文本…" spellcheck="false" />
@@ -181,13 +255,16 @@ function resDeltaClass(v: number): string {
 
     <div v-if="pasted" class="paste-result">
       <div class="gear-title">
-        <span :class="'rarity-' + (pasted.rarity ?? 'NORMAL').toLowerCase()">{{ pasted.name ?? pasted.base }}</span>
-        <span class="dim" v-if="pasted.base && pasted.name"> · {{ pasted.base }}</span>
+        <span :class="'rarity-' + (pasted.rarity ?? 'NORMAL').toLowerCase()">
+          <template v-if="nameZh(pasted.name ?? pasted.base ?? '')">{{ nameZh(pasted.name ?? pasted.base) }}<span class="en">{{ pasted.name ?? pasted.base }}</span></template>
+          <template v-else>{{ pasted.name ?? pasted.base }}</template>
+        </span>
+        <span class="dim" v-if="pasted.base && pasted.name"> · {{ bilingual(pasted.base) }}</span>
       </div>
-      <div class="dim meta">{{ pasted.rarity }} · {{ pasted.mods.length }} 词缀 · 抗性 {{ resText(pastedRes!) }}</div>
+      <div class="dim meta">{{ rarityZh(pasted.rarity) }} · {{ pasted.mods.length }} 词缀 · 抗性 {{ resText(pastedRes!) }}</div>
 
       <template v-if="diff">
-        <div class="diff-title dim">相比「{{ selected!.name ?? selected!.base }}」:</div>
+        <div class="diff-title dim">相比「{{ bilingual(selected!.name ?? selected!.base) }}」:</div>
         <div v-for="(m, i) in diff.added" :key="'a' + i" class="mod-line up">
           + <template v-if="zhOf(m.text)">{{ zhOf(m.text) }}<span class="en">{{ m.text }}</span></template><template v-else>{{ m.text }}</template>
         </div>

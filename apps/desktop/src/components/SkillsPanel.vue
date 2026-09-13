@@ -1,20 +1,29 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { BuildSnapshot } from '@poe2coach/core'
+import { nameZh } from '../nameZh'
 
 const props = defineProps<{ build: BuildSnapshot }>()
 
 const totalGems = computed(() => props.build.skills.reduce((sum, g) => sum + g.gems.length, 0))
 const activeGems = computed(() => props.build.skills.reduce((sum, g) => sum + g.gems.filter((x) => x.enabled).length, 0))
+
+function gemLine(name: string): string {
+  const zh = nameZh(name)
+  return zh ? `${zh} ${name}` : name
+}
 </script>
 
 <template>
   <div class="skills-wrap">
     <div class="skills-meta dim">共 {{ build.skills.length }} 组 · {{ totalGems }} 颗宝石(启用 {{ activeGems }})。</div>
     <div v-for="(g, i) in build.skills" :key="i" class="skill-group">
-      <div class="skill-label">{{ g.label ?? '未命名技能组' }}</div>
+      <div class="skill-label">
+        <template v-if="nameZh(g.label ?? '')">{{ nameZh(g.label) }}<span class="en">{{ g.label }}</span></template>
+        <template v-else>{{ g.label ?? '未命名技能组' }}</template>
+      </div>
       <div v-for="gem in g.gems" :key="gem.name + i" class="gem" :class="{ off: !gem.enabled }">
-        {{ gem.name }}<span class="dim"> Lv{{ gem.level ?? '?' }}{{ gem.quality ? ` Q${gem.quality}` : '' }}{{ gem.enabled ? '' : ' ·停用' }}</span>
+        {{ gemLine(gem.name) }}<span class="dim"> Lv{{ gem.level ?? '?' }}{{ gem.quality ? ` Q${gem.quality}` : '' }}{{ gem.enabled ? '' : ' ·停用' }}</span>
       </div>
     </div>
     <div v-if="build.skills.length === 0" class="dim">这份 Build 没有配置技能组。</div>
@@ -39,6 +48,11 @@ const activeGems = computed(() => props.build.skills.reduce((sum, g) => sum + g.
   font-size: 14px;
   color: #d9a441;
   margin-bottom: 6px;
+}
+.en {
+  display: block;
+  color: #5b6379;
+  font-size: 10px;
 }
 .gem {
   font-size: 13px;

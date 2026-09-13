@@ -9,6 +9,7 @@ import LevelingPanel from './components/LevelingPanel.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import MapsPanel from './components/MapsPanel.vue'
 import { loadTree } from './treeData'
+import { nameZh } from './nameZh'
 import { addBuild, loadBuilds, removeBuild } from './buildStore'
 import type { StoredBuild } from './buildStore'
 import mapsJson from '@poe2coach/data/maps.json'
@@ -46,20 +47,29 @@ const progressSet = computed(() => {
 })
 
 const hasBuild = computed(() => !!build.value)
+
+function bilingual(en: string | null | undefined, fallback = ''): string {
+  if (!en) return fallback
+  const zh = nameZh(en)
+  return zh ? `${zh} ${en}` : en
+}
+
 const buildTitle = computed(() => {
   const b = build.value
   if (!b) return ''
-  return `${b.className ?? '未知'} · ${b.ascendClassName ?? ''} Lv${b.level ?? '?'}`
+  const cls = bilingual(b.className, '未知')
+  const asc = b.ascendClassName ? ` · ${bilingual(b.ascendClassName)}` : ''
+  return `${cls}${asc} Lv${b.level ?? '?'}`
 })
 
 const summary = computed(() => {
   const b = build.value
   if (!b) return null
   return [
-    { k: '职业', v: b.className ?? '—' },
-    { k: '升华', v: b.ascendClassName ?? '—' },
+    { k: '职业', v: bilingual(b.className, '—') },
+    { k: '升华', v: bilingual(b.ascendClassName, '—') },
     { k: '等级', v: b.level ?? '—' },
-    { k: '目标树版本', v: b.treeVersion ?? '—' },
+    { k: '目标树版本', v: b.treeVersion?.replace('_', '.') ?? '—' },
     { k: '天赋节点', v: b.passiveNodes.length },
     { k: '技能组', v: b.skills.length },
     { k: '装备', v: b.items.length },
@@ -115,11 +125,11 @@ function loadDemo() {
       {
         id: 1,
         rarity: 'UNIQUE',
-        name: 'Mailbreaker',
-        base: 'Ancient Spirit Helmet',
-        itemClass: 'Helmet',
-        slot: 'Helmet',
-        text: 'Rarity: UNIQUE\nItem Class: Helmets\nMailbreaker\nAncient Spirit Helmet\n',
+        name: 'Headhunter',
+        base: 'Heavy Belt',
+        itemClass: 'Belts',
+        slot: 'Belt',
+        text: 'Rarity: UNIQUE\nItem Class: Belts\nHeadhunter\nHeavy Belt\n',
       },
     ],
   }

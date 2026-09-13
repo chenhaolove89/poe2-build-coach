@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { BuildSnapshot, LevelingPlan, TreeData } from '@poe2coach/core'
+import { nameZh } from '../nameZh'
 
 const props = defineProps<{
   tree: TreeData
@@ -18,11 +19,16 @@ const shownSteps = computed(() => {
     next: steps.slice(n, n + 12),
   }
 })
+
+const startLabel = computed(() => {
+  const zh = nameZh(props.build.className)
+  return zh ? `${zh} ${props.build.className}` : (props.build.className ?? '未知')
+})
 </script>
 
 <template>
   <div>
-    <h2>逐级点法(从{{ build.className }}起点出发)</h2>
+    <h2>逐级点法(从{{ startLabel }}起点出发)</h2>
     <div class="pts-row">
       <label class="dim">你当前已用点数:</label>
       <input
@@ -39,13 +45,13 @@ const shownSteps = computed(() => {
     <template v-if="currentPoints != null && currentPoints > 0">
       <div class="sec-label done">应已分配({{ shownSteps.past.length }})</div>
       <div class="step done" v-for="step in shownSteps.past" :key="step.order">
-        {{ step.order }}. {{ step.name }}<span v-if="!step.isTarget" class="connector"> ·路径</span>
+        {{ step.order }}. <template v-if="nameZh(step.name)"><b>{{ nameZh(step.name) }}</b><span class="en">{{ step.name }}</span></template><template v-else>{{ step.name }}</template><span v-if="!step.isTarget" class="connector"> ·路径</span>
       </div>
       <div class="sec-label next" v-if="shownSteps.next.length">接下来</div>
     </template>
 
     <div class="step" v-for="step in shownSteps.next" :key="step.order">
-      {{ step.order }}. {{ step.name }}<span v-if="!step.isTarget" class="connector"> ·路径</span>
+      {{ step.order }}. <template v-if="nameZh(step.name)"><b>{{ nameZh(step.name) }}</b><span class="en">{{ step.name }}</span></template><template v-else>{{ step.name }}</template><span v-if="!step.isTarget" class="connector"> ·路径</span>
     </div>
 
     <div v-if="plan.unreachable.length" class="asc">
