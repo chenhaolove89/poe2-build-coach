@@ -57,6 +57,8 @@
     "Attack Speed": "攻击速度",
     "Cast Speed": "施法速度",
     "Skill Speed": "技能速度",
+    "Attack and Cast Speed": "攻击与施法速度",
+    "Minion Attack and Cast Speed": "召唤物攻击与施法速度",
     "Movement Speed": "移动速度",
     "Critical Hit Chance": "暴击率",
     "Critical Damage Bonus": "暴击伤害加成",

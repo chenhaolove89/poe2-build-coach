@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { nodePosition, treeBounds, translateStat } from '@poe2coach/core'
+import { buildEdges, nodePosition, treeBounds, translateStat } from '@poe2coach/core'
 import type { TreeData, TreeNode } from '@poe2coach/core'
 import statTranslationJson from '@poe2coach/data/stat-translations.json'
 

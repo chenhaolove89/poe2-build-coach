@@ -38,7 +38,7 @@ function onParse() {
 
 /** Demo fixture: a connected blob of nodes from the real tree, re-encoded as a share code. */
 function loadDemo() {
-  const firstKeystone = Object.values(tree.nodes).find((n) => n.isKeystone && !n.isAscendancyNode)
+  const firstKeystone = Object.values(tree.nodes).find((n) => n.isKeystone && !n.ascendancyName)
   const picked: number[] = []
   const seen = new Set<number>()
   const queue: number[] = firstKeystone ? [firstKeystone.id] : [Number(Object.keys(tree.nodes)[0])]
@@ -46,7 +46,7 @@ function loadDemo() {
     const id = queue.shift()!
     if (seen.has(id)) continue
     const node = tree.nodes[id]
-    if (!node || node.isAscendancyNode || node.isMastery) continue
+    if (!node || node.ascendancyName || node.isMastery) continue
     seen.add(id)
     picked.push(id)
     for (const c of node.connections ?? []) queue.push(c.id)
