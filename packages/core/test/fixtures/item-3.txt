@@ -1,0 +1,25 @@
+Rarity: UNIQUE
+Essentia Sanguis
+Furtive Wraps
+Evasion: 116
+Energy Shield: 37
+Unique ID: 30f99ece5bc8c4a713f8a0c10a705c358db5737bfe9c6f93b94024182c24a5f7
+Item Level: 82
+Quality: 0
+Sockets: S
+Rune: Greater Iron Rune
+LevelReq: 52
+Implicits: 3
+{enchant}{rune}18% increased Armour, Evasion and Energy Shield
+{enchant}{rune}Bonded: +20 to maximum Life
+{enchant}{rune}Bonded: +20 to maximum Mana
+57% increased Evasion and Energy Shield
+Adds 1 to 49 Lightning damage to Attacks
++24 to Intelligence
++27% to Lightning Resistance
+Life Leech is Converted to Energy Shield Leech
+<ModRange id="4" range="0.5"/>
+<ModRange id="5" range="0.5"/>
+<ModRange id="6" range="0.5"/>
+<ModRange id="7" range="0.5"/>
+<ModRange id="8" range="0.5"/>

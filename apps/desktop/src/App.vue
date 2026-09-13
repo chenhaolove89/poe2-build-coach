@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { PobParseError, buildToShareCode, parsePobCode } from '@poe2coach/core'
-import type { BuildSnapshot, TreeData } from '@poe2coach/core'
+import { PobParseError, buildToShareCode, parseItemText, parsePobCode } from '@poe2coach/core'
+import type { BuildSnapshot, GameItem, TreeData } from '@poe2coach/core'
 import TreeCanvas from './components/TreeCanvas.vue'
+import ResistancePanel from './components/ResistancePanel.vue'
+import GearPanel from './components/GearPanel.vue'
 import { loadTree } from './treeData'
 
 const tree: TreeData = loadTree()
@@ -12,6 +14,7 @@ const error = ref<string | null>(null)
 const build = ref<BuildSnapshot | null>(null)
 
 const activeSet = computed(() => new Set(build.value?.passiveNodes ?? []))
+const gameItems = computed<GameItem[]>(() => (build.value?.items ?? []).map((i) => parseItemText(i.text)))
 
 function onParse() {
   error.value = null
@@ -42,6 +45,7 @@ function loadDemo() {
     className: 'Witch',
     ascendClassName: 'Infernalist',
     level: 88,
+    treeVersion: '0_5',
     passiveNodes: picked,
     treeSpecUrls: [],
     skills: [
@@ -106,6 +110,9 @@ const summary = computed(() => {
           </div>
         </div>
 
+        <h2>抗性(装备合计,上限75%)</h2>
+        <ResistancePanel :items="gameItems" />
+
         <h2>技能组</h2>
         <div v-for="(g, i) in build!.skills" :key="i" class="skill-group">
           <div class="skill-label">{{ g.label ?? '未命名技能组' }}</div>
@@ -115,14 +122,7 @@ const summary = computed(() => {
         </div>
         <div v-if="build!.skills.length === 0" class="dim">—</div>
 
-        <h2>装备</h2>
-        <div v-for="item in build!.items" :key="item.id" class="item">
-          <div :class="'rarity-' + (item.rarity ?? 'NORMAL').toLowerCase()">
-            {{ item.name ?? item.base }}<span v-if="item.name && item.base" class="dim"> · {{ item.base }}</span>
-          </div>
-          <div class="dim">{{ item.rarity }}{{ item.slot ? ` · ${item.slot}` : '' }}</div>
-        </div>
-        <div v-if="build!.items.length === 0" class="dim">—</div>
+        <GearPanel :items="gameItems" />
       </template>
     </aside>
 
@@ -233,19 +233,6 @@ button:disabled {
 .gem.off {
   color: #5b6379;
   text-decoration: line-through;
-}
-.item {
-  margin-bottom: 10px;
-  font-size: 13px;
-}
-.rarity-unique {
-  color: #af6025;
-}
-.rarity-rare {
-  color: #ffff77;
-}
-.rarity-magic {
-  color: #8888ff;
 }
 .dim {
   color: #6b7390;

@@ -1,0 +1,13 @@
+Rarity: UNIQUE
+From Nothing
+Diamond
+Unique ID: 24d1c4efd7b9cf708dc92311925105a2d8d724d3dd2f865d5263fd74b3c799c6
+Item Level: 81
+LevelReq: 0
+Radius: Small
+Limited to: 1
+Implicits: 0
+Passives in Radius of Wildsurge Incantation can be Allocated
+without being connected to your tree
+Corrupted
+<ModRange id="1" range="0.5"/>

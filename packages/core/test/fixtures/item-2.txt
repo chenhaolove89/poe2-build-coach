@@ -1,0 +1,16 @@
+Rarity: RARE
+Chimeric Joy
+Sapphire
+Unique ID: 3dd79ed79ece340270ff2032e16596b0992fab8cb74c25ee25be8438a49a2c43
+Item Level: 81
+LevelReq: 0
+Implicits: 0
+19% increased maximum Energy Shield
+17% increased Critical Damage Bonus
+9% increased Skill Effect Duration
+11% increased Damage if you have Consumed a Corpse Recently
+Corrupted
+<ModRange id="1" range="0.5"/>
+<ModRange id="2" range="0.5"/>
+<ModRange id="3" range="0.5"/>
+<ModRange id="4" range="0.5"/>

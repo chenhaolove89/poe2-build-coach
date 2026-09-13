@@ -109,3 +109,46 @@ export class PobParseError extends Error {
     this.name = 'PobParseError'
   }
 }
+
+/** One mod line on an item, with its origin tag resolved. */
+export type ModKind = 'implicit' | 'explicit' | 'enchant' | 'rune' | 'fractured' | 'crafted' | 'pseudo'
+
+export interface ItemMod {
+  /** Mod text without {tag} prefixes. */
+  text: string
+  kind: ModKind
+}
+
+/** An item parsed from in-game Ctrl+C clipboard text or a PoB <Item> body. */
+export interface GameItem {
+  rarity: string | null
+  name: string | null
+  base: string | null
+  itemClass: string | null
+  itemLevel: number | null
+  levelReq: number | null
+  quality: number | null
+  corrupted: boolean
+  armour: number | null
+  evasion: number | null
+  energyShield: number | null
+  ward: number | null
+  rune: string | null
+  sockets: string | null
+  mods: ItemMod[]
+  rawText: string
+}
+
+export interface ResistanceTotals {
+  fire: number
+  cold: number
+  lightning: number
+  chaos: number
+}
+
+/** Multiset diff of two items' mods plus the resistance swing. */
+export interface ItemDiff {
+  added: ItemMod[]
+  removed: ItemMod[]
+  resistances: ResistanceTotals
+}
