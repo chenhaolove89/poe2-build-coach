@@ -56,6 +56,18 @@ npm run tauri dev       # 开发运行
 npm run tauri build     # 产出安装包(src-tauri/target/release/bundle/)
 ```
 
+本地打包推荐用 `scripts\build-tauri.bat`,它在 `npm run tauri build` 外面套好了两件必须做的事:
+
+- **构建前强制关掉正在运行的旧版本**。运行中的 `poe2-build-coach.exe` 会锁住 `target\release` 里的同名文件,cargo 链接时会直接失败(`failed to remove file ...: 拒绝访问 (os error 5)`)。脚本会等文件真的能删掉再继续,删不掉就报明确的错,而不是让 cargo 抛出难懂的 access denied。
+- **构建成功后自动启动新版本**;只要安装包不启动,加 `--no-start`。
+
+```bash
+scripts\build-tauri.bat             # 关闭旧的 → 构建 → 启动新的
+scripts\build-tauri.bat --no-start  # 只出安装包
+```
+
+CI 里不要用这个脚本(那里没有桌面、也没有实例要关);release 工作流直接调 `npx tauri build`。
+
 ## 发布流程
 
 1. **下载页**:推送到 `main` 后 GitHub Actions 自动把 `apps/website` 部署到 Pages(仓库 Settings → Pages → Source 选 GitHub Actions)。
