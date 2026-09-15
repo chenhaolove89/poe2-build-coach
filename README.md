@@ -12,11 +12,26 @@
 - 滚轮缩放 · 拖拽平移 · 双击复位 · 节点悬停显示词缀
 - 内置示例(从真实树生成,用于演示闭环)
 
+## 服务器与语言(设置页)
+
+游戏分三个独立交易站,每个站的客户端只用自己那一种语言写物品文本,所以"粘贴的装备"必须和所在服的词缀模板对上才能查出价格:
+
+| 选项 | 交易站 | 客户端语言 | 匿名查询 |
+| --- | --- | --- | --- |
+| 国际服 | `www.pathofexile.com/api/trade2` | English | 可以 |
+| 国服 | `poe.game.qq.com/api/trade2` | 简体中文 | **需登录** |
+| 台服 | `pathofexile.tw/api/trade2` | 繁體中文 | 可以 |
+
+- **国服**:数据接口(联赛、词缀模板、通货名)公开,但 `/search` 未登录会返回 401。在设置页点**关联登录**,会在一个独立窗口里打开腾讯官方登录页,用 QQ / 微信登录后自动取回会话 Cookie —— 和查价器常见的做法一致。账号密码只填在腾讯那一页,本工具不会接触;读到的只是登录后的 `POESESSID`,只存本机、只发给 `poe.game.qq.com`,仅用于只读查询。也可以手动粘贴(浏览器 F12 → Cookies)。不填也能做本地词缀匹配。
+- **语言**:界面语言(简体/繁体)与服务器互相独立 —— 国服玩家可以读繁体,台服玩家可以读简体。简体↔繁体是**字符转换**,不是重新本地化:国服叫「引路石」、台服叫「換界石」,这类用词差异来自各服自己的数据。
+
+台服与国服都由当地代理商运营(国服腾讯,台服熱酷科技),国际服为 Grinding Gear Games。三者的交易站是各自独立的服务,联赛与物价互不相通。
+
 ## 架构
 
 ```
-packages/core    纯 TS 业务核心(零环境依赖):PoB 码编解码/解析、天赋树几何、(后续)diff 引擎
-packages/data    版本锁定的游戏数据包(tree.json,来自 PoB2,MIT)
+packages/core    纯 TS 业务核心(零环境依赖):PoB 码编解码/解析、天赋树几何、物品解析、查价查询构造、简繁转换
+packages/data    版本锁定的游戏数据包(tree.json 来自 PoB2 MIT;三服词缀模板、通货名、简繁对照表由 scripts 生成)
 apps/desktop     Tauri 2 + Vue 3 桌面端
 apps/website     GitHub Pages 下载页(纯静态)
 ```
@@ -57,9 +72,24 @@ git tag v0.1.0 && git push origin v0.1.0
 - 天赋树:`packages/data/trees/0_5/tree.json`,取自 [PathOfBuilding-PoE2](https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2)(MIT License)。
 - 版本升级(如 12 月 1.0):下载新版 `TreeData/<ver>/tree.json` 放入 `packages/data/trees/<ver>/`,`apps/desktop/src/treeData.ts` 指向新版本即可。
 
+三个服的词缀模板与通货名重新抓取(联赛更新后跑一次):
+
+```bash
+node scripts/fetch-trade-data.mjs --write          # 全部三个服
+node scripts/fetch-trade-data.mjs --realm cn --write   # 只更新国服
+```
+
+简繁对照表重新生成(需要网络拉取 OpenCC 词典,结果缓存于 `.tmp/opencc/`):
+
+```bash
+node scripts/build-zh-variant.mjs --write
+```
+
+两个脚本都会把语料里用不到的条目裁掉(词缀模板只留 explicit/implicit/fractured/crafted/enchant/rune/desecrated;简繁词组表只留本工具会显示的词),输出都是确定性的 —— 重跑不会产生无意义的 diff。
+
 ## 红线
 
-不读内存、不注入、不发按键、不碰封包。只做离线规划与对照;官方接口(未来角色导入)仅走 OAuth 只读。
+不读内存、不注入、不发按键、不碰封包。只做离线规划与对照;官方接口只读(交易站搜索/取回挂单),不登录游戏账号、不进行任何交易或上架操作。国服关联登录在独立窗口里加载运营商自己的登录页,本工具不接触账号密码,只读取登录后的会话 Cookie,且只发给该服。国服数据来源为腾讯;国际服为 Grinding Gear Games,台服为熱酷科技。
 
 ## 免责声明
 

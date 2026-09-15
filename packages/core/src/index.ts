@@ -22,3 +22,7 @@ export { buildItemQuery, shouldRetryOffline, MAX_STAT_FILTERS } from './trade/bu
 export type { TradeQuery, BuiltQuery } from './trade/buildQuery.js'
 export { summarisePrices } from './trade/prices.js'
 export type { PriceListing, PriceSummary } from './trade/prices.js'
+export { REALMS, REALM_IDS, isRealmId, realmOf, realmVariant } from './trade/realms.js'
+export type { Realm, RealmId, RealmLanguage } from './trade/realms.js'
+export { createZhConverter, rewriteVariant } from './i18n/variant.js'
+export type { ZhConverter, ZhVariant, ZhVariantTables, VariantTable } from './i18n/variant.js'

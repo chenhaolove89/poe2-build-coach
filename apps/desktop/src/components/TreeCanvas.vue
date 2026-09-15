@@ -3,12 +3,14 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { buildEdges, nodePosition, treeBounds, translateStat } from '@poe2coach/core'
 import type { TreeData, TreeNode } from '@poe2coach/core'
 import statTranslationJson from '@poe2coach/data/stat-translations.json'
-import { nameZh } from '../nameZh'
+import { dialect, t, zhName } from '../i18n'
 
 const STAT_TRANSLATIONS = statTranslationJson as unknown as Parameters<typeof translateStat>[1]
 
+/** Tree stats are English in the data packs, so the dictionary always answers. */
 function statZh(s: string): string | null {
-  return translateStat(s, STAT_TRANSLATIONS)
+  const zh = translateStat(s, STAT_TRANSLATIONS)
+  return zh ? t(zh) : null
 }
 
 const props = defineProps<{
@@ -40,14 +42,16 @@ let resizeObs: ResizeObserver | null = null
 const hoverHtml = computed(() => {
   const h = hover.value
   if (!h) return ''
-  const kind = h.node.isKeystone
-    ? '核心天赋 Keystone'
-    : h.node.isNotable
-      ? '显著天赋 Notable'
-      : h.node.ascendancyName
-        ? '升华天赋 Ascendancy'
-        : '普通天赋 Passive'
-  const activeMark = props.active.has(h.node.id) ? ' · <b style="color:#e8b04b">已规划</b>' : ''
+  const kind = t(
+    h.node.isKeystone
+      ? '核心天赋 Keystone'
+      : h.node.isNotable
+        ? '显著天赋 Notable'
+        : h.node.ascendancyName
+          ? '升华天赋 Ascendancy'
+          : '普通天赋 Passive',
+  )
+  const activeMark = props.active.has(h.node.id) ? ` · <b style="color:#e8b04b">${t('已规划')}</b>` : ''
   const stats = h.node.stats
     .slice(0, 5)
     .map((s) => {
@@ -57,11 +61,12 @@ const hoverHtml = computed(() => {
         : `<div>${escapeHtml(s)}</div>`
     })
     .join('')
-  const more = h.node.stats.length > 5 ? `<div class="en-stat">…还有 ${h.node.stats.length - 5} 条</div>` : ''
-  const nameZhText = nameZh(h.node.name)
+  const more =
+    h.node.stats.length > 5 ? `<div class="en-stat">…${t('还有')} ${h.node.stats.length - 5} ${t('条')}</div>` : ''
+  const nameZhText = zhName(h.node.name)
   const nameHtml = nameZhText
-    ? `<b>${escapeHtml(nameZhText)}</b><span class="en-stat">${escapeHtml(h.node.name)}</span>`
-    : `<b>${escapeHtml(h.node.name)}</b>`
+    ? `<b>${escapeHtml(nameZhText)}</b><span class="en-stat">${escapeHtml(dialect(h.node.name))}</span>`
+    : `<b>${escapeHtml(dialect(h.node.name))}</b>`
   return `${nameHtml} <span style="color:#7a8299">(${kind})</span>${activeMark}${stats}${more}`
 })
 
@@ -275,7 +280,7 @@ onBeforeUnmount(() => {
   <div ref="wrapEl" class="tree-wrap">
     <canvas ref="canvasEl" />
     <div v-if="hover" class="tooltip" :style="{ left: hover.x + 14 + 'px', top: hover.y + 14 + 'px' }" v-html="hoverHtml" />
-    <div class="hint">滚轮缩放 · 拖拽平移 · 双击复位</div>
+    <div class="hint">{{ t('滚轮缩放 · 拖拽平移 · 双击复位') }}</div>
   </div>
 </template>
 

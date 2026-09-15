@@ -9,15 +9,17 @@ import LevelingPanel from './components/LevelingPanel.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import MapsPanel from './components/MapsPanel.vue'
 import PricePanel from './components/PricePanel.vue'
+import SettingsPanel from './components/SettingsPanel.vue'
 import { loadTree } from './treeData'
-import { nameZh } from './nameZh'
+import { bilingual, t } from './i18n'
 import { addBuild, loadBuilds, removeBuild } from './buildStore'
 import type { StoredBuild } from './buildStore'
+import { realm } from './settings'
 import mapsJson from '@poe2coach/data/maps.json'
 
 const MAP_COUNT = (mapsJson as unknown as { maps: unknown[] }).maps.length
 
-type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps' | 'price'
+type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps' | 'price' | 'settings'
 
 const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'home', label: '主页' },
@@ -27,6 +29,7 @@ const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'leveling', label: '升级', requiresBuild: true },
   { key: 'price', label: '查价' },
   { key: 'maps', label: '地图' },
+  { key: 'settings', label: '设置' },
 ]
 
 const tree: TreeData = loadTree()
@@ -50,17 +53,16 @@ const progressSet = computed(() => {
 
 const hasBuild = computed(() => !!build.value)
 
-function bilingual(en: string | null | undefined, fallback = ''): string {
-  if (!en) return fallback
-  const zh = nameZh(en)
-  return zh ? `${zh} ${en}` : en
+/** "中文 English" with the language setting applied; see i18n.ts. */
+function bi(en: string | null | undefined, fallback = ''): string {
+  return bilingual(en, fallback)
 }
 
 const buildTitle = computed(() => {
   const b = build.value
   if (!b) return ''
-  const cls = bilingual(b.className, '未知')
-  const asc = b.ascendClassName ? ` · ${bilingual(b.ascendClassName)}` : ''
+  const cls = bi(b.className, t('未知'))
+  const asc = b.ascendClassName ? ` · ${bi(b.ascendClassName)}` : ''
   return `${cls}${asc} Lv${b.level ?? '?'}`
 })
 
@@ -68,13 +70,13 @@ const summary = computed(() => {
   const b = build.value
   if (!b) return null
   return [
-    { k: '职业', v: bilingual(b.className, '—') },
-    { k: '升华', v: bilingual(b.ascendClassName, '—') },
-    { k: '等级', v: b.level ?? '—' },
-    { k: '目标树版本', v: b.treeVersion?.replace('_', '.') ?? '—' },
-    { k: '天赋节点', v: b.passiveNodes.length },
-    { k: '技能组', v: b.skills.length },
-    { k: '装备', v: b.items.length },
+    { k: t('职业'), v: bi(b.className, '—') },
+    { k: t('升华'), v: bi(b.ascendClassName, '—') },
+    { k: t('等级'), v: b.level ?? '—' },
+    { k: t('目标树版本'), v: b.treeVersion?.replace('_', '.') ?? '—' },
+    { k: t('天赋节点'), v: b.passiveNodes.length },
+    { k: t('技能组'), v: b.skills.length },
+    { k: t('装备'), v: b.items.length },
   ]
 })
 
@@ -168,26 +170,29 @@ function deleteStored(id: string) {
           :disabled="n.requiresBuild && !hasBuild"
           @click="view = n.key"
         >
-          {{ n.label }}
+          {{ t(n.label) }}
         </button>
       </nav>
+      <span class="realm-badge" :title="realm.apiBase" @click="view = 'settings'">
+        {{ t(realm.label) }} · {{ realm.lang === 'en' ? 'EN' : realm.lang === 'zh-Hans' ? '简' : '繁' }}
+      </span>
       <span v-if="hasBuild" class="build-badge">{{ buildTitle }}</span>
     </header>
 
     <!-- ===================== 主页 ===================== -->
     <main v-if="view === 'home'" class="home">
       <section class="hero-card">
-        <h2>导入 Build</h2>
-        <textarea v-model="codeInput" rows="5" placeholder="粘贴 Path of Building 分享码…" spellcheck="false" />
+        <h2>{{ t('导入 Build') }}</h2>
+        <textarea v-model="codeInput" rows="5" :placeholder="t('粘贴 Path of Building 分享码…')" spellcheck="false" />
         <div class="btn-row">
-          <button class="primary" :disabled="!codeInput.trim()" @click="onParse">解析 Build</button>
-          <button @click="loadDemo">加载示例</button>
+          <button class="primary" :disabled="!codeInput.trim()" @click="onParse">{{ t('解析 Build') }}</button>
+          <button @click="loadDemo">{{ t('加载示例') }}</button>
         </div>
         <p v-if="error" class="error">{{ error }}</p>
       </section>
 
       <section v-if="hasBuild" class="card span-2">
-        <h3>概览</h3>
+        <h3>{{ t('概览') }}</h3>
         <div class="kv">
           <div v-for="row in summary" :key="row.k" class="kv-row">
             <span class="k">{{ row.k }}</span>
@@ -197,57 +202,71 @@ function deleteStored(id: string) {
       </section>
 
       <section v-if="hasBuild" class="card">
-        <h3>元素抗性</h3>
+        <h3>{{ t('元素抗性') }}</h3>
         <ResistancePanel :items="gameItems" />
       </section>
 
       <button class="card feature" :disabled="!hasBuild" @click="view = 'tree'">
-        <h3>🌳 天赋树</h3>
-        <p class="desc">{{ hasBuild ? `${build!.passiveNodes.length} 个目标节点,悬停看中英对照` : '先导入一份 Build' }}</p>
-        <p class="go">进入 →</p>
+        <h3>🌳 {{ t('天赋树') }}</h3>
+        <p class="desc">
+          {{ hasBuild ? t(`${build!.passiveNodes.length} 个目标节点,悬停看中英对照`) : t('先导入一份 Build') }}
+        </p>
+        <p class="go">{{ t('进入') }} →</p>
       </button>
 
       <button class="card feature" :disabled="!hasBuild" @click="view = 'gear'">
-        <h3>🛡 装备</h3>
-        <p class="desc">{{ hasBuild ? `${build!.items.length} 件装备 · 词缀重心与换装比对` : '先导入一份 Build' }}</p>
-        <p class="go">进入 →</p>
+        <h3>🛡 {{ t('装备') }}</h3>
+        <p class="desc">
+          {{ hasBuild ? t(`${build!.items.length} 件装备 · 词缀重心与换装比对`) : t('先导入一份 Build') }}
+        </p>
+        <p class="go">{{ t('进入') }} →</p>
       </button>
 
       <button class="card feature" :disabled="!hasBuild" @click="view = 'skills'">
-        <h3>💎 技能</h3>
-        <p class="desc">{{ hasBuild ? `${build!.skills.length} 组 · ${totalGems} 颗宝石` : '先导入一份 Build' }}</p>
-        <p class="go">进入 →</p>
+        <h3>💎 {{ t('技能') }}</h3>
+        <p class="desc">
+          {{ hasBuild ? t(`${build!.skills.length} 组 · ${totalGems} 颗宝石`) : t('先导入一份 Build') }}
+        </p>
+        <p class="go">{{ t('进入') }} →</p>
       </button>
 
       <button class="card feature" :disabled="!hasBuild" @click="view = 'leveling'">
-        <h3>📈 升级</h3>
-        <p class="desc">{{ hasBuild ? `${plan!.steps.length} 步逐级点法 · 输入点数看进度` : '先导入一份 Build' }}</p>
-        <p class="go">进入 →</p>
+        <h3>📈 {{ t('升级') }}</h3>
+        <p class="desc">
+          {{ hasBuild ? t(`${plan!.steps.length} 步逐级点法 · 输入点数看进度`) : t('先导入一份 Build') }}
+        </p>
+        <p class="go">{{ t('进入') }} →</p>
       </button>
 
       <button class="card feature" @click="view = 'maps'">
-        <h3>🗺 地图</h3>
-        <p class="desc">{{ MAP_COUNT }} 个异界地区 · 跑图评分/布局/Boss 一览</p>
-        <p class="go">进入 →</p>
+        <h3>🗺 {{ t('地图') }}</h3>
+        <p class="desc">{{ t(`${MAP_COUNT} 个异界地区 · 跑图评分/布局/Boss 一览`) }}</p>
+        <p class="go">{{ t('进入') }} →</p>
       </button>
 
       <button class="card feature" @click="view = 'price'">
-        <h3>💰 查价</h3>
-        <p class="desc">粘贴装备取回官方交易站实时挂单 · 只读接口</p>
-        <p class="go">进入 →</p>
+        <h3>💰 {{ t('查价') }}</h3>
+        <p class="desc">{{ t('粘贴装备取回官方交易站实时挂单 · 只读接口') }}</p>
+        <p class="go">{{ t('进入') }} →</p>
+      </button>
+
+      <button class="card feature" @click="view = 'settings'">
+        <h3>⚙️ {{ t('设置') }}</h3>
+        <p class="desc">{{ t('切换国际服 / 国服 / 台服，切换简体与繁体') }}</p>
+        <p class="go">{{ t('进入') }} →</p>
       </button>
 
       <section class="card span-2">
         <div class="lib-head">
-          <h3>我的 Build 库({{ builds.length }})</h3>
-          <button v-if="hasBuild" class="lib-save" @click="saveCurrent">+ 保存当前</button>
+          <h3>{{ t('我的 Build 库') }}({{ builds.length }})</h3>
+          <button v-if="hasBuild" class="lib-save" @click="saveCurrent">+ {{ t('保存当前') }}</button>
         </div>
         <div v-for="b in builds" :key="b.id" class="lib-item">
-          <span class="lib-name" title="载入这份 Build" @click="loadStored(b)">{{ b.name }}</span>
+          <span class="lib-name" :title="t('载入这份 Build')" @click="loadStored(b)">{{ b.name }}</span>
           <span class="dim">{{ new Date(b.savedAt).toLocaleDateString() }}</span>
-          <span class="lib-del" title="删除" @click="deleteStored(b.id)">✕</span>
+          <span class="lib-del" :title="t('删除')" @click="deleteStored(b.id)">✕</span>
         </div>
-        <div v-if="!builds.length" class="dim">保存后多份 Build 可随时切换,刷新不丢。</div>
+        <div v-if="!builds.length" class="dim">{{ t('保存后多份 Build 可随时切换,刷新不丢。') }}</div>
       </section>
     </main>
 
@@ -273,7 +292,11 @@ function deleteStored(id: string) {
     </main>
 
     <main v-else-if="view === 'price'" class="centered">
-      <PricePanel />
+      <PricePanel @open-settings="view = 'settings'" />
+    </main>
+
+    <main v-else-if="view === 'settings'" class="centered">
+      <SettingsPanel />
     </main>
   </div>
 </template>
@@ -326,13 +349,28 @@ function deleteStored(id: string) {
   cursor: not-allowed;
 }
 .build-badge {
-  margin-left: auto;
+  margin-left: 8px;
   font-size: 12px;
   color: #7dd087;
   background: #14201a;
   border: 1px solid #2f4a38;
   border-radius: 10px;
   padding: 3px 10px;
+}
+.realm-badge {
+  margin-left: auto;
+  font-size: 11px;
+  color: #9aa3bd;
+  background: #171b26;
+  border: 1px solid #2c3244;
+  border-radius: 10px;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.realm-badge:hover {
+  border-color: #e8b04b;
+  color: #e8b04b;
 }
 
 .home {

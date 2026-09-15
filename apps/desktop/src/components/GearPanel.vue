@@ -4,13 +4,18 @@ import { categoryCounts, compareItems, itemPriorityCheck, itemResistances, parse
 import type { GameItem, ItemDiff, ModCategory } from '@poe2coach/core'
 import priorityJson from '@poe2coach/data/affix-priorities.json'
 import translationJson from '@poe2coach/data/mod-translations.json'
-import { nameZh } from '../nameZh'
+import { bilingual, dialect, t, zhName } from '../i18n'
 
 const PRIORITY = priorityJson as unknown as Parameters<typeof itemPriorityCheck>[1]
 const TRANSLATIONS = translationJson as unknown as Parameters<typeof translateMod>[1]
 
+/**
+ * The mod dictionary only covers English wording, so a 国服 or 台服 item line
+ * comes back null and the template falls through to {@link dialect}.
+ */
 function zhOf(text: string): string | null {
-  return translateMod(text, TRANSLATIONS)
+  const zh = translateMod(text, TRANSLATIONS)
+  return zh ? t(zh) : null
 }
 
 const KEYWORD_LABEL: Record<string, string> = {
@@ -78,19 +83,16 @@ function classWord(w: string): string {
 function rarityZh(rarity: string | null | undefined): string {
   if (!rarity) return ''
   const zh = RARITY_ZH[rarity.toUpperCase()]
-  return zh ? `${zh} ${rarity}` : rarity
+  return zh ? `${t(zh)} ${rarity}` : dialect(rarity)
 }
 
 function classZh(cls: string | null | undefined): string {
   if (!cls) return ''
   const zh = cls.split(' ').map(classWord).join('')
-  return zh === cls ? cls : `${zh} ${cls}`
-}
-
-function bilingual(name: string | null | undefined): string {
-  if (!name) return ''
-  const zh = nameZh(name)
-  return zh ? `${zh} ${name}` : name
+  // No word matched, so this is the client's own class name rather than English
+  // ("护甲" on 国服) — bring it into the reader's variant instead of prefixing it.
+  if (zh === cls) return dialect(cls)
+  return `${t(zh)} ${cls}`
 }
 
 const CAT_LABEL: Record<ModCategory, string> = {
@@ -125,7 +127,7 @@ function priorityOf(item: GameItem) {
 }
 
 function kwLabel(kw: string): string {
-  return KEYWORD_LABEL[kw] ?? kw
+  return t(KEYWORD_LABEL[kw] ?? kw)
 }
 
 const selectedIndex = ref<number | null>(null)
@@ -181,7 +183,7 @@ function resText(r: { fire: number; cold: number; lightning: number; chaos: numb
   if (r.cold) parts.push(`冰${r.cold > 0 ? '+' : ''}${r.cold}`)
   if (r.lightning) parts.push(`电${r.lightning > 0 ? '+' : ''}${r.lightning}`)
   if (r.chaos) parts.push(`混沌${r.chaos > 0 ? '+' : ''}${r.chaos}`)
-  return parts.length ? parts.join(' / ') : '—'
+  return parts.length ? t(parts.join(' / ')) : '—'
 }
 
 function resDeltaClass(v: number): string {
@@ -191,10 +193,10 @@ function resDeltaClass(v: number): string {
 
 <template>
   <div>
-    <h2>装备重心(全装备词缀分布)</h2>
+    <h2>{{ t('装备重心(全装备词缀分布)') }}</h2>
     <div v-if="items.length" class="profile">
       <div v-for="p in profile" :key="p.category" class="profile-row">
-        <span class="profile-label">{{ CAT_LABEL[p.category] }}</span>
+        <span class="profile-label">{{ t(CAT_LABEL[p.category]) }}</span>
         <div class="profile-bar">
           <div class="profile-fill" :style="{ width: (p.count / profileMax) * 100 + '%', background: CAT_COLOR[p.category] }" />
         </div>
@@ -203,21 +205,21 @@ function resDeltaClass(v: number): string {
     </div>
     <div v-else class="dim">—</div>
 
-    <h2>装备 · 点击选中比对</h2>
+    <h2>{{ t('装备 · 点击选中比对') }}</h2>
     <div v-for="(item, i) in items" :key="i" class="gear-card" :class="{ active: selectedIndex === i }" @click="select(i)">
       <div class="gear-title">
         <span :class="'rarity-' + (item.rarity ?? 'NORMAL').toLowerCase()">
           <template v-if="item.name ?? item.base">
-            <template v-if="nameZh(item.name ?? item.base)">{{ nameZh(item.name ?? item.base) }}<span class="en">{{ item.name ?? item.base }}</span></template>
-            <template v-else>{{ item.name ?? item.base }}</template>
+            <template v-if="zhName(item.name ?? item.base)">{{ zhName(item.name ?? item.base) }}<span class="en">{{ dialect(item.name ?? item.base) }}</span></template>
+            <template v-else>{{ dialect(item.name ?? item.base) }}</template>
           </template>
-          <template v-else>未知物品</template>
+          <template v-else>{{ t('未知物品') }}</template>
         </span>
-        <span class="dim" v-if="item.base && item.name"> · <template v-if="nameZh(item.base)">{{ nameZh(item.base) }}<span class="en">{{ item.base }}</span></template><template v-else>{{ item.base }}</template></span>
+        <span class="dim" v-if="item.base && item.name"> · <template v-if="zhName(item.base)">{{ zhName(item.base) }}<span class="en">{{ dialect(item.base) }}</span></template><template v-else>{{ dialect(item.base) }}</template></span>
       </div>
       <div class="dim meta">
-        {{ rarityZh(item.rarity) }}{{ item.itemClass ? ` · ${classZh(item.itemClass)}` : '' }}{{ item.corrupted ? ' · 已腐化' : ''
-        }}{{ item.rune ? ` · ${bilingual(item.rune)}` : '' }} · {{ item.mods.length }} 词缀
+        {{ rarityZh(item.rarity) }}{{ item.itemClass ? ` · ${classZh(item.itemClass)}` : '' }}{{ item.corrupted ? ` · ${t('已腐化')}` : ''
+        }}{{ item.rune ? ` · ${bilingual(item.rune)}` : '' }} · {{ item.mods.length }} {{ t('词缀') }}
       </div>
       <div v-if="priorityApplies(item) && priorityOf(item).core.length" class="core-row">
         <span
@@ -225,53 +227,53 @@ function resDeltaClass(v: number): string {
           :key="kw"
           class="core-badge"
           :class="priorityOf(item).coreHits.includes(kw) ? 'has' : 'missing'"
-          :title="'核心词缀:' + kw"
+          :title="t('核心词缀:') + kw"
         >
           {{ priorityOf(item).coreHits.includes(kw) ? '✓' : '✗' }} {{ kwLabel(kw) }}
         </span>
       </div>
       <div v-if="selectedIndex === i" class="mods">
         <div v-for="(mod, mi) in item.mods" :key="mi" class="mod">
-          <span class="kind" :style="{ color: KIND_COLOR[mod.kind] }">{{ KIND_LABEL[mod.kind] || '' }}</span>
+          <span class="kind" :style="{ color: KIND_COLOR[mod.kind] }">{{ t(KIND_LABEL[mod.kind] || '') }}</span>
           <span :style="{ color: KIND_COLOR[mod.kind] }">
             <template v-if="zhOf(mod.text)">{{ zhOf(mod.text) }}<span class="en">{{ mod.text }}</span></template>
-            <template v-else>{{ mod.text }}</template>
+            <template v-else>{{ dialect(mod.text) }}</template>
           </span>
         </div>
-        <div v-if="selectedRes" class="dim res-line">抗性贡献:{{ resText(selectedRes) }}</div>
+        <div v-if="selectedRes" class="dim res-line">{{ t('抗性贡献:') }}{{ resText(selectedRes) }}</div>
       </div>
     </div>
 
-    <h2>换装比对</h2>
+    <h2>{{ t('换装比对') }}</h2>
     <p class="dim tip">
-      游戏内对物品按 Ctrl+C 复制,粘贴到这里。<template v-if="selected">将与选中的「{{ bilingual(selected.name ?? selected.base) }}」比对。</template>
-      <template v-else>先在上方点击选中一件 Build 装备再粘贴,可直接看差异。</template>
+      {{ t('游戏内对物品按 Ctrl+C 复制,粘贴到这里。') }}<template v-if="selected">{{ t('将与选中的') }}「{{ bilingual(selected.name ?? selected.base) }}」{{ t('比对。') }}</template>
+      <template v-else>{{ t('先在上方点击选中一件 Build 装备再粘贴,可直接看差异。') }}</template>
     </p>
-    <textarea v-model="pasteText" rows="5" placeholder="粘贴游戏内物品文本…" spellcheck="false" />
+    <textarea v-model="pasteText" rows="5" :placeholder="t('粘贴游戏内物品文本…')" spellcheck="false" />
     <div class="btn-row">
-      <button :disabled="!pasteText.trim()" @click="onParsePaste">解析物品</button>
+      <button :disabled="!pasteText.trim()" @click="onParsePaste">{{ t('解析物品') }}</button>
     </div>
     <p v-if="pasteError" class="error">{{ pasteError }}</p>
 
     <div v-if="pasted" class="paste-result">
       <div class="gear-title">
         <span :class="'rarity-' + (pasted.rarity ?? 'NORMAL').toLowerCase()">
-          <template v-if="nameZh(pasted.name ?? pasted.base ?? '')">{{ nameZh(pasted.name ?? pasted.base) }}<span class="en">{{ pasted.name ?? pasted.base }}</span></template>
-          <template v-else>{{ pasted.name ?? pasted.base }}</template>
+          <template v-if="zhName(pasted.name ?? pasted.base ?? '')">{{ zhName(pasted.name ?? pasted.base) }}<span class="en">{{ dialect(pasted.name ?? pasted.base ?? '') }}</span></template>
+          <template v-else>{{ dialect(pasted.name ?? pasted.base ?? '') }}</template>
         </span>
         <span class="dim" v-if="pasted.base && pasted.name"> · {{ bilingual(pasted.base) }}</span>
       </div>
-      <div class="dim meta">{{ rarityZh(pasted.rarity) }} · {{ pasted.mods.length }} 词缀 · 抗性 {{ resText(pastedRes!) }}</div>
+      <div class="dim meta">{{ rarityZh(pasted.rarity) }} · {{ pasted.mods.length }} {{ t('词缀') }} · {{ t('抗性') }} {{ resText(pastedRes!) }}</div>
 
       <template v-if="diff">
-        <div class="diff-title dim">相比「{{ bilingual(selected!.name ?? selected!.base) }}」:</div>
+        <div class="diff-title dim">{{ t('相比') }}「{{ bilingual(selected!.name ?? selected!.base) }}」:</div>
         <div v-for="(m, i) in diff.added" :key="'a' + i" class="mod-line up">
-          + <template v-if="zhOf(m.text)">{{ zhOf(m.text) }}<span class="en">{{ m.text }}</span></template><template v-else>{{ m.text }}</template>
+          + <template v-if="zhOf(m.text)">{{ zhOf(m.text) }}<span class="en">{{ m.text }}</span></template><template v-else>{{ dialect(m.text) }}</template>
         </div>
         <div v-for="(m, i) in diff.removed" :key="'r' + i" class="mod-line down">
-          − <template v-if="zhOf(m.text)">{{ zhOf(m.text) }}<span class="en">{{ m.text }}</span></template><template v-else>{{ m.text }}</template>
+          − <template v-if="zhOf(m.text)">{{ zhOf(m.text) }}<span class="en">{{ m.text }}</span></template><template v-else>{{ dialect(m.text) }}</template>
         </div>
-        <div class="mod-line dim">抗性变化:火 <b :class="resDeltaClass(diff.resistances.fire)">{{ diff.resistances.fire }}</b> · 冰 <b :class="resDeltaClass(diff.resistances.cold)">{{ diff.resistances.cold }}</b> · 电 <b :class="resDeltaClass(diff.resistances.lightning)">{{ diff.resistances.lightning }}</b> · 混沌 <b :class="resDeltaClass(diff.resistances.chaos)">{{ diff.resistances.chaos }}</b></div>
+        <div class="mod-line dim">{{ t('抗性变化:') }}火 <b :class="resDeltaClass(diff.resistances.fire)">{{ diff.resistances.fire }}</b> · 冰 <b :class="resDeltaClass(diff.resistances.cold)">{{ diff.resistances.cold }}</b> · 电 <b :class="resDeltaClass(diff.resistances.lightning)">{{ diff.resistances.lightning }}</b> · 混沌 <b :class="resDeltaClass(diff.resistances.chaos)">{{ diff.resistances.chaos }}</b></div>
       </template>
     </div>
   </div>

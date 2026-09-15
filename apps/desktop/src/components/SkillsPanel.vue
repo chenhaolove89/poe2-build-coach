@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { BuildSnapshot } from '@poe2coach/core'
-import { nameZh } from '../nameZh'
+import { bilingual, t, zhName } from '../i18n'
 
 const props = defineProps<{ build: BuildSnapshot }>()
 
@@ -9,24 +9,25 @@ const totalGems = computed(() => props.build.skills.reduce((sum, g) => sum + g.g
 const activeGems = computed(() => props.build.skills.reduce((sum, g) => sum + g.gems.filter((x) => x.enabled).length, 0))
 
 function gemLine(name: string): string {
-  const zh = nameZh(name)
-  return zh ? `${zh} ${name}` : name
+  return bilingual(name)
 }
 </script>
 
 <template>
   <div class="skills-wrap">
-    <div class="skills-meta dim">共 {{ build.skills.length }} 组 · {{ totalGems }} 颗宝石(启用 {{ activeGems }})。</div>
+    <div class="skills-meta dim">
+      {{ t('共') }} {{ build.skills.length }} {{ t('组 ·') }} {{ totalGems }} {{ t('颗宝石(启用') }} {{ activeGems }})。
+    </div>
     <div v-for="(g, i) in build.skills" :key="i" class="skill-group">
       <div class="skill-label">
-        <template v-if="nameZh(g.label ?? '')">{{ nameZh(g.label) }}<span class="en">{{ g.label }}</span></template>
-        <template v-else>{{ g.label ?? '未命名技能组' }}</template>
+        <template v-if="zhName(g.label ?? '')">{{ zhName(g.label) }}<span class="en">{{ g.label }}</span></template>
+        <template v-else>{{ g.label ?? t('未命名技能组') }}</template>
       </div>
       <div v-for="gem in g.gems" :key="gem.name + i" class="gem" :class="{ off: !gem.enabled }">
-        {{ gemLine(gem.name) }}<span class="dim"> Lv{{ gem.level ?? '?' }}{{ gem.quality ? ` Q${gem.quality}` : '' }}{{ gem.enabled ? '' : ' ·停用' }}</span>
+        {{ gemLine(gem.name) }}<span class="dim"> Lv{{ gem.level ?? '?' }}{{ gem.quality ? ` Q${gem.quality}` : '' }}{{ gem.enabled ? '' : ` ·${t('停用')}` }}</span>
       </div>
     </div>
-    <div v-if="build.skills.length === 0" class="dim">这份 Build 没有配置技能组。</div>
+    <div v-if="build.skills.length === 0" class="dim">{{ t('这份 Build 没有配置技能组。') }}</div>
   </div>
 </template>
 

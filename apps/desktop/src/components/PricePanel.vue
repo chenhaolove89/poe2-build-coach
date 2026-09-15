@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { matchItemMods, parseItemText } from '@poe2coach/core'
 import type { GameItem, StatMatch } from '@poe2coach/core'
-import { nameZh } from '../nameZh'
+import { bilingual, currencyName, dialect, t } from '../i18n'
+import { realm, realmId } from '../settings'
 import {
+  ensureRealmData,
   fetchLeagues,
-  getStatIndex,
   isDesktopRuntime,
   priceCheck,
   rateLimitState,
@@ -13,7 +14,9 @@ import {
   savedLeague,
   TradeError,
 } from '../tradeClient'
-import type { PriceCheckResult } from '../tradeClient'
+import type { PriceCheckResult, RealmData } from '../tradeClient'
+
+const emit = defineEmits<{ openSettings: [] }>()
 
 const draft = ref('')
 const item = ref<GameItem | null>(null)
@@ -23,11 +26,15 @@ const queryError = ref<string | null>(null)
 const loading = ref(false)
 const result = ref<PriceCheckResult | null>(null)
 const leagues = ref<string[]>([])
-const league = ref(savedLeague() ?? savedLeague() ?? '')
+const league = ref('')
 const onlineOnly = ref(true)
 const copied = ref(false)
 
+/** The active realm's mod templates and currency labels. */
+const data = ref<RealmData | null>(null)
 const desktop = isDesktopRuntime()
+const needsSession = computed(() => realm.value.loginRequired)
+
 /** Refreshed by hand: the request log is not reactive, so a computed would freeze at its first value. */
 const limit = ref(rateLimitState())
 
@@ -37,6 +44,8 @@ const RARITY_ZH: Record<string, string> = {
   RARE: '稀有',
   UNIQUE: '传奇',
   RELIC: '圣物',
+  CURRENCY: '通货',
+  GEM: '宝石',
 }
 
 const KIND_ZH: Record<string, string> = {
@@ -49,27 +58,60 @@ const KIND_ZH: Record<string, string> = {
   pseudo: '综合',
 }
 
-function bilingual(en: string | null | undefined): string {
+/**
+ * Item names come from the player's own client, so the dictionary usually has
+ * nothing for them — a 国服 rare is already called "祸害 魔甲". bilingual()
+ * falls through to the realm's language for exactly that case.
+ */
+function label(en: string | null | undefined): string {
   if (!en) return '—'
-  const zh = nameZh(en)
-  return zh ? `${zh} ${en}` : en
+  return bilingual(en) || '—'
 }
 
-const matched = computed(() => matches.value.filter((m) => m.statId))
-const unmatched = computed(() => matches.value.filter((m) => !m.statId))
-/** Uniques are searched by name, so no mod got a filter — say so instead of showing "0 filters". */
-const isUnique = computed(() => (item.value?.rarity ?? '').toUpperCase() === 'UNIQUE')
+/** Mod lines are the player's own text too, and need no dictionary. */
+function modLine(text: string): string {
+  return bilingual(text) || text
+}
 
-onMounted(async () => {
-  if (!desktop) return
+async function loadRealm() {
+  try {
+    data.value = await ensureRealmData()
+  } catch (e) {
+    queryError.value = t(e instanceof Error ? e.message : String(e))
+  }
+  rematch()
+}
+
+async function loadLeagues() {
+  league.value = savedLeague() ?? ''
   try {
     leagues.value = await fetchLeagues()
-    if (!league.value && leagues.value.length > 0) league.value = leagues.value[0]
+    if (!league.value || !leagues.value.includes(league.value)) league.value = leagues.value[0] ?? ''
   } catch {
     /* league list is a convenience; the check below reports real problems */
   } finally {
     limit.value = rateLimitState()
   }
+}
+
+onMounted(async () => {
+  // The stat packs are local JSON, so matching works in a browser preview too.
+  // Only the league list needs the API, which a browser cannot reach.
+  await loadRealm()
+  if (desktop) await loadLeagues()
+})
+
+/**
+ * The templates belong to the realm, so a switch invalidates the match: the
+ * same mod line resolves against "生命上限 #" on 国服 and "#最大生命" on 台服.
+ */
+watch(realmId, async () => {
+  result.value = null
+  queryError.value = null
+  data.value = null
+  leagues.value = []
+  await loadRealm()
+  await loadLeagues()
 })
 
 /** Parsing and stat matching are local, so they work even without the API. */
@@ -80,22 +122,31 @@ function onParse() {
   item.value = null
   matches.value = []
   try {
-    const parsed = parseItemText(draft.value)
-    item.value = parsed
-    matches.value = matchItemMods(parsed, getStatIndex())
+    item.value = parseItemText(draft.value)
+    rematch()
   } catch (e) {
     parseError.value = String(e)
   }
 }
 
+function rematch() {
+  if (!item.value || !data.value) return
+  matches.value = matchItemMods(item.value, data.value.statIndex)
+}
+
 async function onCheck() {
   if (!item.value) return
   if (!desktop) {
-    queryError.value = '浏览器预览无法直连官方 API(跨域被拦),请使用桌面版查价。'
+    queryError.value = t('浏览器预览无法直连官方 API(跨域被拦),请使用桌面版查价。')
+    return
+  }
+  if (needsSession.value) {
+    queryError.value = t('国服需要在设置里填入登录后的 POESESSID 才能查询。')
+    emit('openSettings')
     return
   }
   if (!league.value) {
-    queryError.value = '请先选择联赛。'
+    queryError.value = t('请先选择联赛。')
     return
   }
   loading.value = true
@@ -105,7 +156,8 @@ async function onCheck() {
     result.value = await priceCheck(item.value, { league: league.value, online: onlineOnly.value })
     rememberLeague(league.value)
   } catch (e) {
-    queryError.value = e instanceof TradeError ? e.message : String(e)
+    const message = e instanceof TradeError ? e.message : String(e)
+    queryError.value = t(message)
   } finally {
     loading.value = false
     limit.value = rateLimitState()
@@ -119,139 +171,172 @@ async function copyQuery() {
     copied.value = true
     setTimeout(() => (copied.value = false), 1500)
   } catch {
-    queryError.value = '复制失败,请手动选中下面的内容。'
+    queryError.value = t('复制失败,请手动选中下面的内容。')
   }
 }
+
+/** The same search, on the realm's own site — for the parts this tool does not do. */
+const tradeUrl = computed(() => {
+  if (!league.value) return realm.value.siteBase
+  return `${realm.value.siteBase}/search/poe2/${encodeURIComponent(league.value)}`
+})
+
+const currency = computed(() => data.value?.currency ?? {})
+const currencyLabel = (id: string | null | undefined) => currencyName(id, currency.value)
+
+const matched = computed(() => matches.value.filter((m) => m.statId))
+const unmatched = computed(() => matches.value.filter((m) => !m.statId))
+/** Uniques are searched by name, so no mod got a filter — say so instead of showing "0 filters". */
+const isUnique = computed(() => (item.value?.rarity ?? '').toUpperCase() === 'UNIQUE')
 </script>
 
 <template>
   <div class="price-wrap">
     <p class="meta dim">
-      粘贴一件装备(游戏内 Ctrl+C 或 PoB 物品文本),工具会把它翻译成官方交易站的查询条件并取回实时挂单。
-      只调用官方只读接口,不模拟按键、不读取游戏内存。
+      {{ t('粘贴一件装备(游戏内 Ctrl+C 或 PoB 物品文本),工具会把它翻译成官方交易站的查询条件并取回实时挂单。只调用官方只读接口,不模拟按键、不读取游戏内存。') }}
     </p>
 
+    <div class="realm-line">
+      <span class="realm-tag">{{ t(realm.label) }}</span>
+      <span class="dim">{{ realm.apiBase.replace('https://', '') }}</span>
+      <a class="dim link" :href="tradeUrl" target="_blank" rel="noreferrer">{{ t('在交易站打开') }} ↗</a>
+      <button class="mini" @click="emit('openSettings')">{{ t('切换服务器') }}</button>
+    </div>
+
     <div v-if="!desktop" class="notice warn">
-      当前是浏览器预览环境,官方接口不带跨域许可,无法取回价格。词缀匹配是本地计算,这里仍可正常查看。
+      {{ t('当前是浏览器预览环境,官方接口不带跨域许可,无法取回价格。词缀匹配是本地计算,这里仍可正常查看。') }}
+    </div>
+
+    <div v-else-if="needsSession" class="notice warn">
+      {{ t('国服交易站不对外开放匿名查询。请在「设置」里填入登录 poe.game.qq.com 后的 POESESSID 再查价;下面的词缀匹配不受影响。') }}
+      <button class="mini" @click="emit('openSettings')">{{ t('去设置') }}</button>
     </div>
 
     <div class="controls">
-      <label class="dim">联赛</label>
+      <label class="dim">{{ t('联赛') }}</label>
       <select v-model="league" class="league">
-        <option v-if="!leagues.length" :value="league">{{ league || '(未加载)' }}</option>
+        <option v-if="!leagues.length" :value="league">{{ league || t('(未加载)') }}</option>
         <option v-for="l in leagues" :key="l" :value="l">{{ l }}</option>
       </select>
       <label class="check dim">
         <input v-model="onlineOnly" type="checkbox" />
-        仅在线卖家
+        {{ t('仅在线卖家') }}
       </label>
       <span class="dim limit">
-        本机配额:{{ limit.usedInWindow }} / {{ limit.maxInWindow }} 次每 {{ limit.windowSeconds }} 秒
+        {{ t('本机配额') }}:{{ limit.usedInWindow }} / {{ limit.maxInWindow }} {{ t('次每') }} {{ limit.windowSeconds }} {{ t('秒') }}
       </span>
     </div>
 
     <textarea
       v-model="draft"
       rows="6"
-      placeholder="Rarity: RARE&#10;Doom Tread&#10;Runeforged Wanderer Shoes&#10;...&#10;+129 to maximum Life"
+      :placeholder="
+        t(
+          'Rarity: RARE\nDoom Tread\nRuneforged Wanderer Shoes\n...\n+129 to maximum Life\n\n也可以直接粘贴国服/台服客户端的物品文本',
+        )
+      "
       spellcheck="false"
     />
     <div class="btn-row">
-      <button :disabled="!draft.trim()" @click="onParse">解析物品</button>
+      <button :disabled="!draft.trim()" @click="onParse">{{ t('解析物品') }}</button>
       <button class="primary" :disabled="!item || loading" @click="onCheck">
-        {{ loading ? '查询中…' : '查价' }}
+        {{ loading ? t('查询中…') : t('查价') }}
       </button>
     </div>
     <p v-if="parseError" class="error">{{ parseError }}</p>
     <p v-if="queryError" class="error">{{ queryError }}</p>
 
     <template v-if="item">
-      <h2>{{ bilingual(item.name ?? item.base) }}</h2>
+      <h2>{{ label(item.name ?? item.base) }}</h2>
       <div class="meta-line dim">
-        {{ RARITY_ZH[item.rarity ?? ''] ?? item.rarity ?? '—' }}
-        <span v-if="item.base && item.name"> · {{ bilingual(item.base) }}</span>
-        <span v-if="item.itemLevel"> · 物品等级 {{ item.itemLevel }}</span>
-        <span v-if="item.itemClass"> · 类型 {{ item.itemClass }}</span>
+        {{ t(RARITY_ZH[item.rarity ?? ''] ?? item.rarity ?? '—') }}
+        <span v-if="item.base && item.name"> · {{ label(item.base) }}</span>
+        <span v-if="item.itemLevel"> · {{ t('物品等级') }} {{ item.itemLevel }}</span>
+        <span v-if="item.itemClass"> · {{ t('类型') }} {{ dialect(item.itemClass) }}</span>
       </div>
 
-      <h3>词缀匹配({{ matched.length }} / {{ matches.length }})</h3>
+      <h3>{{ t('词缀匹配') }}({{ matched.length }} / {{ matches.length }})</h3>
+      <p v-if="!data" class="dim note">{{ t('正在载入该服的词缀模板…') }}</p>
       <div class="mods">
         <div v-for="(m, i) in matches" :key="i" class="mod" :class="{ hit: m.statId }">
           <span class="mark">{{ m.statId ? '✓' : '·' }}</span>
-          <span class="text">{{ m.text }}</span>
-          <span class="tag dim">{{ KIND_ZH[m.kind] ?? m.kind }}</span>
+          <span class="text">{{ modLine(m.text) }}</span>
+          <span class="tag dim">{{ t(KIND_ZH[m.kind] ?? m.kind) }}</span>
           <span v-if="m.statId" class="id dim">{{ m.statId }}</span>
-          <span v-else class="id dim">未收录模板,不参与查询</span>
+          <span v-else class="id dim">{{ t('未收录模板,不参与查询') }}</span>
         </div>
       </div>
+      <p v-if="unmatched.length" class="dim note">
+        {{ t('未匹配的行大多是装备自带属性(伤害、暴击、攻速等)或该服独有的措辞,不影响其余词缀的查询。') }}
+      </p>
     </template>
 
     <template v-if="result">
       <div v-if="result.relaxed" class="notice warn">
-        在线卖家暂无挂单,已放宽为包含离线卖家的全部挂单(共 {{ result.total }} 条)。离线卖家未必能成交,低价单可能已经失效。
+        {{ t('在线卖家暂无挂单,已放宽为包含离线卖家的全部挂单(共') }} {{ result.total }} {{ t('条)。离线卖家未必能成交,低价单可能已经失效。') }}
       </div>
 
-      <h2>价格</h2>
+      <h2>{{ t('价格') }}</h2>
       <div v-if="result.summary.priced" class="summary">
         <div class="stat">
-          <span class="dim">最低</span>
-          <b>{{ result.summary.min }} {{ result.summary.currency }}</b>
+          <span class="dim">{{ t('最低') }}</span>
+          <b>{{ result.summary.min }} {{ currencyLabel(result.summary.currency) }}</b>
         </div>
         <div class="stat">
-          <span class="dim">中位</span>
-          <b>{{ result.summary.median }} {{ result.summary.currency }}</b>
+          <span class="dim">{{ t('中位') }}</span>
+          <b>{{ result.summary.median }} {{ currencyLabel(result.summary.currency) }}</b>
         </div>
         <div class="stat">
-          <span class="dim">最高</span>
-          <b>{{ result.summary.max }} {{ result.summary.currency }}</b>
+          <span class="dim">{{ t('最高') }}</span>
+          <b>{{ result.summary.max }} {{ currencyLabel(result.summary.currency) }}</b>
         </div>
         <div class="stat">
-          <span class="dim">命中总数</span>
+          <span class="dim">{{ t('命中总数') }}</span>
           <b>{{ result.total }}</b>
         </div>
         <div class="stat">
-          <span class="dim">这批在线</span>
+          <span class="dim">{{ t('这批在线') }}</span>
           <b>{{ result.summary.onlineCount }} / {{ result.summary.priced }}</b>
         </div>
       </div>
 
       <p class="dim note">
         <template v-if="result.built.used.length">
-          以你这条词缀的数值为下限搜索(找"不低于此"的同类),共 {{ result.built.used.length }} 条词缀进入过滤<template
-            v-if="result.built.skipped.length"
-          >,{{ result.built.skipped.length }} 条未参与</template
+          {{ t('以你这条词缀的数值为下限搜索(找"不低于此"的同类),共') }} {{ result.built.used.length }}
+          {{ t('条词缀进入过滤') }}<template v-if="result.built.skipped.length"
+          >,{{ result.built.skipped.length }} {{ t('条未参与') }}</template
           >。
         </template>
         <template v-else-if="isUnique">
-          传奇按名字查询:词缀波动只影响小幅溢价,卡具体数值会找不到卖家。
+          {{ t('传奇按名字查询:词缀波动只影响小幅溢价,卡具体数值会找不到卖家。') }}
         </template>
-        挂单来自官方实时数据,卖家是否在线以游戏内为准。
+        {{ t('挂单来自官方实时数据,卖家是否在线以游戏内为准。') }}
       </p>
 
       <div v-if="result.summary.byCurrency.length > 1" class="dim note">
-        混合币种:{{ result.summary.byCurrency.map((c) => `${c.currency}×${c.count}`).join('、') }}(统计基于
-        {{ result.summary.currency }})
+        {{ t('混合币种') }}:{{ result.summary.byCurrency.map((c) => `${currencyLabel(c.currency)}×${c.count}`).join('、') }}({{ t('统计基于') }}
+        {{ currencyLabel(result.summary.currency) }})
       </div>
 
       <div v-if="result.summary.listings.length" class="listings">
         <div v-for="(l, i) in result.summary.listings" :key="i" class="listing">
-          <span class="price">{{ l.amount }} {{ l.currency }}</span>
-          <span class="name">{{ bilingual(l.name ?? l.typeLine) }}</span>
+          <span class="price">{{ l.amount }} {{ currencyLabel(l.currency) }}</span>
+          <span class="name">{{ l.name ? label(l.name) : dialect(l.typeLine ?? '') }}</span>
           <span class="dim">
-            <template v-if="l.itemLevel">ilvl {{ l.itemLevel }} · </template>{{ l.modCount }} 词缀
-            <template v-if="l.corrupted"> · 已腐化</template>
-            <template v-if="!l.online"> · 离线</template>
+            <template v-if="l.itemLevel">ilvl {{ l.itemLevel }} · </template>{{ l.modCount }} {{ t('词缀') }}
+            <template v-if="l.corrupted"> · {{ t('已腐化') }}</template>
+            <template v-if="!l.online"> · {{ t('离线') }}</template>
           </span>
         </div>
       </div>
       <p v-else class="dim note">
-        {{ onlineOnly ? '在线卖家没有挂单' : '这个条件没有任何挂单' }}<template v-if="result.summary.unpriced"
-          >({{ result.summary.unpriced }} 条挂单未标价)</template
-        >,可以放宽词缀、取消"仅在线卖家",或换联赛再试。
+        {{ onlineOnly ? t('在线卖家没有挂单') : t('这个条件没有任何挂单') }}<template v-if="result.summary.unpriced"
+          >({{ result.summary.unpriced }} {{ t('条挂单未标价') }})</template
+        >{{ t(',可以放宽词缀、取消"仅在线卖家",或换联赛再试。') }}
       </p>
 
       <div class="btn-row">
-        <button @click="copyQuery">{{ copied ? '已复制' : '复制查询 JSON' }}</button>
+        <button @click="copyQuery">{{ copied ? t('已复制') : t('复制查询 JSON') }}</button>
       </div>
     </template>
   </div>
@@ -265,12 +350,47 @@ async function copyQuery() {
   margin-bottom: 10px;
   line-height: 1.6;
 }
+.realm-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+.realm-tag {
+  color: #e8b04b;
+  background: #1f1a10;
+  border: 1px solid #4a3d20;
+  border-radius: 10px;
+  padding: 2px 10px;
+  font-size: 11px;
+}
+.link {
+  text-decoration: none;
+}
+.link:hover {
+  color: #e8b04b;
+}
+button.mini {
+  background: none;
+  border: 1px solid #2c3244;
+  color: #9aa3bd;
+  border-radius: 10px;
+  padding: 2px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+button.mini:hover {
+  border-color: #e8b04b;
+  color: #e8b04b;
+}
 .notice {
   border-radius: 6px;
   padding: 10px 12px;
   font-size: 12px;
   margin-bottom: 12px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 .notice.warn {
   background: #241f14;

@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Core window permissions plus outbound HTTPS to the read-only PoE2 data APIs.",
+  "description": "Core window permissions plus outbound HTTPS to the read-only trade APIs of all three realms. Only the main window is listed: the login window created for 关联登录 loads an operator page and needs no Tauri API at all.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -9,7 +9,9 @@
       "identifier": "http:default",
       "allow": [
         { "url": "https://www.pathofexile.com/*" },
-        { "url": "https://poe.ninja/*" }
+        { "url": "https://poe.ninja/*" },
+        { "url": "https://poe.game.qq.com/*" },
+        { "url": "https://pathofexile.tw/*" }
       ]
     }
   ]

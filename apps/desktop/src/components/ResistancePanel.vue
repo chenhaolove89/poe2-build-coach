@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { resistanceGap, sumResistances } from '@poe2coach/core'
 import type { GameItem } from '@poe2coach/core'
+import { t } from '../i18n'
 
 const props = defineProps<{ items: GameItem[] }>()
 
@@ -24,13 +25,13 @@ function pct(total: number): number {
 <template>
   <div class="res-panel">
     <div v-for="row in ROWS" :key="row.key" class="res-row">
-      <span class="label">{{ row.label }}</span>
+      <span class="label">{{ t(row.label) }}</span>
       <div class="bar">
         <div class="fill" :style="{ width: pct(totals[row.key]) + '%', background: row.color }" />
         <div class="cap-line" />
       </div>
       <span class="value" :class="{ short: gap[row.key] > 0 }">
-        {{ totals[row.key] }}/{{ CAP }}<template v-if="gap[row.key] > 0"> 缺{{ gap[row.key] }}</template>
+        {{ totals[row.key] }}/{{ CAP }}<template v-if="gap[row.key] > 0"> {{ t('缺') }}{{ gap[row.key] }}</template>
       </span>
     </div>
   </div>

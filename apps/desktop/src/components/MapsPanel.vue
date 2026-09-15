@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import mapsJson from '@poe2coach/data/maps.json'
 import topologyJson from '@poe2coach/data/map-topology.json'
-import { nameZh, nameZhThenEn } from '../nameZh'
+import { bilingual, dialect, t, zhName } from '../i18n'
 
 interface MapEntry {
   name: string
@@ -46,11 +46,12 @@ const filtered = computed(() =>
     if (layoutFilter.value !== 'all' && m.layout !== layoutFilter.value) return false
     const q = query.value.trim().toLowerCase()
     if (!q) return true
+    // Matched against the variant on screen, so a 繁體 reader can type 繁體.
     return (
       m.name.toLowerCase().includes(q) ||
-      (nameZh(m.name) ?? '').includes(q) ||
+      (zhName(m.name) ?? '').includes(q) ||
       (m.boss ?? '').toLowerCase().includes(q) ||
-      (nameZh(m.boss) ?? '').includes(q)
+      (zhName(m.boss) ?? '').includes(q)
     )
   }),
 )
@@ -62,11 +63,11 @@ function navLabel(n: number | null): string {
 }
 
 function biomeZh(b: string): string {
-  return BIOME_LABEL[b] ?? b
+  return BIOME_LABEL[b] ? t(BIOME_LABEL[b]) : dialect(b)
 }
 
-function bilingual(en: string): string {
-  return nameZhThenEn(en)
+function mechLabel(r: string): string {
+  return MECH_LABEL[r] ? t(MECH_LABEL[r]) : dialect(r)
 }
 
 /** POE2WAY renders a handful of layout variants per map; not all maps are mapped. */
@@ -97,11 +98,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 <template>
   <div class="maps-wrap">
     <div class="meta dim">
-      共 {{ DATA.maps.length }} 个地区 · 跑图/回头路为 POE2WAY 社区评分(4 最好)。布局:直线型=沿主线推进,开放型=大面积开阔,迷宫型=岔路多易迷路。点开卡片看地区拓扑。
+      {{ t('共') }} {{ DATA.maps.length }} {{ t('个地区 · 跑图/回头路为 POE2WAY 社区评分(4 最好)。布局:直线型=沿主线推进,开放型=大面积开阔,迷宫型=岔路多易迷路。点开卡片看地区拓扑。') }}
     </div>
 
     <div class="controls">
-      <input v-model="query" class="search" placeholder="搜索地图或 Boss…" spellcheck="false" />
+      <input v-model="query" class="search" :placeholder="t('搜索地图或 Boss…')" spellcheck="false" />
       <div class="filters">
         <button
           v-for="opt in [['all', '全部'], ['linear', '直线型'], ['open', '开放型'], ['maze', '迷宫型'], ['special', '特殊']]"
@@ -110,7 +111,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           :class="{ active: layoutFilter === opt[0] }"
           @click="layoutFilter = opt[0] as typeof layoutFilter"
         >
-          {{ opt[1] }}
+          {{ t(opt[1]) }}
         </button>
       </div>
     </div>
@@ -125,22 +126,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       >
         <div class="map-head">
           <span class="map-name">{{ bilingual(m.name) }}</span>
-          <span class="layout-badge" :class="m.layout">{{ LAYOUT_LABEL[m.layout] }}</span>
+          <span class="layout-badge" :class="m.layout">{{ t(LAYOUT_LABEL[m.layout]) }}</span>
         </div>
         <div v-if="m.layout !== 'special'" class="scores">
-          <span class="score" title="跑图难度(4=最容易)">跑图 {{ navLabel(m.navigation) }}</span>
-          <span class="score" title="回头路程度(4=几乎不回头)">回头 {{ navLabel(m.backtracking) }}</span>
+          <span class="score" :title="t('跑图难度(4=最容易)')">{{ t('跑图') }} {{ navLabel(m.navigation) }}</span>
+          <span class="score" :title="t('回头路程度(4=几乎不回头)')">{{ t('回头') }} {{ navLabel(m.backtracking) }}</span>
         </div>
-        <div class="row dim">生态:{{ m.biomes.map(biomeZh).join(' / ') || '—' }}</div>
+        <div class="row dim">{{ t('生态:') }}{{ m.biomes.map(biomeZh).join(' / ') || '—' }}</div>
         <div v-if="m.boss" class="row boss">Boss:{{ bilingual(m.boss) }}</div>
         <div v-if="m.recommended.length" class="row mech">
-          推荐机制:{{ m.recommended.map((r) => MECH_LABEL[r] ?? r).join(' / ') }}
+          {{ t('推荐机制:') }}{{ m.recommended.map(mechLabel).join(' / ') }}
         </div>
-        <div class="open-hint">{{ TOPOLOGY[m.name.toLowerCase()] ? '查看拓扑 →' : '查看详情 →' }}</div>
+        <div class="open-hint">{{ TOPOLOGY[m.name.toLowerCase()] ? t('查看拓扑 →') : t('查看详情 →') }}</div>
       </div>
     </div>
-    <div v-if="!filtered.length" class="dim empty">没有匹配的地图。</div>
-    <div class="source dim">数据来源:POE2WAY(poe2way.com/atlas),评分为社区参考;拓扑图为社区手绘示意图。</div>
+    <div v-if="!filtered.length" class="dim empty">{{ t('没有匹配的地图。') }}</div>
+    <div class="source dim">{{ t('数据来源:POE2WAY(poe2way.com/atlas),评分为社区参考;拓扑图为社区手绘示意图。') }}</div>
 
     <div v-if="detail" class="overlay" @click.self="closeDetail">
       <div class="detail">
@@ -148,24 +149,24 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <div>
             <h2>{{ bilingual(detail.name) }}</h2>
             <p class="dim sub">
-              {{ LAYOUT_LABEL[detail.layout] }} · 生态 {{ detail.biomes.map(biomeZh).join(' / ') || '—' }}
+              {{ t(LAYOUT_LABEL[detail.layout]) }} · {{ t('生态') }} {{ detail.biomes.map(biomeZh).join(' / ') || '—' }}
             </p>
           </div>
-          <button class="close" title="关闭(Esc)" @click="closeDetail">✕</button>
+          <button class="close" :title="t('关闭(Esc)')" @click="closeDetail">✕</button>
         </div>
 
         <div class="detail-scores">
           <div class="dscore">
-            <span class="dim">跑图难度</span>
+            <span class="dim">{{ t('跑图难度') }}</span>
             <b>{{ navLabel(detail.navigation) }}</b>
           </div>
           <div class="dscore">
-            <span class="dim">回头路</span>
+            <span class="dim">{{ t('回头路') }}</span>
             <b>{{ navLabel(detail.backtracking) }}</b>
           </div>
           <div class="dscore">
-            <span class="dim">推荐机制</span>
-            <b>{{ detail.recommended.map((r) => MECH_LABEL[r] ?? r).join(' / ') || '—' }}</b>
+            <span class="dim">{{ t('推荐机制') }}</span>
+            <b>{{ detail.recommended.map(mechLabel).join(' / ') || '—' }}</b>
           </div>
         </div>
 
@@ -182,16 +183,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               :class="{ active: i === variant }"
               @click="variant = i"
             >
-              布局 {{ i + 1 }}
+              {{ t('布局') }} {{ i + 1 }}
             </button>
-            <span class="dim tab-note">共 {{ variants.length }} 种布局变体</span>
+            <span class="dim tab-note">{{ t('共') }} {{ variants.length }} {{ t('种布局变体') }}</span>
           </div>
           <div class="topo" v-html="currentSvg" />
           <p class="dim topo-note">
-            社区手绘拓扑:圆点=房间/节点,连线=通路。同一地区进去的固定是其中一种变体。
+            {{ t('社区手绘拓扑:圆点=房间/节点,连线=通路。同一地区进去的固定是其中一种变体。') }}
           </p>
         </template>
-        <p v-else class="dim topo-missing">社区暂未收录该地区的拓扑图,可参考布局类型判断走法。</p>
+        <p v-else class="dim topo-missing">{{ t('社区暂未收录该地区的拓扑图,可参考布局类型判断走法。') }}</p>
       </div>
     </div>
   </div>

@@ -8,6 +8,8 @@ edition = "2021"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# Needs >= 2.4, which is where WebviewWindow::cookies_for_url landed; that is
+# what 关联登录 uses to read the session cookie out of the login window.
 tauri = { version = "2", features = [] }
 # The trade site and poe.ninja send no CORS headers, so requests have to leave
 # through Rust instead of the webview.
