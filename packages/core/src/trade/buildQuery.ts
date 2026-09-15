@@ -34,9 +34,10 @@ export interface BuiltQuery {
 /**
  * Turn a parsed item plus its matched stats into a trade-site search.
  *
- * Filters use the rolled value as a minimum: the question a price check answers
- * is "what do items at least this good cost", not "what does this exact roll
- * cost". Uniques search by name, everything else by base type.
+ * Rares are filtered by their mods, with the rolled value as a floor: the
+ * question a price check answers is "what do items at least this good cost".
+ * Uniques are searched by name only — their price comes from the item itself,
+ * and requiring this particular roll finds sellers who do not exist.
  */
 export function buildItemQuery(
   item: GameItem,
@@ -44,12 +45,13 @@ export function buildItemQuery(
   options: { online?: boolean; maxFilters?: number } = {},
 ): BuiltQuery {
   const maxFilters = options.maxFilters ?? MAX_STAT_FILTERS
-  const usable = matches.filter((m) => m.statId !== null && m.values.length > 0)
-  const used = usable.slice(0, maxFilters)
-  const skipped = matches.filter((m) => !used.includes(m))
 
   const rarity = item.rarity ? TRADE_RARITY[item.rarity.toUpperCase()] : undefined
   const isUnique = rarity === 'unique'
+
+  const usable = isUnique ? [] : matches.filter((m) => m.statId !== null && m.values.length > 0)
+  const used = usable.slice(0, maxFilters)
+  const skipped = matches.filter((m) => !used.includes(m))
 
   const query: TradeQuery['query'] = {
     status: { option: options.online === false ? 'any' : 'online' },

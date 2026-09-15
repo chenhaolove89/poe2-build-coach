@@ -84,7 +84,7 @@ describe('trade query construction', () => {
     expect(skipped.map((s) => s.text)).toContain('Corrupted')
   })
 
-  it('searches uniques by name and caps the filter budget', () => {
+  it('searches uniques by name without mod filters, and caps the rare filter budget', () => {
     const unique: GameItem = {
       ...ITEM,
       rarity: 'UNIQUE',
@@ -92,11 +92,20 @@ describe('trade query construction', () => {
       base: 'Heavy Belt',
       mods: Array.from({ length: 9 }, (_, i) => ({ text: `+${i + 10} to maximum Life`, kind: 'explicit' as const })),
     }
-    const { tradeQuery, used, skipped } = buildItemQuery(unique, matchItemMods(unique, INDEX))
-    expect(tradeQuery.query.name).toBe('Headhunter')
-    expect(tradeQuery.query.stats[0].filters).toHaveLength(6)
-    expect(used).toHaveLength(6)
-    expect(skipped).toHaveLength(3)
+    const uniqueBuilt = buildItemQuery(unique, matchItemMods(unique, INDEX))
+    expect(uniqueBuilt.tradeQuery.query.name).toBe('Headhunter')
+    // A unique's price comes from the item, not this particular roll.
+    expect(uniqueBuilt.tradeQuery.query.stats[0].filters).toHaveLength(0)
+    expect(uniqueBuilt.skipped).toHaveLength(9)
+
+    const rare: GameItem = {
+      ...ITEM,
+      mods: Array.from({ length: 9 }, (_, i) => ({ text: `+${i + 10} to maximum Life`, kind: 'explicit' as const })),
+    }
+    const rareBuilt = buildItemQuery(rare, matchItemMods(rare, INDEX))
+    expect(rareBuilt.tradeQuery.query.stats[0].filters).toHaveLength(6)
+    expect(rareBuilt.used).toHaveLength(6)
+    expect(rareBuilt.skipped).toHaveLength(3)
   })
 })
 

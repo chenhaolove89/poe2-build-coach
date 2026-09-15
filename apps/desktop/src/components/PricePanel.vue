@@ -55,6 +55,8 @@ function bilingual(en: string | null | undefined): string {
 
 const matched = computed(() => matches.value.filter((m) => m.statId))
 const unmatched = computed(() => matches.value.filter((m) => !m.statId))
+/** Uniques are searched by name, so no mod got a filter — say so instead of showing "0 filters". */
+const isUnique = computed(() => (item.value?.rarity ?? '').toUpperCase() === 'UNIQUE')
 
 onMounted(async () => {
   if (!desktop) return
@@ -197,10 +199,16 @@ async function copyQuery() {
       </div>
 
       <p class="dim note">
-        以你这条词缀的数值为下限搜索(找"不低于此"的同类),共 {{ result.built.used.length }} 条词缀进入过滤<template
-          v-if="result.built.skipped.length"
-        >,{{ result.built.skipped.length }} 条未参与</template
-        >。挂单来自官方实时数据,卖家是否在线以游戏内为准。
+        <template v-if="result.built.used.length">
+          以你这条词缀的数值为下限搜索(找"不低于此"的同类),共 {{ result.built.used.length }} 条词缀进入过滤<template
+            v-if="result.built.skipped.length"
+          >,{{ result.built.skipped.length }} 条未参与</template
+          >。
+        </template>
+        <template v-else-if="isUnique">
+          传奇按名字查询:词缀波动只影响小幅溢价,卡具体数值会找不到卖家。
+        </template>
+        挂单来自官方实时数据,卖家是否在线以游戏内为准。
       </p>
 
       <div v-if="result.summary.byCurrency.length > 1" class="dim note">
