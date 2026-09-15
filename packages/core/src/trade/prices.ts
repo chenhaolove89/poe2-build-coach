@@ -8,6 +8,8 @@ export interface PriceListing {
   modCount: number
   corrupted: boolean
   account: string | null
+  /** The seller's account is flagged online; an offline listing may never trade. */
+  online: boolean
 }
 
 export interface PriceSummary {
@@ -23,12 +25,15 @@ export interface PriceSummary {
   max: number | null
   /** Every currency seen, so mixed results are visible rather than hidden. */
   byCurrency: { currency: string; count: number }[]
+  /** How many of the shown listings belong to a seller who is currently online. */
+  onlineCount: number
 }
 
 interface RawListing {
   listing?: {
     price?: { amount?: number; currency?: string } | null
-    account?: { name?: string } | null
+    /** `online` is an object while the seller is online and null once they log off. */
+    account?: { name?: string; online?: unknown } | null
   } | null
   item?: {
     name?: string
@@ -74,6 +79,7 @@ export function summarisePrices(payload: unknown, limit = 10): PriceSummary {
       modCount: Array.isArray(entry.item?.explicitMods) ? entry.item!.explicitMods!.length : 0,
       corrupted: Boolean(entry.item?.corrupted),
       account: entry.listing?.account?.name ?? null,
+      online: Boolean(entry.listing?.account?.online),
     })
   }
 
@@ -96,5 +102,6 @@ export function summarisePrices(payload: unknown, limit = 10): PriceSummary {
     median: median(amounts),
     max: amounts.length ? amounts[amounts.length - 1] : null,
     byCurrency,
+    onlineCount: listings.filter((l) => l.online).length,
   }
 }

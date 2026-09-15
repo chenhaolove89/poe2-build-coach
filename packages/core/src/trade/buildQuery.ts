@@ -68,3 +68,17 @@ export function buildItemQuery(
 
   return { tradeQuery: { query, sort: { price: 'asc' } }, used, skipped }
 }
+
+/**
+ * Whether an empty result should be retried with offline sellers included.
+ *
+ * Measured on the live league: a chase unique like Headhunter has 602 listings
+ * and zero online sellers, because the people holding one are offline, so an
+ * online-only search answers "nothing" when the market is really 602 asks.
+ * Only name searches (uniques) fall back on their own — a rare that finds no
+ * online seller is genuinely unmatched, and retrying every filter tweak would
+ * spend the request budget twice as fast.
+ */
+export function shouldRetryOffline(search: { onlineOnly: boolean; byName: boolean; total: number }): boolean {
+  return search.onlineOnly && search.byName && search.total === 0
+}

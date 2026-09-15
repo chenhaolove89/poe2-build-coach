@@ -3,6 +3,7 @@ import {
   buildItemQuery,
   buildStatIndex,
   matchItemMods,
+  shouldRetryOffline,
   summarisePrices,
 } from '@poe2coach/core'
 import type { BuiltQuery, GameItem, PriceSummary, StatIndex, StatIndexEntry, StatMatch } from '@poe2coach/core'
@@ -110,6 +111,11 @@ export interface PriceCheckResult {
   /** How many listings the search matched in total (not just the fetched page). */
   total: number
   league: string
+  /**
+   * True when the online-only search found nothing and the result came from a
+   * second query that also allows sellers who are offline.
+   */
+  relaxed: boolean
 }
 
 /** Fetch could return a page of ids; ten is the trade site's own preview size. */
@@ -118,44 +124,48 @@ const FETCH_BATCH = 10
 /**
  * Price a parsed item: match its mods to official stat ids, search, then fetch
  * the first page of listings.
+ *
+ * When a name search comes back empty, the query is repeated with offline
+ * sellers allowed, because that is where a chase unique's listings live.
  */
 export async function priceCheck(
   item: GameItem,
-  options: { league: string; maxFilters?: number },
+  options: { league: string; maxFilters?: number; online?: boolean },
 ): Promise<PriceCheckResult> {
+  const onlineOnly = options.online !== false
   const matches = matchItemMods(item, getStatIndex())
-  const built = buildItemQuery(item, matches, { maxFilters: options.maxFilters })
-  if (!built.tradeQuery.query.type && !built.tradeQuery.query.name) {
-    throw new TradeError('这件物品没有可查询的基底名,无法查价。', 'no_base_type')
+
+  async function run(online: boolean): Promise<{ built: BuiltQuery; summary: PriceSummary; total: number }> {
+    const built = buildItemQuery(item, matches, { maxFilters: options.maxFilters, online })
+    if (!built.tradeQuery.query.type && !built.tradeQuery.query.name) {
+      throw new TradeError('这件物品没有可查询的基底名,无法查价。', 'no_base_type')
+    }
+
+    const search = (await apiFetch(`/search/poe2/${encodeURIComponent(options.league)}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(built.tradeQuery),
+    })) as { id?: string; result?: string[]; total?: number; error?: { message?: string } }
+    if (search.error) throw new TradeError(search.error.message ?? '查询被拒绝', 'query_rejected')
+
+    const ids = (search.result ?? []).slice(0, FETCH_BATCH)
+    const total = search.total ?? 0
+    const payload =
+      ids.length > 0 && search.id ? await apiFetch(`/fetch/${ids.join(',')}?query=${search.id}`) : { result: [] }
+    return { built, summary: summarisePrices(payload, FETCH_BATCH), total }
   }
 
-  const search = (await apiFetch(`/search/poe2/${encodeURIComponent(options.league)}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(built.tradeQuery),
-  })) as { id?: string; result?: string[]; total?: number; error?: { message?: string } }
-  if (search.error) throw new TradeError(search.error.message ?? '查询被拒绝', 'query_rejected')
-
-  const ids = (search.result ?? []).slice(0, FETCH_BATCH)
-  const total = search.total ?? 0
-  if (ids.length === 0 || !search.id) {
-    return {
-      matches,
-      built,
-      summary: summarisePrices({ result: [] }),
-      total,
-      league: options.league,
+  let outcome = await run(onlineOnly)
+  let relaxed = false
+  const byName = Boolean(outcome.built.tradeQuery.query.name)
+  if (shouldRetryOffline({ onlineOnly, byName, total: outcome.total })) {
+    const offline = await run(false)
+    if (offline.total > 0) {
+      outcome = offline
+      relaxed = true
     }
   }
-
-  const fetched = await apiFetch(`/fetch/${ids.join(',')}?query=${search.id}`)
-  return {
-    matches,
-    built,
-    summary: summarisePrices(fetched, FETCH_BATCH),
-    total,
-    league: options.league,
-  }
+  return { matches, ...outcome, league: options.league, relaxed }
 }
 
 const LEAGUE_KEY = 'poe2coach.tradeLeague'

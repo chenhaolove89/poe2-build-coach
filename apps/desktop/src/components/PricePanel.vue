@@ -24,10 +24,12 @@ const loading = ref(false)
 const result = ref<PriceCheckResult | null>(null)
 const leagues = ref<string[]>([])
 const league = ref(savedLeague() ?? savedLeague() ?? '')
+const onlineOnly = ref(true)
 const copied = ref(false)
 
 const desktop = isDesktopRuntime()
-const limit = computed(() => rateLimitState())
+/** Refreshed by hand: the request log is not reactive, so a computed would freeze at its first value. */
+const limit = ref(rateLimitState())
 
 const RARITY_ZH: Record<string, string> = {
   NORMAL: '普通',
@@ -65,6 +67,8 @@ onMounted(async () => {
     if (!league.value && leagues.value.length > 0) league.value = leagues.value[0]
   } catch {
     /* league list is a convenience; the check below reports real problems */
+  } finally {
+    limit.value = rateLimitState()
   }
 })
 
@@ -98,12 +102,13 @@ async function onCheck() {
   queryError.value = null
   result.value = null
   try {
-    result.value = await priceCheck(item.value, { league: league.value })
+    result.value = await priceCheck(item.value, { league: league.value, online: onlineOnly.value })
     rememberLeague(league.value)
   } catch (e) {
     queryError.value = e instanceof TradeError ? e.message : String(e)
   } finally {
     loading.value = false
+    limit.value = rateLimitState()
   }
 }
 
@@ -136,6 +141,10 @@ async function copyQuery() {
         <option v-if="!leagues.length" :value="league">{{ league || '(未加载)' }}</option>
         <option v-for="l in leagues" :key="l" :value="l">{{ l }}</option>
       </select>
+      <label class="check dim">
+        <input v-model="onlineOnly" type="checkbox" />
+        仅在线卖家
+      </label>
       <span class="dim limit">
         本机配额:{{ limit.usedInWindow }} / {{ limit.maxInWindow }} 次每 {{ limit.windowSeconds }} 秒
       </span>
@@ -178,6 +187,10 @@ async function copyQuery() {
     </template>
 
     <template v-if="result">
+      <div v-if="result.relaxed" class="notice warn">
+        在线卖家暂无挂单,已放宽为包含离线卖家的全部挂单(共 {{ result.total }} 条)。离线卖家未必能成交,低价单可能已经失效。
+      </div>
+
       <h2>价格</h2>
       <div v-if="result.summary.priced" class="summary">
         <div class="stat">
@@ -195,6 +208,10 @@ async function copyQuery() {
         <div class="stat">
           <span class="dim">命中总数</span>
           <b>{{ result.total }}</b>
+        </div>
+        <div class="stat">
+          <span class="dim">这批在线</span>
+          <b>{{ result.summary.onlineCount }} / {{ result.summary.priced }}</b>
         </div>
       </div>
 
@@ -223,13 +240,14 @@ async function copyQuery() {
           <span class="dim">
             <template v-if="l.itemLevel">ilvl {{ l.itemLevel }} · </template>{{ l.modCount }} 词缀
             <template v-if="l.corrupted"> · 已腐化</template>
+            <template v-if="!l.online"> · 离线</template>
           </span>
         </div>
       </div>
       <p v-else class="dim note">
-        这个条件没有在线挂单<template v-if="result.summary.unpriced">
-          ({{ result.summary.unpriced }} 条挂单未标价)</template
-        >,可以放宽词缀或换联赛再试。
+        {{ onlineOnly ? '在线卖家没有挂单' : '这个条件没有任何挂单' }}<template v-if="result.summary.unpriced"
+          >({{ result.summary.unpriced }} 条挂单未标价)</template
+        >,可以放宽词缀、取消"仅在线卖家",或换联赛再试。
       </p>
 
       <div class="btn-row">
@@ -277,6 +295,19 @@ async function copyQuery() {
 .limit {
   font-size: 11px;
   margin-left: auto;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.check input {
+  accent-color: #e8b04b;
+  cursor: pointer;
+  margin: 0;
 }
 textarea {
   width: 100%;

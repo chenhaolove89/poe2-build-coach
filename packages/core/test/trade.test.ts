@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { skeleton, modValues } from '../src/trade/skeleton.js'
 import { buildStatIndex, matchItemMods, matchStat } from '../src/trade/matchStats.js'
-import { buildItemQuery } from '../src/trade/buildQuery.js'
+import { buildItemQuery, shouldRetryOffline } from '../src/trade/buildQuery.js'
 import { summarisePrices } from '../src/trade/prices.js'
 import type { StatIndexEntry } from '../src/trade/matchStats.js'
 import type { GameItem } from '../src/types.js'
@@ -107,15 +107,40 @@ describe('trade query construction', () => {
     expect(rareBuilt.used).toHaveLength(6)
     expect(rareBuilt.skipped).toHaveLength(3)
   })
+
+  it('asks for online sellers unless told otherwise', () => {
+    const matches = matchItemMods(ITEM, INDEX)
+    expect(buildItemQuery(ITEM, matches).tradeQuery.query.status.option).toBe('online')
+    expect(buildItemQuery(ITEM, matches, { online: false }).tradeQuery.query.status.option).toBe('any')
+  })
+})
+
+describe('offline fallback', () => {
+  it('retries a name search that found nothing online', () => {
+    expect(shouldRetryOffline({ onlineOnly: true, byName: true, total: 0 })).toBe(true)
+  })
+
+  it('does not retry a search that already returned listings', () => {
+    expect(shouldRetryOffline({ onlineOnly: true, byName: true, total: 602 })).toBe(false)
+  })
+
+  it('does not retry a rare searched by its mods, where an empty result is real', () => {
+    expect(shouldRetryOffline({ onlineOnly: true, byName: false, total: 0 })).toBe(false)
+  })
+
+  it('does not retry when the search was already open to offline sellers', () => {
+    expect(shouldRetryOffline({ onlineOnly: false, byName: true, total: 0 })).toBe(false)
+  })
 })
 
 describe('price summarising', () => {
+  // `online` is an object while the seller is online and null once they log off.
   const payload = {
     result: [
-      { listing: { price: { amount: 1, currency: 'regal' }, account: { name: 'a' } }, item: { name: 'Fate Harness', typeLine: 'Heavy Belt', ilvl: 82, explicitMods: [1, 2, 3] } },
-      { listing: { price: { amount: 3, currency: 'regal' }, account: { name: 'b' } }, item: { name: 'Healthy Heavy Belt', typeLine: 'Heavy Belt', ilvl: 68, explicitMods: [1] } },
-      { listing: { price: { amount: 2, currency: 'exalted' }, account: { name: 'c' } }, item: { name: 'Third', typeLine: 'Heavy Belt', ilvl: 80, explicitMods: [1, 2] } },
-      { listing: { price: null, account: { name: 'd' } }, item: { name: 'Unpriced', typeLine: 'Heavy Belt' } },
+      { listing: { price: { amount: 1, currency: 'regal' }, account: { name: 'a', online: { league: 'X' } } }, item: { name: 'Fate Harness', typeLine: 'Heavy Belt', ilvl: 82, explicitMods: [1, 2, 3] } },
+      { listing: { price: { amount: 3, currency: 'regal' }, account: { name: 'b', online: null } }, item: { name: 'Healthy Heavy Belt', typeLine: 'Heavy Belt', ilvl: 68, explicitMods: [1] } },
+      { listing: { price: { amount: 2, currency: 'exalted' }, account: { name: 'c', online: { league: 'X', status: 'afk' } } }, item: { name: 'Third', typeLine: 'Heavy Belt', ilvl: 80, explicitMods: [1, 2] } },
+      { listing: { price: null, account: { name: 'd', online: null } }, item: { name: 'Unpriced', typeLine: 'Heavy Belt' } },
     ],
   }
 
@@ -134,10 +159,17 @@ describe('price summarising', () => {
     expect(summary.listings[0].modCount).toBe(3)
   })
 
+  it('flags which listings belong to a seller who is online', () => {
+    const summary = summarisePrices(payload)
+    expect(summary.listings.map((l) => l.online)).toEqual([true, false, true])
+    expect(summary.onlineCount).toBe(2)
+  })
+
   it('survives an empty result', () => {
     const summary = summarisePrices({ result: [] })
     expect(summary.priced).toBe(0)
     expect(summary.median).toBeNull()
     expect(summary.currency).toBeNull()
+    expect(summary.onlineCount).toBe(0)
   })
 })
