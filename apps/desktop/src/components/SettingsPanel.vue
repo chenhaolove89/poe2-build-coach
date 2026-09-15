@@ -1,16 +1,17 @@
 <script setup lang="ts">
 /**
- * Realm and display-language settings.
+ * Realm and login settings.
  *
- * The two switches are independent on purpose. The realm decides which trade
- * site answers and, with it, which language the game client writes items in;
- * the language decides how this app renders Chinese. A 国服 player who reads
- * Traditional is a real combination, and so is a 台服 player reading Simplified.
+ * The display language is not offered here: it follows the realm, because a
+ * realm's client only writes one script (see `Realm.reading`). One switch
+ * instead of two also means the two can never disagree, which they silently
+ * could before — matching used the realm's pack while the UI showed the other
+ * script.
  */
 import { computed, ref } from 'vue'
-import { REALMS, REALM_IDS, type RealmId, type ZhVariant } from '@poe2coach/core'
+import { REALMS, REALM_IDS, type RealmId } from '@poe2coach/core'
 import { t } from '../i18n'
-import { cnSession, realmId, selectRealm, selectVariant, setCnSession, zhVariant } from '../settings'
+import { cnSession, realmId, selectRealm, setCnSession, zhVariant } from '../settings'
 import { linkRealmSession, SessionLinkError } from '../sessionLink'
 import { isDesktopRuntime } from '../tradeClient'
 
@@ -20,11 +21,6 @@ const linking = ref(false)
 const linkError = ref<string | null>(null)
 
 const desktop = isDesktopRuntime()
-
-const VARIANTS: { id: ZhVariant; label: string; note: string }[] = [
-  { id: 'hans', label: '简体中文', note: '简体字' },
-  { id: 'hant', label: '繁體中文', note: '繁體字' },
-]
 
 const active = computed(() => REALMS[realmId.value])
 /** The one realm whose trade site will not answer without a login. */
@@ -76,7 +72,7 @@ async function startLink() {
     <section class="block">
       <h3>{{ t('服务器') }}</h3>
       <p class="hint">
-        {{ t('决定查价走哪个交易站。三个服的游戏文本语言不同，粘贴的装备要和所在服的模板匹配才能查出价格。') }}
+        {{ t('决定查价走哪个交易站。三个服的游戏文本语言不同，粘贴的装备要和所在服的模板匹配才能查出价格。界面语言跟着服务器自动切换，不用单独选。') }}
       </p>
       <div class="realms">
         <button
@@ -99,26 +95,6 @@ async function startLink() {
         <template v-else>
           {{ t('这个服可以直接查询，不需要登录。') }}
         </template>
-      </p>
-    </section>
-
-    <section class="block">
-      <h3>{{ t('界面语言') }}</h3>
-      <p class="hint">{{ t('只影响本工具显示的中文，不改变查询的服务器。') }}</p>
-      <div class="variants">
-        <button
-          v-for="v in VARIANTS"
-          :key="v.id"
-          class="variant"
-          :class="{ active: zhVariant === v.id }"
-          @click="selectVariant(v.id)"
-        >
-          <span class="variant-label">{{ v.label }}</span>
-          <span class="variant-note">{{ v.note }}</span>
-        </button>
-      </div>
-      <p class="note dim">
-        {{ t('简体与繁体按字符转换，同一件装备在国服叫「引路石」、在台服叫「換界石」——这类用词差异来自各服自己的数据，不是转换能覆盖的，所以切换服务器比切换语言更关键。') }}
       </p>
     </section>
 
@@ -187,6 +163,9 @@ async function startLink() {
           <span class="v">{{ zhVariant === 'hans' ? '简体中文' : '繁體中文' }}</span>
         </div>
       </div>
+      <p class="note dim">
+        {{ t('界面语言由服务器决定：简体只在国服存在，国际服客户端自带的是繁体而不是简体，所以选了服务器就等于选了语言，两者不会不一致。') }}
+      </p>
     </section>
   </div>
 </template>
@@ -224,8 +203,7 @@ h3 {
   line-height: 1.75;
   margin-top: 10px;
 }
-.realms,
-.variants {
+.realms {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -275,38 +253,6 @@ h3 {
   border: 1px solid #4a3d20;
   border-radius: 8px;
   padding: 0 7px;
-}
-.variant {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: flex-start;
-  background: #0b0d12;
-  border: 1px solid #2c3244;
-  border-radius: 8px;
-  padding: 8px 18px;
-  color: #cfd4e4;
-  cursor: pointer;
-  font: inherit;
-}
-.variant:hover {
-  border-color: #4a5468;
-}
-.variant.active {
-  border-color: #e8b04b;
-  background: #1f1a10;
-}
-.variant-label {
-  font-size: 14px;
-  font-weight: 600;
-}
-.variant.active .variant-label {
-  color: #e8b04b;
-}
-.variant-note {
-  font-size: 10px;
-  color: #6b7390;
 }
 .link-row {
   display: flex;

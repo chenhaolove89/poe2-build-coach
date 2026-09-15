@@ -1,6 +1,11 @@
 /**
- * User settings: which trade realm to talk to, which Chinese variant to read,
- * and the session cookie the one login-gated realm needs.
+ * User settings: which trade realm to talk to, and the session cookie the one
+ * login-gated realm needs.
+ *
+ * There is no display-language setting. It follows the realm: Simplified only
+ * exists on the Tencent client, and the international client ships Traditional
+ * rather than Simplified, so picking a realm already picks the script. See
+ * `Realm.reading`.
  *
  * These are module-level refs rather than a composable instance so that any
  * component can read them and Vue still tracks the dependency — a template
@@ -10,12 +15,13 @@ import { computed, ref, watch } from 'vue'
 import { REALMS, realmOf, type Realm, type RealmId, type ZhVariant } from '@poe2coach/core'
 
 const REALM_KEY = 'poe2coach.realm'
-const VARIANT_KEY = 'poe2coach.zhVariant'
 /**
- * Kept apart from the other two: this one is a credential, and it should be
+ * Kept apart from the realm: this one is a credential, and it should be
  * obvious which key to delete.
  */
 const SESSION_KEY = 'poe2coach.cnSession'
+/** Written by the version that had a language switch of its own; now unused. */
+const LEGACY_VARIANT_KEY = 'poe2coach.zhVariant'
 
 function read(key: string): string | null {
   try {
@@ -37,7 +43,10 @@ function write(key: string, value: string): void {
 /** International is the default: it is the only realm that never needs a login. */
 export const realmId = ref<RealmId>(realmOf(read(REALM_KEY)).id)
 
-export const zhVariant = ref<ZhVariant>(read(VARIANT_KEY) === 'hant' ? 'hant' : 'hans')
+export const realm = computed<Realm>(() => REALMS[realmId.value])
+
+/** The script this realm's players read. Not user-selectable. */
+export const zhVariant = computed<ZhVariant>(() => realm.value.reading)
 
 /**
  * A Tencent session cookie (POESESSID), in the "name=value" form DevTools
@@ -45,22 +54,8 @@ export const zhVariant = ref<ZhVariant>(read(VARIANT_KEY) === 'hant' ? 'hant' : 
  */
 export const cnSession = ref<string>(read(SESSION_KEY) ?? '')
 
-export const realm = computed<Realm>(() => REALMS[realmId.value])
-
-/**
- * Pick a realm, and follow it with the language its player most likely reads:
- * 国服 clients only ship Simplified and Garena's only Traditional, so pairing
- * them is right far more often than not. The language stays switchable
- * afterwards — plenty of 国服 players prefer reading Traditional.
- */
 export function selectRealm(id: RealmId): void {
   realmId.value = id
-  if (id === 'cn') zhVariant.value = 'hans'
-  else if (id === 'tw') zhVariant.value = 'hant'
-}
-
-export function selectVariant(variant: ZhVariant): void {
-  zhVariant.value = variant
 }
 
 export function setCnSession(cookie: string): void {
@@ -68,5 +63,8 @@ export function setCnSession(cookie: string): void {
 }
 
 watch(realmId, (v) => write(REALM_KEY, v), { immediate: true })
-watch(zhVariant, (v) => write(VARIANT_KEY, v), { immediate: true })
 watch(cnSession, (v) => write(SESSION_KEY, v), { immediate: true })
+
+// Drop the key the removed language switch used to write, so a later code path
+// cannot resurrect a stale choice.
+write(LEGACY_VARIANT_KEY, '')

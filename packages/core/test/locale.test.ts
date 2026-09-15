@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseItemText } from '../src/items/parseItemText.js'
-import { REALMS, REALM_IDS, isRealmId, realmOf, realmVariant } from '../src/trade/realms.js'
+import { REALMS, REALM_IDS, isRealmId, realmOf } from '../src/trade/realms.js'
 import { createZhConverter, rewriteVariant } from '../src/i18n/variant.js'
 import { buildStatIndex, matchStat } from '../src/trade/matchStats.js'
 import type { StatIndexEntry } from '../src/trade/matchStats.js'
@@ -207,8 +207,15 @@ describe('realm metadata', () => {
     expect(realmOf(null).id).toBe('intl')
     expect(isRealmId('tw')).toBe(true)
     expect(isRealmId('de')).toBe(false)
-    expect(realmVariant(REALMS.intl)).toBeNull()
-    expect(realmVariant(REALMS.tw)).toBe('hant')
+  })
+
+  it('carries the script each realm reads, so language needs no separate setting', () => {
+    // Simplified exists only on the Tencent realm. The international client
+    // ships Traditional rather than Simplified, so an English-locale realm
+    // still reads Traditional instead of falling back to English.
+    expect(REALMS.cn.reading).toBe('hans')
+    expect(REALMS.tw.reading).toBe('hant')
+    expect(REALMS.intl.reading).toBe('hant')
   })
 })
 

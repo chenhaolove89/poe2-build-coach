@@ -173,7 +173,11 @@ function deleteStored(id: string) {
           {{ t(n.label) }}
         </button>
       </nav>
-      <span class="realm-badge" :title="realm.apiBase" @click="view = 'settings'">
+      <span
+        class="realm-badge"
+        :title="`${realm.apiBase}\n${t('尾标是客户端写物品的语言,决定你粘贴的装备能不能匹配;界面语言跟着服务器走。')}`"
+        @click="view = 'settings'"
+      >
         {{ t(realm.label) }} · {{ realm.lang === 'en' ? 'EN' : realm.lang === 'zh-Hans' ? '简' : '繁' }}
       </span>
       <span v-if="hasBuild" class="build-badge">{{ buildTitle }}</span>

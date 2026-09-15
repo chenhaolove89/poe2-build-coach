@@ -9,15 +9,16 @@
  *
  *   intl  www.pathofexile.com   English             (the global client)
  *   cn    poe.game.qq.com       Simplified Chinese  (Tencent / WeGame)
- *   tw    pathofexile.tw        Traditional Chinese (Garena)
+ *   tw    pathofexile.tw        Traditional Chinese (Hotcool, 台港澳)
  *
  * The stat ids are shared across all three — only the template wording and word
  * order differ (international "#% to Fire Resistance", Tencent "火焰抗性 #%",
- * Garena "#%火焰抗性") — which is why each realm needs its own pack.
+ * Hotcool "#%火焰抗性") — which is why each realm needs its own pack.
  *
- * Simplified Chinese exists only on the Tencent realm; the international and
- * Garena clients write Traditional.
+ * Simplified Chinese exists only on the Tencent realm; the international client
+ * ships Traditional, so a player on it reads Traditional rather than English.
  */
+import type { ZhVariant } from '../i18n/variant.js'
 
 export type RealmId = 'intl' | 'cn' | 'tw'
 
@@ -36,6 +37,16 @@ export interface Realm {
   siteBase: string
   lang: RealmLanguage
   /**
+   * Which Chinese script this realm's players read, and so what the app
+   * displays. Simplified exists only on the Tencent client; the international
+   * client ships Traditional (cmn-Hant) and no Simplified at all, so an
+   * English-locale realm reads Traditional rather than falling back to English.
+   *
+   * This is why the display language is not a separate setting: choosing a
+   * realm already determines it.
+   */
+  reading: ZhVariant
+  /**
    * True when the trade site refuses anonymous searches. Tencent's login is the
    * game account, so price checks there need a session cookie the player copies
    * out of their own browser — see the POESESSID handling in the desktop app.
@@ -51,6 +62,7 @@ export const REALMS: Record<RealmId, Realm> = {
     apiBase: 'https://www.pathofexile.com/api/trade2',
     siteBase: 'https://www.pathofexile.com/trade2',
     lang: 'en',
+    reading: 'hant',
     loginRequired: false,
   },
   cn: {
@@ -60,19 +72,20 @@ export const REALMS: Record<RealmId, Realm> = {
     apiBase: 'https://poe.game.qq.com/api/trade2',
     siteBase: 'https://poe.game.qq.com/trade2',
     lang: 'zh-Hans',
+    reading: 'hans',
     loginRequired: true,
   },
   tw: {
     id: 'tw',
     label: '台服',
     // Authored in Simplified like every other string the UI shows, so the
-    // display-language switch can reach it; 繁體 stays put as the label for
-    // the realm's own client language. The operator is 熱酷科技, the company
-    // that took over the 台港澳 agency from Garena.
+    // display rewrite can reach it; 繁體 stays put as the label for the
+    // realm's own client language.
     operator: '热酷科技 · 繁體',
     apiBase: 'https://pathofexile.tw/api/trade2',
     siteBase: 'https://pathofexile.tw/trade2',
     lang: 'zh-Hant',
+    reading: 'hant',
     loginRequired: false,
   },
 }
@@ -86,15 +99,4 @@ export function isRealmId(value: unknown): value is RealmId {
 /** Falls back to the international realm for anything unrecognised. */
 export function realmOf(id: string | null | undefined): Realm {
   return isRealmId(id) ? REALMS[id] : REALMS.intl
-}
-
-/**
- * The display language a realm's data is natively written in, as the app's
- * `ZhVariant` calls it. Used to skip a pointless rewrite when the player reads
- * the realm's own language.
- */
-export function realmVariant(realm: Realm): 'hans' | 'hant' | null {
-  if (realm.lang === 'zh-Hans') return 'hans'
-  if (realm.lang === 'zh-Hant') return 'hant'
-  return null
 }
