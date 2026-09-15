@@ -8,6 +8,7 @@ import GearPanel from './components/GearPanel.vue'
 import LevelingPanel from './components/LevelingPanel.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import MapsPanel from './components/MapsPanel.vue'
+import PricePanel from './components/PricePanel.vue'
 import { loadTree } from './treeData'
 import { nameZh } from './nameZh'
 import { addBuild, loadBuilds, removeBuild } from './buildStore'
@@ -16,7 +17,7 @@ import mapsJson from '@poe2coach/data/maps.json'
 
 const MAP_COUNT = (mapsJson as unknown as { maps: unknown[] }).maps.length
 
-type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps'
+type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps' | 'price'
 
 const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'home', label: '主页' },
@@ -24,6 +25,7 @@ const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'gear', label: '装备', requiresBuild: true },
   { key: 'skills', label: '技能', requiresBuild: true },
   { key: 'leveling', label: '升级', requiresBuild: true },
+  { key: 'price', label: '查价' },
   { key: 'maps', label: '地图' },
 ]
 
@@ -229,6 +231,12 @@ function deleteStored(id: string) {
         <p class="go">进入 →</p>
       </button>
 
+      <button class="card feature" @click="view = 'price'">
+        <h3>💰 查价</h3>
+        <p class="desc">粘贴装备取回官方交易站实时挂单 · 只读接口</p>
+        <p class="go">进入 →</p>
+      </button>
+
       <section class="card span-2">
         <div class="lib-head">
           <h3>我的 Build 库({{ builds.length }})</h3>
@@ -262,6 +270,10 @@ function deleteStored(id: string) {
 
     <main v-else-if="view === 'maps'" class="centered">
       <MapsPanel />
+    </main>
+
+    <main v-else-if="view === 'price'" class="centered">
+      <PricePanel />
     </main>
   </div>
 </template>

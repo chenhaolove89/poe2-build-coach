@@ -9,6 +9,9 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+# The trade site and poe.ninja send no CORS headers, so requests have to leave
+# through Rust instead of the webview.
+tauri-plugin-http = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

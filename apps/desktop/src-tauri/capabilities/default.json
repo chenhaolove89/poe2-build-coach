@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Core window permissions plus outbound HTTPS to the read-only PoE2 data APIs.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://www.pathofexile.com/*" },
+        { "url": "https://poe.ninja/*" }
+      ]
+    }
+  ]
+}
