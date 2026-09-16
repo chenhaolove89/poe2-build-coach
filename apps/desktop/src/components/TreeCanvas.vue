@@ -511,6 +511,30 @@ function draw() {
       blit(ctx, 'frame', backing, pos.x, pos.y, (index?.drawFrame[`${kindName}.backing`] ?? frameSize) * shrink)
     }
 
+    /*
+     * Icon first, frame over it, and the icon masked to a circle.
+     *
+     * The node art in the atlas is square — 34, 49 and 68 pixel boxes whose
+     * corners are opaque — so drawing it at its own size lets those corners
+     * cross the ring. The game shows a disc, so the icon is clipped to one and
+     * the frame is then laid on top, which is also what hides the seam.
+     *
+     * Anything the build wants gets the lit art; only nodes with no part in it
+     * stay desaturated. Previously only the leveling-progress set lit up, so a
+     * hand-picked tree showed gold rings around grey icons.
+     */
+    const entry = index?.nodes[node.icon ?? '']?.[kind]
+    const lit = state !== 'unallocated'
+    const iconRect = lit ? entry?.allocated : entry?.unallocated
+    if (iconRect) {
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc(pos.x, pos.y, (drawSize / 2) * 0.99, 0, Math.PI * 2)
+      ctx.clip()
+      blit(ctx, lit ? 'skills' : 'skills-disabled', iconRect, pos.x, pos.y, drawSize)
+      ctx.restore()
+    }
+
     if (state === 'allocated') {
       ctx.shadowColor = 'rgba(240,186,88,0.55)'
       ctx.shadowBlur = 10 / scale
@@ -534,11 +558,8 @@ function draw() {
       ctx.stroke()
     }
 
-    const entry = index?.nodes[node.icon ?? '']?.[kind]
-    const iconRect = state === 'allocated' ? entry?.allocated : entry?.unallocated
     // Mastery nodes have no entry in this build's atlas, so they keep the bare
     // frame rather than a hole.
-    blit(ctx, state === 'allocated' ? 'skills' : 'skills-disabled', iconRect, pos.x, pos.y, drawSize)
   }
 }
 
