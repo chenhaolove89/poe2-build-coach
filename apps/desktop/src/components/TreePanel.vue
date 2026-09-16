@@ -15,7 +15,7 @@ import { QUEST_POINT_TOTAL } from '@poe2coach/core'
 import { bilingual, t } from '../i18n'
 import type { StoredTreePreset } from '../treePresetStore'
 import { isDesktopRuntime } from '../tradeClient'
-import { overlayHotkey, toggleTreeOverlay } from '../overlayClient'
+import { overlayHotkey, setOverlayClickThrough, toggleTreeOverlay } from '../overlayClient'
 import TreeCanvas from './TreeCanvas.vue'
 
 const props = defineProps<{
@@ -78,6 +78,8 @@ const overlayOn = ref(false)
 const overlayError = ref<string | null>(null)
 /** Resolved by Rust at startup; null when every candidate key was taken. */
 const overlayKey = ref<string | null>(null)
+/** Locked means it ignores clicks; unlocked means it can be dragged. */
+const overlayLocked = ref(false)
 
 onMounted(async () => {
   overlayKey.value = await overlayHotkey()
@@ -92,6 +94,18 @@ async function onToggleOverlay() {
   overlayError.value = null
   try {
     overlayOn.value = await toggleTreeOverlay()
+    // It opens unlocked, so it can be dragged into place.
+    if (overlayOn.value) overlayLocked.value = false
+  } catch {
+    overlayError.value = t('叠加层需要桌面版运行。')
+  }
+}
+
+async function onToggleOverlayLock() {
+  overlayError.value = null
+  try {
+    await setOverlayClickThrough(!overlayLocked.value)
+    overlayLocked.value = !overlayLocked.value
   } catch {
     overlayError.value = t('叠加层需要桌面版运行。')
   }
@@ -212,6 +226,16 @@ function onSavePreset() {
       >
         {{ overlayOn ? t('收起叠加层') : t('叠加到游戏') }}
         <template v-if="overlayKey"> · {{ overlayKey }}</template>
+      </button>
+
+      <button
+        v-if="overlayOn"
+        class="overlay-btn"
+        :class="{ on: overlayLocked }"
+        :title="t('锁定后卡片不再接收点击,游戏正常操作;要挪位置就先解锁。')"
+        @click="onToggleOverlayLock"
+      >
+        {{ overlayLocked ? t('已锁定(点击可拖动)') : t('锁定位置') }}
       </button>
 
       <button class="primary" :disabled="!build || overBudget" @click="emit('save')">

@@ -1,13 +1,19 @@
 <script setup lang="ts">
 /**
- * The passive-tree overlay: a reference the player summons over the game with a
- * hotkey, and dismisses the same way.
+ * The passive-tree overlay: a small reference card the player summons over the
+ * game with a hotkey, and dismisses the same way.
+ *
+ * It shows **only the region the selected nodes sit in**, framed automatically,
+ * rather than the whole tree laid over the game's. Lining the two up was the
+ * first attempt and it cannot work: the app has no way to know how the game has
+ * panned or zoomed its own tree, so the two renderings never match. Cropping to
+ * the selection sidesteps that entirely — there is nothing to align, it is a
+ * card the player parks somewhere and reads.
  *
  * It reads nothing from the game. The node order comes from the build's own
- * leveling plan, so what it shows is "the tree you imported, in the order you
- * planned to take it" — the player matches it up by eye. That is the whole
- * reason it is allowed to exist over the game at all: no memory, no injection,
- * no packets, and nothing drawn unless asked for.
+ * leveling plan, and the player follows it by eye. That is the whole reason it
+ * is allowed over the game at all: no memory, no injection, no packets, and
+ * nothing drawn unless asked for.
  *
  * It lives in its own window, which means its own JavaScript context, so the
  * build is picked up from the share code the main window keeps in storage.
@@ -41,26 +47,35 @@ function readBuild() {
 const active = computed(() => new Set(build.value?.passiveNodes ?? []))
 const startNode = computed(() => resolveStartNode(tree, build.value?.className ?? null))
 
-/**
- * The order to take the nodes in, keyed by node id. Connector nodes the plan
- * walks through are included, because the player has to click those too.
- */
-const order = computed(() => {
+const steps = computed(() => {
   const b = build.value
-  if (!b) return new Map<number, number>()
-  const plan = buildLevelingPlan(tree, b.passiveNodes, startNode.value)
-  const map = new Map<number, number>()
-  plan.steps.forEach((step, i) => map.set(step.nodeId, i + 1))
-  return map
+  if (!b) return []
+  return buildLevelingPlan(tree, b.passiveNodes, startNode.value).steps
 })
 
 const nextStep = computed(() => {
+  const first = steps.value[0]
+  if (!first) return null
+  return { name: bilingual(first.name), total: steps.value.length }
+})
+
+/**
+ * Node id -> the step it is taken at. Connector nodes the plan walks through are
+ * included, because the player has to click those too.
+ */
+const order = computed(() => {
+  const map = new Map<number, number>()
+  steps.value.forEach((step, i) => map.set(step.nodeId, i + 1))
+  return map
+})
+
+/** The region to frame: the selection, plus the start it grows from. */
+const framed = computed(() => {
   const b = build.value
   if (!b) return null
-  const plan = buildLevelingPlan(tree, b.passiveNodes, startNode.value)
-  const first = plan.steps[0]
-  if (!first) return null
-  return { order: 1, name: bilingual(first.name), total: plan.steps.length }
+  const ids = new Set(b.passiveNodes)
+  if (startNode.value != null) ids.add(startNode.value)
+  return ids
 })
 
 function onKey(e: KeyboardEvent) {
@@ -71,7 +86,7 @@ function onKey(e: KeyboardEvent) {
 onMounted(() => {
   readBuild()
   // The main window writes this whenever the build changes, and storage events
-  // reach other windows of the same origin.
+  // reach the other windows of the same origin.
   window.addEventListener('storage', (e) => {
     if (e.key === BUILD_KEY) readBuild()
   })
@@ -83,13 +98,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 <template>
   <div class="overlay">
-    <div v-if="nextStep" class="hud">
-      <span class="label">{{ t('下一个') }}</span>
-      <span class="num">#1</span>
-      <span class="name">{{ nextStep.name }}</span>
-      <span class="dim">{{ t('共') }} {{ nextStep.total }} {{ t('步') }} · F8 {{ t('关闭') }}</span>
-    </div>
-    <div v-else-if="notice" class="hud">{{ notice }}</div>
+    <!-- Dragging the card: this bar is the window's handle. -->
+    <header class="bar" data-tauri-drag-region>
+      <template v-if="nextStep">
+        <span class="label" data-tauri-drag-region>{{ t('下一个') }}</span>
+        <span class="num" data-tauri-drag-region>#1</span>
+        <span class="name" data-tauri-drag-region>{{ nextStep.name }}</span>
+        <span class="dim" data-tauri-drag-region>· {{ t('共') }} {{ nextStep.total }} {{ t('步') }}</span>
+      </template>
+      <span v-else class="dim" data-tauri-drag-region>{{ notice ?? t('这份 Build 还没有天赋') }}</span>
+      <span class="spacer" data-tauri-drag-region />
+      <span class="move" data-tauri-drag-region>{{ t('拖动此处移动') }}</span>
+    </header>
     <main class="canvas-wrap">
       <TreeCanvas
         :tree="tree"
@@ -97,6 +117,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         :start-node="startNode"
         :background="null"
         :order="order"
+        :fit-to="framed"
         :editable="false"
       />
     </main>
@@ -105,49 +126,63 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 <style scoped>
 /*
- * The window itself is transparent, so nothing here may paint a background:
- * the game shows through everywhere the tree is not drawn.
+ * A card, not a full-screen sheet: it sits in a corner of the screen and the
+ * game shows around it. The window is transparent only so the corners can be
+ * rounded.
  */
 .overlay {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
-  background: transparent;
+  box-sizing: border-box;
+  background: rgba(9, 11, 16, 0.9);
+  border: 1px solid rgba(232, 176, 75, 0.45);
+  border-radius: 10px;
+  overflow: hidden;
+  color: #cfd4e4;
+  font: 13px/1.4 'Segoe UI', 'Microsoft YaHei', sans-serif;
 }
-.canvas-wrap {
-  height: 100%;
-  background: transparent;
-}
-.hud {
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
+.bar {
   display: flex;
   align-items: baseline;
-  gap: 10px;
-  padding: 8px 18px;
-  border-radius: 999px;
-  background: rgba(10, 12, 18, 0.82);
-  border: 1px solid rgba(232, 176, 75, 0.5);
-  color: #cfd4e4;
-  font: 14px/1.4 'Segoe UI', 'Microsoft YaHei', sans-serif;
-  pointer-events: none;
+  gap: 8px;
+  padding: 7px 12px;
+  background: rgba(16, 19, 28, 0.95);
+  border-bottom: 1px solid rgba(44, 50, 68, 0.9);
+  cursor: move;
+  user-select: none;
+  flex: 0 0 auto;
 }
-.hud .label {
+.bar .label {
   color: #8a93ad;
-  font-size: 12px;
+  font-size: 11px;
 }
-.hud .num {
+.bar .num {
   color: #ffd979;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16px;
 }
-.hud .name {
+.bar .name {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.hud .dim {
+.bar .dim {
   color: #6b7390;
-  font-size: 12px;
+  font-size: 11px;
+}
+.bar .spacer {
+  flex: 1;
+}
+.bar .move {
+  color: #4d5570;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  background: transparent;
 }
 </style>

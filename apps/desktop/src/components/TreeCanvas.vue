@@ -45,6 +45,13 @@ const props = defineProps<{
    * into "click this one next".
    */
   order?: Map<number, number>
+  /**
+   * Frame the view on these nodes instead of on everything drawn. The overlay
+   * uses it to show only the region the selection sits in, which is what lets it
+   * be a small card: there is nothing to line up with the game, so it does not
+   * have to be the whole tree.
+   */
+  fitTo?: Set<number> | null
 }>()
 
 const emit = defineEmits<{ toggleNode: [id: number] }>()
@@ -256,16 +263,30 @@ function rebuildGeometry() {
   // Frame the main tree plus the relocated cluster. Every other ascendancy
   // cluster stays parked ~17000 units out, and letting those into the bounds is
   // what used to shrink the tree to half the canvas.
+  //
+  // `fitTo` narrows that to a set of nodes, padded so the outermost ones are
+  // not flush against the edge.
+  const framed = props.fitTo && props.fitTo.size > 0 ? new Set([...props.fitTo].filter((id) => inBounds.has(id))) : null
+  const framing = framed && framed.size > 0 ? framed : inBounds
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
   let maxY = -Infinity
-  for (const id of inBounds) {
+  for (const id of framing) {
     const p = positions.get(id)!
     if (p.x < minX) minX = p.x
     if (p.y < minY) minY = p.y
     if (p.x > maxX) maxX = p.x
     if (p.y > maxY) maxY = p.y
+  }
+  if (framed) {
+    // One node's own width, so a single selected node is centred rather than
+    // filling the card with its own edge.
+    const pad = 220
+    minX -= pad
+    minY -= pad
+    maxX += pad
+    maxY += pad
   }
   bounds = Number.isFinite(minX) ? { minX, minY, maxX, maxY } : { minX: 0, minY: 0, maxX: 1, maxY: 1 }
 }
@@ -762,6 +783,17 @@ watch(nextUp, () => scheduleDraw())
 /** A different ascendancy means a different cluster in the middle. */
 watch(
   () => props.ascendancy,
+  () => {
+    rebuildGeometry()
+    buildGrid()
+    fitToContent()
+    scheduleDraw()
+  },
+)
+
+/** A different selection is a different region to frame. */
+watch(
+  () => props.fitTo,
   () => {
     rebuildGeometry()
     buildGrid()

@@ -34,6 +34,18 @@ export async function toggleTreeOverlay(): Promise<boolean> {
   return invoke<boolean>('toggle_tree_overlay')
 }
 
+/**
+ * Lock the card out of the way, or unlock it so it can be dragged.
+ *
+ * Dragging needs the window to accept clicks, so the two are exclusive: the
+ * card starts unlocked so it can be placed, and is locked once it is where the
+ * player wants it.
+ */
+export async function setOverlayClickThrough(clickThrough: boolean): Promise<void> {
+  if (!isDesktopRuntime()) throw new OverlayUnsupported()
+  await invoke('set_overlay_click_through', { clickThrough })
+}
+
 export async function treeOverlayVisible(): Promise<boolean> {
   if (!isDesktopRuntime()) return false
   try {

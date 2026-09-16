@@ -114,13 +114,40 @@ async fn close_login_window(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Size of the overlay card, in logical pixels.
+const OVERLAY_SIZE: (f64, f64) = (560.0, 470.0);
+
+/// Where the overlay first appears: top-right, clear of the game's own HUD.
+///
+/// A card rather than a full screen. It used to cover the whole monitor so it
+/// could be lined up with the game's tree, and that could not work: the app
+/// cannot know how the game has panned or zoomed its tree, so the two never
+/// matched. Showing only the region the selection sits in needs no lining up —
+/// it is a reference the player parks somewhere and reads.
+fn overlay_origin(app: &AppHandle) -> (f64, f64) {
+    let margin = 24.0;
+    match app.primary_monitor() {
+        Ok(Some(monitor)) => {
+            let scale = monitor.scale_factor();
+            let logical_width = monitor.size().width as f64 / scale;
+            ((logical_width - OVERLAY_SIZE.0 - margin).max(margin), margin)
+        }
+        _ => (margin, margin),
+    }
+}
+
 /// Show or hide the tree overlay, creating it on first use.
 ///
-/// Returns whether it is now visible. The window is transparent, borderless,
-/// always on top and click-through: the player keeps playing, the game keeps
-/// every click and every key. This is why it is a reference the player asks for
-/// rather than something that follows the game — the app never learns anything
-/// about the game's state, so nothing here can drift or interfere.
+/// Returns whether it is now visible. The window is borderless and always on
+/// top, and it *accepts* clicks by default so the player can drag it where they
+/// want it; `set_overlay_click_through` locks it out of the way once placed.
+/// Dragging is impossible while clicks pass through, which is why it does not
+/// start locked.
+///
+/// It never takes focus unless asked, because stealing it would drop the game
+/// out of the foreground. This is a reference the player summons, not something
+/// that follows the game: the app never learns anything about the game's state,
+/// so nothing here can drift or interfere.
 ///
 /// The game has to be in windowed or borderless mode; exclusive fullscreen
 /// draws over every other window, ours included.
@@ -136,6 +163,7 @@ async fn toggle_tree_overlay(app: AppHandle) -> Result<bool, String> {
         return Ok(!visible);
     }
 
+    let (x, y) = overlay_origin(&app);
     let window = WebviewWindowBuilder::new(
         &app,
         OVERLAY_LABEL,
@@ -147,20 +175,20 @@ async fn toggle_tree_overlay(app: AppHandle) -> Result<bool, String> {
     .always_on_top(true)
     .skip_taskbar(true)
     .shadow(false)
-    .fullscreen(true)
+    .resizable(true)
+    .position(x, y)
+    .inner_size(OVERLAY_SIZE.0, OVERLAY_SIZE.1)
     .build()
     .map_err(|e| e.to_string())?;
 
-    // Never take focus: stealing it would drop the game out of the foreground,
-    // and the whole point is that play continues underneath.
-    window.set_ignore_cursor_events(true).map_err(|e| e.to_string())?;
+    window.set_ignore_cursor_events(false).map_err(|e| e.to_string())?;
     Ok(true)
 }
 
-/// Let the overlay accept clicks, or go back to passing them through.
+/// Lock the overlay out of the way, or unlock it so it can be dragged.
 ///
-/// Needed once the overlay shows anything interactive; until then it stays
-/// click-through so the game keeps the mouse.
+/// While locked it ignores every click, so play continues underneath; while
+/// unlocked it can be moved and resized.
 #[tauri::command]
 async fn set_overlay_click_through(app: AppHandle, click_through: bool) -> Result<(), String> {
     let window = app
