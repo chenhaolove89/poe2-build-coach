@@ -117,6 +117,52 @@ export interface TreeArt {
   geometry: TreeGeometry
   /** Decoded atlases, keyed the same way as `index.atlases`. */
   images: Record<string, CanvasImageSource>
+  /**
+   * `<kind>.<state>` -> the diameter a node's icon may occupy, in tree units.
+   *
+   * `index.draw` is the icon art's *own* size, which is roughly twice the clear
+   * aperture inside its frame — measured, a normal node's ring has a 50-unit
+   * hole against a 68-unit icon — so drawing at that size pushes the icon out
+   * through the ring. These are measured off the frame art instead of assumed,
+   * so they follow the art if it changes.
+   */
+  iconInset: Record<string, number>
+}
+
+/**
+ * Below this fraction of the rays the frame is treated as solid, so decorative
+ * protrusions on a frame do not shrink its aperture to nothing.
+ */
+const APERTURE_PERCENTILE = 0.1
+
+/**
+ * The radius of the clear hole in the middle of a frame, in atlas pixels:
+ * walk outward along many rays and take the distance at which the art first
+ * becomes opaque.
+ */
+function apertureRadius(image: CanvasImageSource, rect: Rect): number {
+  const canvas = document.createElement('canvas')
+  canvas.width = rect.w
+  canvas.height = rect.h
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return 0
+  ctx.drawImage(image, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h)
+  const { data } = ctx.getImageData(0, 0, rect.w, rect.h)
+  const cx = rect.w / 2
+  const cy = rect.h / 2
+  const hits: number[] = []
+  for (let angle = 0; angle < 360; angle += 2) {
+    const rad = (angle * Math.PI) / 180
+    let d = 0
+    for (; d < Math.min(cx, cy); d += 0.5) {
+      const x = Math.round(cx + Math.cos(rad) * d)
+      const y = Math.round(cy + Math.sin(rad) * d)
+      if (data[(y * rect.w + x) * 4 + 3] > 24) break
+    }
+    hits.push(d)
+  }
+  hits.sort((a, b) => a - b)
+  return hits[Math.floor(hits.length * APERTURE_PERCENTILE)] ?? 0
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -142,7 +188,17 @@ export function loadTreeArt(): Promise<TreeArt> {
     const loaded = await Promise.all(names.map((name) => loadImage(SOURCES[name])))
     const images: Record<string, CanvasImageSource> = {}
     names.forEach((name, i) => (images[name] = loaded[i]))
-    return { index: TREE_ART_INDEX, geometry: TREE_GEOMETRY, images }
+
+    const frameImage = images.frame
+    const frameScale = TREE_ART_INDEX.atlases.frame.scale
+    const iconInset: Record<string, number> = {}
+    for (const [key, rect] of Object.entries(TREE_ART_INDEX.frames)) {
+      if (!frameImage) continue
+      const radius = apertureRadius(frameImage, rect)
+      if (radius > 0) iconInset[key] = (radius * 2) / frameScale
+    }
+
+    return { index: TREE_ART_INDEX, geometry: TREE_GEOMETRY, images, iconInset }
   })()
   return pending
 }

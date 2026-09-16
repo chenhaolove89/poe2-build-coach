@@ -553,7 +553,15 @@ function draw() {
     // atlas and is drawn to fill the frame's inner disc, because the art is
     // authored far larger than a node (488 units against a 102-unit frame).
     const mastery = !entry && node.activeEffectImage ? index?.masteries[node.activeEffectImage] : undefined
-    const discSize = (mastery ? frameSize : drawSize) * 0.98
+    /*
+     * The icon is sized to the frame's clear aperture, not to the atlas's own
+     * icon size: that size is the art's native box, about twice the hole it has
+     * to fit through, and drawing at it pushed icons out through the ring. A
+     * mastery plate has no separate icon, so it keeps filling the frame.
+     */
+    const inset = art?.iconInset[`${kindName}.${shape}`]
+    const iconSize = (inset ?? drawSize) * shrink
+    const discSize = mastery ? frameSize * 0.98 : iconSize
     if (mastery) {
       ctx.save()
       ctx.beginPath()
@@ -568,7 +576,7 @@ function draw() {
       if (iconRect) {
         ctx.save()
         ctx.beginPath()
-        ctx.arc(pos.x, pos.y, (discSize / 2) * 0.99, 0, Math.PI * 2)
+        ctx.arc(pos.x, pos.y, (discSize / 2) * 0.98, 0, Math.PI * 2)
         ctx.clip()
         blit(ctx, lit ? 'skills' : 'skills-disabled', iconRect, pos.x, pos.y, discSize)
         ctx.restore()
