@@ -21,6 +21,8 @@ const props = defineProps<{
   active: Set<number>
   progress?: Set<number>
   presets: StoredTreePreset[]
+  /** Every class the tree data knows, for the class picker. */
+  classes: string[]
   /** Ascendancy names offered for the current class. */
   ascendancies: string[]
   /** Result of validating the current selection, for the save button's state. */
@@ -31,6 +33,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   toggleNode: [id: number]
+  setClass: [name: string | null]
   setAscendancy: [name: string | null]
   save: []
   removeOrphans: []
@@ -83,6 +86,17 @@ function onSavePreset() {
       </label>
 
       <label class="field">
+        <span class="dim">{{ t('职业') }}</span>
+        <select
+          :value="build?.className ?? ''"
+          @change="emit('setClass', ($event.target as HTMLSelectElement).value || null)"
+        >
+          <option value="">{{ t('未选') }}</option>
+          <option v-for="c in classes" :key="c" :value="c">{{ c }}</option>
+        </select>
+      </label>
+
+      <label class="field">
         <span class="dim">{{ t('升华') }}</span>
         <select
           :value="build?.ascendClassName ?? ''"
@@ -112,7 +126,10 @@ function onSavePreset() {
     </div>
 
     <p v-if="!build" class="notice">
-      {{ t('还没有导入 Build。可以自由浏览天赋树、载入天赋预设;要保存需要先有职业(预设自带职业)。') }}
+      {{ t('先在上方选一个职业就能开始点天赋。也可以载入天赋预设(预设自带职业),或从主页导入 PoB 分享码。') }}
+    </p>
+    <p v-else-if="!build.passiveNodes.length" class="notice">
+      {{ t('这份职业还没有天赋。勾选「编辑模式」后点击节点开始配置。') }}
     </p>
     <p v-else-if="!editing" class="notice dim">
       {{ t('勾选「编辑模式」后点击节点即可加/减天赋。修改会同步到升级顺序。') }}

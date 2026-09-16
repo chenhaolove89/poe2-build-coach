@@ -183,6 +183,9 @@ function deleteStored(id: string) {
 const presets = ref<StoredTreePreset[]>(loadTreePresets())
 const saveMessage = ref<string | null>(null)
 
+/** Every class the tree knows, which is what makes a class pickable cold. */
+const classNames = computed(() => tree.classes.map((c) => c.name))
+
 /** Ascendancies this build's class can pick, which is what the picker offers. */
 const ascendancies = computed(() => {
   const className = build.value?.className
@@ -200,7 +203,7 @@ const treeCheck = computed(() =>
 const startNodeId = computed(() => resolveStartNode(tree, build.value?.className ?? null))
 
 /** Replace the whole array: `activeSet` and `plan` recompute off its identity. */
-function patchBuild(patch: { passiveNodes?: number[]; ascendClassName?: string | null }) {
+function patchBuild(patch: { className?: string | null; ascendClassName?: string | null; passiveNodes?: number[] }) {
   if (!build.value) return
   build.value = { ...build.value, ...patch }
   saveMessage.value = null
@@ -211,6 +214,41 @@ function toggleTreeNode(id: number) {
   if (!b) return
   const has = b.passiveNodes.includes(id)
   patchBuild({ passiveNodes: has ? b.passiveNodes.filter((n) => n !== id) : [...b.passiveNodes, id] })
+}
+
+/**
+ * Choosing a class is what makes the tree usable without importing anything:
+ * the start node, the leveling plan and the connectivity check all hang off it.
+ * With no build yet, this creates an empty one; with a build already loaded the
+ * nodes are kept, because the orphan check will say plainly if the old
+ * selection no longer reaches the new start.
+ *
+ * Ascendancies are class-specific, so the pick is dropped either way. That
+ * matches how switching ascendancy behaves, which throws away the nodes that
+ * belonged to the old tree.
+ */
+function setClass(name: string | null) {
+  const b = build.value
+  if (!b) {
+    if (!name) return
+    build.value = {
+      className: name,
+      ascendClassName: null,
+      level: null,
+      treeVersion: tree.version,
+      passiveNodes: [],
+      treeSpecUrls: [],
+      skills: [],
+      items: [],
+    }
+    saveMessage.value = `${t('已选择职业')} ${name}${t(',现在可以点天赋了。')}`
+    return
+  }
+  if (b.className === name) return
+  patchBuild({ className: name, ascendClassName: null })
+  saveMessage.value = name
+    ? `${t('职业已改为')} ${name}${t(',升华已清空(升华属于职业)。')}`
+    : t('已取消职业选择。')
 }
 
 /**
@@ -440,10 +478,12 @@ function deleteTreePreset(id: string) {
         :active="activeSet"
         :progress="progressSet"
         :presets="presets"
+        :classes="classNames"
         :ascendancies="ascendancies"
         :check="treeCheck"
         :save-message="saveMessage"
         @toggle-node="toggleTreeNode"
+        @set-class="setClass"
         @set-ascendancy="setAscendancy"
         @save="saveTree"
         @remove-orphans="removeOrphans"
