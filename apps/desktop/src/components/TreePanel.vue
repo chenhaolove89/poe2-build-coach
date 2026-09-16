@@ -9,13 +9,13 @@
  * therefore the mutations, since changing nodes also has to regenerate the
  * share code that a save writes.
  */
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import type { BuildSnapshot, PointBudget, TreeData, TreeSelectionCheck } from '@poe2coach/core'
 import { QUEST_POINT_TOTAL } from '@poe2coach/core'
 import { bilingual, t } from '../i18n'
 import type { StoredTreePreset } from '../treePresetStore'
 import { isDesktopRuntime } from '../tradeClient'
-import { OVERLAY_HOTKEY, toggleTreeOverlay } from '../overlayClient'
+import { overlayHotkey, toggleTreeOverlay } from '../overlayClient'
 import TreeCanvas from './TreeCanvas.vue'
 
 const props = defineProps<{
@@ -76,6 +76,12 @@ const presetName = ref('')
 const desktop = isDesktopRuntime()
 const overlayOn = ref(false)
 const overlayError = ref<string | null>(null)
+/** Resolved by Rust at startup; null when every candidate key was taken. */
+const overlayKey = ref<string | null>(null)
+
+onMounted(async () => {
+  overlayKey.value = await overlayHotkey()
+})
 
 /**
  * Summon or dismiss the overlay. It is a separate always-on-top window, so this
@@ -197,10 +203,15 @@ function onSavePreset() {
         class="overlay-btn"
         :class="{ on: overlayOn }"
         :disabled="!desktop || !build"
-        :title="t('把天赋树半透明叠在游戏上(F8)。需要游戏在窗口化/无边框模式 —— 独占全屏下任何叠加层都显示不出来。')"
+        :title="
+          t(
+            '把天赋树半透明叠在游戏上,节点上标着升级时的点击顺序。需要游戏在窗口化/无边框模式 —— 独占全屏下任何叠加层都显示不出来。',
+          )
+        "
         @click="onToggleOverlay"
       >
-        {{ overlayOn ? t('收起叠加层') : t('叠加到游戏') }} · {{ OVERLAY_HOTKEY }}
+        {{ overlayOn ? t('收起叠加层') : t('叠加到游戏') }}
+        <template v-if="overlayKey"> · {{ overlayKey }}</template>
       </button>
 
       <button class="primary" :disabled="!build || overBudget" @click="emit('save')">
@@ -229,6 +240,9 @@ function onSavePreset() {
     </p>
     <p v-if="saveMessage" class="notice ok">{{ saveMessage }}</p>
     <p v-if="overlayError" class="notice warn">{{ overlayError }}</p>
+    <p v-else-if="desktop && !overlayKey" class="notice warn">
+      {{ t('快捷键被其他程序占用了(Alt+Shift+Q / Alt+Shift+T / Ctrl+Shift+T / F8–F10 都试过),用上面的按钮打开叠加层。') }}
+    </p>
 
     <div class="canvas-wrap">
       <TreeCanvas

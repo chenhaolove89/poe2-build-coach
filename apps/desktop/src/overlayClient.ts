@@ -13,8 +13,20 @@ export class OverlayUnsupported extends Error {
   }
 }
 
-/** Key that shows and hides the overlay, registered in src-tauri/src/main.rs. */
-export const OVERLAY_HOTKEY = 'F8'
+/**
+ * The key that actually shows and hides the overlay, or null when every
+ * candidate was taken by other software. Rust picks it at startup and reports
+ * the winner, because the UI has to name the key that really works — promising
+ * one that does not is worse than saying there is none.
+ */
+export async function overlayHotkey(): Promise<string | null> {
+  if (!isDesktopRuntime()) return null
+  try {
+    return await invoke<string | null>('overlay_hotkey')
+  } catch {
+    return null
+  }
+}
 
 /** Show the overlay, hide it again, or create it the first time. */
 export async function toggleTreeOverlay(): Promise<boolean> {

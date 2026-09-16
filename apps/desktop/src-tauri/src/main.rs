@@ -1,8 +1,10 @@
 // Prevents an additional console window on Windows in release builds.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::Mutex;
+
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 /// The cookie the trade site keeps a logged-in session in, on every realm.
 ///
@@ -18,13 +20,35 @@ const LOGIN_LABEL: &str = "realm-login";
 /// The passive-tree overlay the player summons over the game.
 const OVERLAY_LABEL: &str = "tree-overlay";
 
-/// Key that shows and hides the overlay.
+/// Hot keys to show and hide the overlay, tried in order until one registers.
 ///
-/// It reads nothing from the game: the player presses it, gets a reference
-/// version of their tree, and presses it again. Nothing is drawn unless asked
-/// for, and no game state is involved on either side.
-fn overlay_shortcut() -> Shortcut {
-    Shortcut::new(None, Code::F8)
+/// A bare F8 was the first choice and it is already taken on at least one
+/// machine — something else on Windows had it — so a list is tried instead and
+/// the winner reported to the UI. Modifier combinations lead because plain
+/// function keys are the ones other software claims.
+///
+/// Whichever wins, the hotkey reads nothing from the game: the player presses
+/// it, gets a reference version of their tree, and presses it again. Nothing is
+/// drawn unless asked for, and no game state is involved on either side.
+fn hotkey_candidates() -> Vec<Shortcut> {
+    vec![
+        Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyQ),
+        Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyT),
+        Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyT),
+        Shortcut::new(None, Code::F8),
+        Shortcut::new(None, Code::F9),
+        Shortcut::new(None, Code::F10),
+    ]
+}
+
+/// Whichever candidate registered, or `None` when every one of them was taken.
+///
+/// Held as state rather than a constant because which one wins is only known at
+/// startup, and the UI has to show the player the key that actually works.
+struct OverlayHotkey(Mutex<Option<Shortcut>>);
+
+fn hotkey_label(shortcut: &Shortcut) -> String {
+    shortcut.clone().into_string()
 }
 
 /// Open (or focus) a realm's real trade page so the player can log in with
@@ -147,6 +171,13 @@ async fn set_overlay_click_through(app: AppHandle, click_through: bool) -> Resul
         .map_err(|e| e.to_string())
 }
 
+/// The key that actually shows and hides the overlay, or `None` if every
+/// candidate was taken — the UI falls back to its own button then.
+#[tauri::command]
+fn overlay_hotkey(state: tauri::State<'_, OverlayHotkey>) -> Option<String> {
+    state.0.lock().ok()?.as_ref().map(hotkey_label)
+}
+
 /// Whether the overlay exists and is visible, so the app can show its state.
 #[tauri::command]
 async fn tree_overlay_visible(app: AppHandle) -> Result<bool, String> {
@@ -176,9 +207,25 @@ fn main() {
                 .build(),
         )
         .setup(|app| {
-            app.global_shortcut()
-                .register(overlay_shortcut())
-                .map_err(|e| e.to_string())?;
+            // Registering a hotkey must never be fatal. It was, briefly: a bare
+            // F8 that another program already owned made the whole app refuse to
+            // start, which is a far worse failure than a hotkey that does not
+            // work. Take the first candidate that registers and otherwise carry
+            // on — the overlay is still reachable from the UI.
+            let mut chosen = None;
+            for candidate in hotkey_candidates() {
+                match app.global_shortcut().register(candidate.clone()) {
+                    Ok(()) => {
+                        chosen = Some(candidate);
+                        break;
+                    }
+                    Err(err) => eprintln!("hotkey {candidate:?} unavailable: {err}"),
+                }
+            }
+            if chosen.is_none() {
+                eprintln!("no overlay hotkey could be registered; use the in-app button");
+            }
+            app.manage(OverlayHotkey(Mutex::new(chosen)));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -187,7 +234,8 @@ fn main() {
             close_login_window,
             toggle_tree_overlay,
             set_overlay_click_through,
-            tree_overlay_visible
+            tree_overlay_visible,
+            overlay_hotkey
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
