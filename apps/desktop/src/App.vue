@@ -507,6 +507,7 @@ function deleteTreePreset(id: string) {
         :progress="progressSet"
         :presets="presets"
         :classes="classNames"
+        :start-node="startNodeId"
         :ascendancies="ascendancies"
         :check="treeCheck"
         :budget="pointBudget"

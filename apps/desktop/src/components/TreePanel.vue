@@ -24,6 +24,8 @@ const props = defineProps<{
   presets: StoredTreePreset[]
   /** Every class the tree data knows, for the class picker. */
   classes: string[]
+  /** Class start node, which anchors the highlighted path. */
+  startNode: number | null
   /** Ascendancy names offered for the current class. */
   ascendancies: string[]
   /** Result of validating the current selection, for the save button's state. */
@@ -175,6 +177,7 @@ function onSavePreset() {
         :progress="progress"
         :editable="editing"
         :ascendancy="build?.ascendClassName ?? null"
+        :start-node="startNode"
         @toggle-node="emit('toggleNode', $event)"
       />
     </div>

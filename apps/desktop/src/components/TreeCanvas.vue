@@ -29,6 +29,11 @@ const props = defineProps<{
    * with an empty centre, which is where the cluster belongs.
    */
   ascendancy?: string | null
+  /**
+   * The class start node. It anchors the highlighted path even though a build's
+   * node list usually does not mention it — the game always has it allocated.
+   */
+  startNode?: number | null
 }>()
 
 const emit = defineEmits<{ toggleNode: [id: number] }>()
@@ -357,10 +362,20 @@ function draw() {
   // The connector art is a long uniform band, so stretching it over an
   // arbitrary span keeps its look; the rings the atlas also ships are arc
   // segments whose placement convention is not documented, so they are unused.
+  //
+  // Three states, as the game has: the path already taken, the path this build
+  // wants, and everything else. Without the middle one a hand-picked tree shows
+  // its nodes ringed in gold but no route between them, which is the one thing
+  // the rings are there to let you trace.
   const connector = index?.lines.LineConnectorNormal
   const connectorActive = index?.lines.LineConnectorActive
   const connectorThick = connector && index ? connector.h / index.atlases.line.scale : 0
   const lineImage = art?.images.line
+  const startId = props.startNode ?? null
+  // The class start is always allocated in game, whether or not the build's node
+  // list mentions it, so it anchors the highlight on its own.
+  const taken = (id: number) => progress.has(id) || id === startId
+  const wanted = (id: number) => props.active.has(id) || id === startId
   if (lineImage && connector && connectorActive && index) {
     for (const [a, b] of edges) {
       const pa = positions.get(a)!
@@ -376,8 +391,14 @@ function draw() {
       const dy = pb.y - pa.y
       const len = Math.hypot(dx, dy)
       if (len < 1) continue
-      const onPath = progress.has(a) && progress.has(b)
-      const rect = onPath ? connectorActive : connector
+      // `connector` and `connectorActive` are narrowed by the guard above, so
+      // only the middle tier needs a fallback.
+      const rect =
+        taken(a) && taken(b)
+          ? connectorActive
+          : wanted(a) && wanted(b)
+            ? (index.lines.LineConnectorIntermediate ?? connectorActive)
+            : connector
       ctx.save()
       ctx.translate(pa.x, pa.y)
       ctx.rotate(Math.atan2(dy, dx))
@@ -385,11 +406,16 @@ function draw() {
       ctx.restore()
     }
   } else {
-    ctx.strokeStyle = 'rgba(122,136,176,0.7)'
     ctx.lineWidth = 1 / scale
     for (const [a, b] of edges) {
       const pa = positions.get(a)!
       const pb = positions.get(b)!
+      const both = taken(a) && taken(b)
+      ctx.strokeStyle = both
+        ? 'rgba(240,186,88,0.95)'
+        : wanted(a) && wanted(b)
+          ? 'rgba(180,140,60,0.75)'
+          : 'rgba(122,136,176,0.7)'
       ctx.beginPath()
       ctx.moveTo(pa.x, pa.y)
       ctx.lineTo(pb.x, pb.y)
