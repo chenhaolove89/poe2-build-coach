@@ -363,12 +363,18 @@ function draw() {
   // arbitrary span keeps its look; the rings the atlas also ships are arc
   // segments whose placement convention is not documented, so they are unused.
   //
-  // Three states, as the game has: the path already taken, the path this build
-  // wants, and everything else. Without the middle one a hand-picked tree shows
-  // its nodes ringed in gold but no route between them, which is the one thing
-  // the rings are there to let you trace.
+  // The path taken and the path this build wants both draw with the lit art;
+  // without it a hand-picked tree shows its nodes ringed in gold but no route
+  // between them, which is the one thing the rings are there to let you trace.
+  //
+  // The atlas's third state, LineConnectorIntermediate, is NOT a lit one: its
+  // texels measure the same brightness as Normal (mean 24.4 against 24.6, peak
+  // 85 against 102) where Active measures 106 with 74% of pixels above 60. So
+  // alpha separates the two tiers instead.
   const connector = index?.lines.LineConnectorNormal
   const connectorActive = index?.lines.LineConnectorActive
+  /** Lit but a touch softer, so "still to take" reads apart from "already taken". */
+  const WANTED_ALPHA = 0.82
   const connectorThick = connector && index ? connector.h / index.atlases.line.scale : 0
   const lineImage = art?.images.line
   const startId = props.startNode ?? null
@@ -391,15 +397,11 @@ function draw() {
       const dy = pb.y - pa.y
       const len = Math.hypot(dx, dy)
       if (len < 1) continue
-      // `connector` and `connectorActive` are narrowed by the guard above, so
-      // only the middle tier needs a fallback.
-      const rect =
-        taken(a) && taken(b)
-          ? connectorActive
-          : wanted(a) && wanted(b)
-            ? (index.lines.LineConnectorIntermediate ?? connectorActive)
-            : connector
+      const onTakenPath = taken(a) && taken(b)
+      const onWantedPath = !onTakenPath && wanted(a) && wanted(b)
+      const rect = onTakenPath || onWantedPath ? connectorActive : connector
       ctx.save()
+      ctx.globalAlpha = onWantedPath ? WANTED_ALPHA : 1
       ctx.translate(pa.x, pa.y)
       ctx.rotate(Math.atan2(dy, dx))
       ctx.drawImage(lineImage, rect.x, rect.y, rect.w, rect.h, 0, -connectorThick / 2, len, connectorThick)
