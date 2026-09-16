@@ -14,6 +14,7 @@
 import indexJson from '@poe2coach/data/tree-art/index.json'
 import geometryJson from '@poe2coach/data/tree-art/geometry.json'
 import frameUrl from '@poe2coach/data/tree-art/frame.webp'
+import groupBackgroundUrl from '@poe2coach/data/tree-art/group-background.webp'
 import lineUrl from '@poe2coach/data/tree-art/line.webp'
 import skillsDisabledUrl from '@poe2coach/data/tree-art/skills-disabled.webp'
 import skillsUrl from '@poe2coach/data/tree-art/skills.webp'
@@ -50,6 +51,13 @@ export interface TreeArtIndex {
   frames: Record<string, Rect>
   /** Line-art rects by their atlas name with the `line:` prefix stripped. */
   lines: Record<string, Rect>
+  /**
+   * The disc an ascendancy cluster sits on once it is moved into the main
+   * tree's empty centre. Shipped 4000 units across, which is wider than that
+   * space, so the renderer sizes it to the hole instead of using the art's own
+   * width.
+   */
+  groups: Record<string, Rect>
   /**
    * Our tree.json's exact `icon` string (still `.dds`) -> rects per node kind.
    * A path can be listed under several kinds; the renderer picks by the node's
@@ -89,6 +97,7 @@ const SOURCES: Record<string, string> = {
   'skills-disabled': skillsDisabledUrl,
   frame: frameUrl,
   line: lineUrl,
+  'group-background': groupBackgroundUrl,
 }
 
 export interface TreeArt {

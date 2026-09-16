@@ -37,7 +37,7 @@ const REPO = 'https://raw.githubusercontent.com/grindinggear/poe2-skilltree-expo
 const UA = 'poe2-build-coach/0.4 (data pipeline; contact via github.com/chenhaolove89)'
 
 /** Atlas sheets we ship. The disabled variants carry the unallocated node art. */
-const ATLASES = ['skills', 'skills-disabled', 'frame', 'line']
+const ATLASES = ['skills', 'skills-disabled', 'frame', 'line', 'group-background']
 
 /** Icon section per node kind, as the atlas keys spell it. */
 const ICON_SECTIONS = {
@@ -49,6 +49,10 @@ const ICON_SECTIONS = {
 /**
  * Frame art per node kind and state. Normal nodes reuse the plain skill frame;
  * ascendancy nodes get their own so the two trees stay visually distinct.
+ *
+ * `backing` is the plate an ascendancy node sits on, drawn under its frame —
+ * the atlas calls it Backing and it is what gives those nodes their inset look.
+ * `start` is the ascendancy tree's own entry node.
  */
 const FRAMES = {
   normal: { unallocated: 'PSSkillFrame', canAllocate: 'PSSkillFrameHighlighted', allocated: 'PSSkillFrameActive' },
@@ -63,16 +67,26 @@ const FRAMES = {
     allocated: 'KeystoneFrameAllocated',
   },
   ascendancyNormal: {
+    backing: 'AscendancyFrameNormalBacking',
     unallocated: 'AscendancyFrameNormalUnallocated',
     canAllocate: 'AscendancyFrameNormalCanAllocate',
     allocated: 'AscendancyFrameNormalAllocated',
   },
   ascendancyNotable: {
+    backing: 'AscendancyFrameNotableBacking',
     unallocated: 'AscendancyFrameNotableUnallocated',
     canAllocate: 'AscendancyFrameNotableCanAllocate',
     allocated: 'AscendancyFrameNotableAllocated',
   },
+  ascendancyStart: {
+    unallocated: 'AscendancyStartNode',
+    canAllocate: 'AscendancyStartNode',
+    allocated: 'AscendancyStartNode',
+  },
 }
+
+/** The disc a relocated ascendancy cluster sits on, plus its unlit variant. */
+const GROUP_BACKGROUNDS = { circleActive: 'startNode:MainCircleActive', circle: 'startNode:MainCircle' }
 
 async function cached(path, url, binary = false) {
   const file = resolve(CACHE, path)
@@ -167,6 +181,21 @@ for (const [key, value] of Object.entries(lineAtlas)) {
   lines[key.replace(/^line:/, '')] = rect(value.frame)
 }
 
+/**
+ * The disc the relocate-into-the-middle ascendancy cluster sits on. The atlas
+ * holds it at 4000 units across, which is wider than the main tree's empty
+ * centre, so the renderer scales it to the hole rather than trusting the art's
+ * own size.
+ */
+const groupAtlas = sheets['group-background'].json.frames
+const groups = {}
+const missingGroups = []
+for (const [key, atlasKey] of Object.entries(GROUP_BACKGROUNDS)) {
+  const hit = groupAtlas[atlasKey]
+  if (hit) groups[key] = rect(hit.frame)
+  else missingGroups.push(atlasKey)
+}
+
 // ------------------------------------------------------------------ draw sizes
 
 /**
@@ -205,6 +234,10 @@ console.log('\nnodes by kind:', JSON.stringify(counts))
 console.log(`distinct icons mapped: ${Object.keys(nodes).length} (missed ${misses.size})`)
 if (misses.size) console.log('  unmapped examples:', [...misses].slice(0, 4).join(', '))
 console.log(`frames: ${Object.keys(frames).length} mapped${missingFrames.length ? `, missing ${missingFrames.join(', ')}` : ''}`)
+console.log(
+  `groups: ${Object.keys(groups).length} mapped${missingGroups.length ? `, missing ${missingGroups.join(', ')}` : ''}` +
+    (groups.circle ? ` (disc ${groups.circle.w * 2} units across)` : ''),
+)
 console.log(`lines: ${Object.keys(lines).length} keys -> ${Object.keys(lines).slice(0, 6).join(', ')}...`)
 console.log('draw sizes (tree units):', JSON.stringify(draw))
 console.log('frame sizes (tree units):', JSON.stringify(drawFrame))
@@ -255,6 +288,7 @@ const pack = {
   drawFrame,
   frames,
   lines,
+  groups,
   nodes,
 }
 const geometry = {

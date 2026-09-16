@@ -48,6 +48,8 @@ interface Cluster {
   centroid: Pt
   /** Distance from the centroid to the cluster's furthest node. */
   radius: number
+  /** The ascendancy's own entry node, whose state lights the cluster's plate. */
+  startId: number | null
 }
 
 let art: TreeArt | null = null
@@ -120,14 +122,17 @@ function escapeHtml(s: string): string {
 function analyseGeometry() {
   const clustersByName = new Map<string, Pt[]>()
   const main: Pt[] = []
+  const starts = new Map<string, number>()
   for (const [id, xy] of Object.entries(TREE_GEOMETRY.positions)) {
-    const node = props.tree.nodes[Number(id)]
+    const nodeId = Number(id)
+    const node = props.tree.nodes[nodeId]
     if (!node) continue
     const point = { x: xy[0], y: xy[1] }
     if (node.ascendancyName) {
       const list = clustersByName.get(node.ascendancyName)
       if (list) list.push(point)
       else clustersByName.set(node.ascendancyName, [point])
+      if (node.isAscendancyStart) starts.set(node.ascendancyName, nodeId)
     } else {
       main.push(point)
     }
@@ -153,7 +158,7 @@ function analyseGeometry() {
       y: points.reduce((s, p) => s + p.y, 0) / points.length,
     }
     const radius = points.reduce((best, p) => Math.max(best, Math.hypot(p.x - centroid.x, p.y - centroid.y)), 0)
-    clusters.set(name, { centroid, radius })
+    clusters.set(name, { centroid, radius, startId: starts.get(name) ?? null })
   }
 }
 
@@ -319,6 +324,35 @@ function draw() {
   const viewMaxX = (w - panX) / scale
   const viewMaxY = (h - panY) / scale
 
+  // ---- the ascendancy cluster's plate ------------------------------------
+  // The relocated cluster sits on the atlas's main circle, sized to the empty
+  // centre rather than to the art's own 4000 units, which would spill over the
+  // innermost main-tree nodes.
+  if (placedCluster && index && Number.isFinite(holeRadius)) {
+    const disc = index.groups.circle
+    const discActive = index.groups.circleActive
+    if (disc) {
+      // The lit plate belongs to an ascendancy the character has actually taken.
+      const taken = placedCluster.startId != null && progress.has(placedCluster.startId)
+      const wanted = taken && discActive ? discActive : disc
+      const image = art?.images['group-background']
+      const size = holeRadius * 2
+      if (image) {
+        ctx.drawImage(
+          image,
+          wanted.x,
+          wanted.y,
+          wanted.w,
+          wanted.h,
+          mainCentre.x - size / 2,
+          mainCentre.y - size / 2,
+          size,
+          size,
+        )
+      }
+    }
+  }
+
   // ---- connections -------------------------------------------------------
   // The connector art is a long uniform band, so stretching it over an
   // arbitrary span keeps its look; the rings the atlas also ships are arc
@@ -418,6 +452,14 @@ function draw() {
     const shape = frameState(state)
     const frameRect = index?.frames[`${kindName}.${shape}`]
     const frameSize = (index?.drawFrame[`${kindName}.${shape}`] ?? drawSize * 1.5) * shrink
+
+    // Ascendancy nodes sit on a plate the plain frames do not have, drawn at the
+    // size it was authored for.
+    const backing = index?.frames[`${kindName}.backing`]
+    if (backing) {
+      blit(ctx, 'frame', backing, pos.x, pos.y, (index?.drawFrame[`${kindName}.backing`] ?? frameSize) * shrink)
+    }
+
     if (state === 'allocated') {
       ctx.shadowColor = 'rgba(240,186,88,0.55)'
       ctx.shadowBlur = 10 / scale
