@@ -11,7 +11,7 @@
  */
 import { computed, ref } from 'vue'
 import type { BuildSnapshot, TreeData, TreeSelectionCheck } from '@poe2coach/core'
-import { t } from '../i18n'
+import { bilingual, t } from '../i18n'
 import type { StoredTreePreset } from '../treePresetStore'
 import TreeCanvas from './TreeCanvas.vue'
 
@@ -67,7 +67,7 @@ if (props.build) originalCount.value = props.build.passiveNodes.length
 const ascendancyLabel = computed(() => {
   const name = props.build?.ascendClassName
   if (!name) return t('未选')
-  return props.ascendancies.includes(name) ? name : `${name} (${t('该职业无此升华')})`
+  return props.ascendancies.includes(name) ? bilingual(name) : `${bilingual(name)} (${t('该职业无此升华')})`
 })
 
 function onSavePreset() {
@@ -92,7 +92,9 @@ function onSavePreset() {
           @change="emit('setClass', ($event.target as HTMLSelectElement).value || null)"
         >
           <option value="">{{ t('未选') }}</option>
-          <option v-for="c in classes" :key="c" :value="c">{{ c }}</option>
+          <!-- `value` stays the English name: it is what the tree data and the
+               connectivity check key on. Only the label is localised. -->
+          <option v-for="c in classes" :key="c" :value="c">{{ bilingual(c) }}</option>
         </select>
       </label>
 
@@ -104,7 +106,7 @@ function onSavePreset() {
           @change="emit('setAscendancy', ($event.target as HTMLSelectElement).value || null)"
         >
           <option value="">{{ t('未选') }}</option>
-          <option v-for="a in ascendancies" :key="a" :value="a">{{ a }}</option>
+          <option v-for="a in ascendancies" :key="a" :value="a">{{ bilingual(a) }}</option>
         </select>
       </label>
       <span v-if="build?.ascendClassName && !ascendancies.includes(build.ascendClassName)" class="warn">
