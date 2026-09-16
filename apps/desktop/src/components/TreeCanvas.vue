@@ -50,8 +50,13 @@ interface Pt {
 }
 
 interface Cluster {
-  centroid: Pt
-  /** Distance from the centroid to the cluster's furthest node. */
+  /**
+   * Bounding-box centre, not the mean of the node positions: a cluster is
+   * denser on one side, and the mean would sit off-centre in the hole by
+   * however much it is.
+   */
+  centre: Pt
+  /** Distance from {@link centre} to the cluster's furthest node. */
   radius: number
   /** The ascendancy's own entry node, whose state lights the cluster's plate. */
   startId: number | null
@@ -158,12 +163,19 @@ function analyseGeometry() {
 
   clusters = new Map()
   for (const [name, points] of clustersByName) {
-    const centroid = {
-      x: points.reduce((s, p) => s + p.x, 0) / points.length,
-      y: points.reduce((s, p) => s + p.y, 0) / points.length,
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+    for (const p of points) {
+      if (p.x < minX) minX = p.x
+      if (p.y < minY) minY = p.y
+      if (p.x > maxX) maxX = p.x
+      if (p.y > maxY) maxY = p.y
     }
-    const radius = points.reduce((best, p) => Math.max(best, Math.hypot(p.x - centroid.x, p.y - centroid.y)), 0)
-    clusters.set(name, { centroid, radius, startId: starts.get(name) ?? null })
+    const centre = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+    const radius = points.reduce((best, p) => Math.max(best, Math.hypot(p.x - centre.x, p.y - centre.y)), 0)
+    clusters.set(name, { centre, radius, startId: starts.get(name) ?? null })
   }
 }
 
@@ -192,22 +204,28 @@ function rebuildGeometry() {
     ascScale = Math.min(1, (holeRadius * 0.92) / wanted.radius)
   }
 
+  /*
+   * Only nodes that will actually be drawn get a position. That matters beyond
+   * this map: the edge list is filtered against it below, and the ascendancy
+   * clusters that are not selected sit ~17000 units out, so leaving them in drew
+   * connections out into empty space with nothing at the far end.
+   */
   positions = new Map()
   const inBounds = new Set<number>()
   for (const [id, xy] of Object.entries(TREE_GEOMETRY.positions)) {
     const nodeId = Number(id)
     const node = props.tree.nodes[nodeId]
     if (!node) continue
+    const selected = !!node.ascendancyName && node.ascendancyName === props.ascendancy
+    if (node.ascendancyName && !selected) continue
     let point = { x: xy[0], y: xy[1] }
-    if (node.ascendancyName && wanted && node.ascendancyName === props.ascendancy) {
+    if (selected && wanted) {
       point = {
-        x: mainCentre.x + (point.x - wanted.centroid.x) * ascScale,
-        y: mainCentre.y + (point.y - wanted.centroid.y) * ascScale,
+        x: mainCentre.x + (point.x - wanted.centre.x) * ascScale,
+        y: mainCentre.y + (point.y - wanted.centre.y) * ascScale,
       }
-      inBounds.add(nodeId)
-    } else if (!node.ascendancyName) {
-      inBounds.add(nodeId)
     }
+    inBounds.add(nodeId)
     positions.set(nodeId, point)
   }
 
@@ -215,7 +233,13 @@ function rebuildGeometry() {
   for (const [a, b] of TREE_GEOMETRY.edges) {
     const from = Number(a)
     const to = Number(b)
-    if (positions.has(from) && positions.has(to)) edges.push([from, to])
+    if (!positions.has(from) || !positions.has(to)) continue
+    // A class start connects straight to its ascendancy's start node, but the
+    // two trees are separate and no character walks between them — and now that
+    // the cluster sits in the middle, such a link would be a long line running
+    // from the main tree into the centre for no reason.
+    if ((props.tree.nodes[from]?.ascendancyName ?? null) !== (props.tree.nodes[to]?.ascendancyName ?? null)) continue
+    edges.push([from, to])
   }
 
   // Frame the main tree plus the relocated cluster. Every other ascendancy
