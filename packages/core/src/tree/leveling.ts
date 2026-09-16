@@ -109,6 +109,111 @@ export function isAscendancy(node: TreeNode): boolean {
   return node.ascendancyName != null || node.isAscendancyStart != null
 }
 
+export interface TreeSelectionCheck {
+  /** Selected nodes reachable from the class start through other selected nodes. */
+  reachable: number[]
+  /**
+   * Selected nodes with no path back to the class start — a tree the game would
+   * refuse to allocate. Ids that are not in the tree at all land here too,
+   * since the game cannot allocate those either.
+   */
+  orphans: number[]
+  /** Selected nodes on an ascendancy tree, which is bought separately. */
+  ascendancy: number[]
+  /** Ids listed more than once, in first-seen order. */
+  duplicates: number[]
+}
+
+/**
+ * Check a hand-picked node set the way the game would.
+ *
+ * Connectivity is walked *inside the selection*: a node only counts as
+ * reachable when every step of the path to it is selected too, because that is
+ * what "this tree can actually be allocated" means. Ascendancy nodes sit out
+ * that walk for the same reason {@link buildLevelingPlan} excludes them — they
+ * are bought with trial points, and a class start connects to its ascendancy
+ * nodes directly, so routing through them is not allowed.
+ *
+ * `edges` is the graph to walk, and it has to be supplied rather than read from
+ * `node.connections`: that field only carries part of the real graph, which is
+ * why {@link buildEdges} exists to infer the rest. Callers should pass the same
+ * edge set they display, so "connected" on screen and "connected" here agree.
+ *
+ * A null `startNodeId` means the class is unknown and connectivity cannot be
+ * judged at all; every known node then counts as reachable, and the caller
+ * decides what to say about the missing class.
+ */
+export function validateTreeSelection(
+  tree: TreeData,
+  selected: number[],
+  startNodeId: number | null,
+  edges: readonly (readonly [number, number])[],
+): TreeSelectionCheck {
+  const seen = new Set<number>()
+  const duplicates: number[] = []
+  const unique: number[] = []
+  for (const id of selected) {
+    if (seen.has(id)) {
+      if (!duplicates.includes(id)) duplicates.push(id)
+      continue
+    }
+    seen.add(id)
+    unique.push(id)
+  }
+
+  const inSelection = new Set(unique.filter((id) => tree.nodes[id] && !isAscendancy(tree.nodes[id])))
+  // The start anchors the walk even when it was not picked explicitly: a
+  // character always has its class start allocated.
+  if (startNodeId != null) inSelection.add(startNodeId)
+
+  const reached = new Set<number>()
+  if (startNodeId != null && tree.nodes[startNodeId]) {
+    // The start is always reachable, even when it is the only thing selected —
+    // there is nothing for it to be disconnected from.
+    reached.add(startNodeId)
+    const adjacency = new Map<number, number[]>()
+    const link = (a: number, b: number) => {
+      const bucket = adjacency.get(a)
+      if (bucket) bucket.push(b)
+      else adjacency.set(a, [b])
+    }
+    for (const [a, b] of edges) {
+      if (!inSelection.has(a) || !inSelection.has(b)) continue
+      link(a, b)
+      link(b, a)
+    }
+    const queue = [startNodeId]
+    for (let head = 0; head < queue.length; head++) {
+      for (const next of adjacency.get(queue[head]) ?? []) {
+        if (reached.has(next)) continue
+        reached.add(next)
+        queue.push(next)
+      }
+    }
+  }
+
+  // Both lists keep the caller's own order, so a UI can show them as picked.
+  const reachable: number[] = []
+  const orphans: number[] = []
+  const ascendancy: number[] = []
+  for (const id of unique) {
+    const node = tree.nodes[id]
+    if (!node) {
+      // Not in this tree at all, so the game cannot allocate it either.
+      orphans.push(id)
+      continue
+    }
+    if (isAscendancy(node)) {
+      ascendancy.push(id)
+      continue
+    }
+    if (startNodeId == null || reached.has(id)) reachable.push(id)
+    else orphans.push(id)
+  }
+
+  return { reachable, orphans, ascendancy, duplicates }
+}
+
 function bfsFromAllocated(
   adjacency: Map<number, number[]>,
   allocated: Set<number>,

@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { PobParseError, buildLevelingPlan, buildToShareCode, parseItemText, parsePobCode, resolveStartNode } from '@poe2coach/core'
+import {
+  PobParseError,
+  buildLevelingPlan,
+  buildToShareCode,
+  isAscendancy,
+  parseItemText,
+  parsePobCode,
+  resolveStartNode,
+  validateTreeSelection,
+} from '@poe2coach/core'
 import type { BuildSnapshot, GameItem, TreeData } from '@poe2coach/core'
-import TreeCanvas from './components/TreeCanvas.vue'
+import TreePanel from './components/TreePanel.vue'
 import ResistancePanel from './components/ResistancePanel.vue'
 import GearPanel from './components/GearPanel.vue'
 import LevelingPanel from './components/LevelingPanel.vue'
@@ -14,6 +23,9 @@ import { loadTree } from './treeData'
 import { bilingual, t } from './i18n'
 import { addBuild, loadBuilds, removeBuild } from './buildStore'
 import type { StoredBuild } from './buildStore'
+import { addTreePreset, loadTreePresets, removeTreePreset } from './treePresetStore'
+import type { StoredTreePreset } from './treePresetStore'
+import { treeEdges } from './treeArt'
 import { realm } from './settings'
 import mapsJson from '@poe2coach/data/maps.json'
 
@@ -23,7 +35,9 @@ type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps' | 'price' 
 
 const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'home', label: '主页' },
-  { key: 'tree', label: '天赋树', requiresBuild: true },
+  // Reachable without a build: a tree preset carries its own class, and the
+  // page is still browsable read-only.
+  { key: 'tree', label: '天赋树' },
   { key: 'gear', label: '装备', requiresBuild: true },
   { key: 'skills', label: '技能', requiresBuild: true },
   { key: 'leveling', label: '升级', requiresBuild: true },
@@ -95,15 +109,23 @@ function onParse() {
 }
 
 function loadDemo() {
-  const firstKeystone = Object.values(tree.nodes).find((n) => n.isKeystone && !n.ascendancyName)
+  /*
+   * Grow the sample from the Witch's class start, the way a real tree is
+   * allocated. Starting from an arbitrary keystone instead — which this used to
+   * do — produces a cluster with no route back to the start, and the save-time
+   * connectivity check then reports every node as an orphan.
+   */
+  const startNode = resolveStartNode(tree, 'Witch')
   const picked: number[] = []
   const seen = new Set<number>()
-  const queue: number[] = firstKeystone ? [firstKeystone.id] : [Number(Object.keys(tree.nodes)[0])]
+  const queue: number[] = startNode != null ? [startNode] : [Number(Object.keys(tree.nodes)[0])]
   while (queue.length > 0 && picked.length < 80) {
     const id = queue.shift()!
     if (seen.has(id)) continue
     const node = tree.nodes[id]
-    if (!node || node.ascendancyName || node.isMastery) continue
+    // Ascendancy nodes hang off the start but are bought with trial points, so
+    // they stay out of the sample's main-tree budget.
+    if (!node || node.isMastery || node.ascendancyName) continue
     seen.add(id)
     picked.push(id)
     for (const c of node.connections ?? []) queue.push(c.id)
@@ -154,6 +176,142 @@ function loadStored(stored: StoredBuild) {
 
 function deleteStored(id: string) {
   builds.value = removeBuild(builds.value, id)
+}
+
+// ---------------------------------------------------------------- tree editing
+
+const presets = ref<StoredTreePreset[]>(loadTreePresets())
+const saveMessage = ref<string | null>(null)
+
+/** Ascendancies this build's class can pick, which is what the picker offers. */
+const ascendancies = computed(() => {
+  const className = build.value?.className
+  if (!className) return []
+  const klass = tree.classes.find((c) => c.name === className)
+  return klass?.ascendancies.map((a) => a.name) ?? []
+})
+
+const treeCheck = computed(() =>
+  build.value
+    ? validateTreeSelection(tree, build.value.passiveNodes, startNodeId.value, treeEdges())
+    : null,
+)
+
+const startNodeId = computed(() => resolveStartNode(tree, build.value?.className ?? null))
+
+/** Replace the whole array: `activeSet` and `plan` recompute off its identity. */
+function patchBuild(patch: { passiveNodes?: number[]; ascendClassName?: string | null }) {
+  if (!build.value) return
+  build.value = { ...build.value, ...patch }
+  saveMessage.value = null
+}
+
+function toggleTreeNode(id: number) {
+  const b = build.value
+  if (!b) return
+  const has = b.passiveNodes.includes(id)
+  patchBuild({ passiveNodes: has ? b.passiveNodes.filter((n) => n !== id) : [...b.passiveNodes, id] })
+}
+
+/**
+ * Switching ascendancy drops the old one's nodes: they belong to a tree the
+ * character no longer has, so keeping them would leave points the game would
+ * never grant.
+ */
+function setAscendancy(name: string | null) {
+  const b = build.value
+  if (!b) return
+  const previous = b.ascendClassName
+  const kept =
+    previous && previous !== name
+      ? b.passiveNodes.filter((id) => {
+          const node = tree.nodes[id]
+          return !node || !isAscendancy(node) || node.ascendancyName !== previous
+        })
+      : b.passiveNodes
+  patchBuild({ ascendClassName: name, passiveNodes: kept })
+}
+
+/** A save writes a freshly encoded code, never the imported one. */
+function currentCode(): string | null {
+  return build.value ? buildToShareCode(build.value) : null
+}
+
+function saveTree() {
+  const b = build.value
+  if (!b) return
+  const check = treeCheck.value
+  if (check && check.orphans.length > 0) {
+    saveMessage.value = `${t('有')} ${check.orphans.length} ${t('个节点没有连回职业起点,无法保存。先用「移除孤立节点」修好。')}`
+    return
+  }
+  if (!b.className) {
+    saveMessage.value = t('这份 Build 没有职业,无法校验天赋是否点得出来;已按现状保存。')
+  }
+  const code = currentCode()
+  if (!code) return
+  const named = `${buildTitle.value.trim()} (${t('已改天赋')})`
+  builds.value = addBuild(builds.value, named, code).list
+  codeInput.value = code
+  saveMessage.value = t('已保存到 Build 库(分享码按当前天赋重新生成)。')
+}
+
+function removeOrphans() {
+  const b = build.value
+  const check = treeCheck.value
+  if (!b || !check || check.orphans.length === 0) return
+  const drop = new Set(check.orphans)
+  patchBuild({ passiveNodes: b.passiveNodes.filter((id) => !drop.has(id)) })
+  saveMessage.value = `${t('已移除')} ${check.orphans.length} ${t('个孤立节点。')}`
+}
+
+function saveTreePreset(name: string) {
+  const b = build.value
+  if (!b) return
+  const result = addTreePreset(presets.value, {
+    name,
+    className: b.className,
+    ascendClassName: b.ascendClassName,
+    treeVersion: b.treeVersion,
+    nodes: b.passiveNodes,
+  })
+  presets.value = result.list
+  saveMessage.value = `${t('已保存预设')}「${result.preset.name}」。`
+}
+
+function applyTreePreset(id: string) {
+  const preset = presets.value.find((p) => p.id === id)
+  if (!preset) return
+  const b = build.value
+  if (!b) {
+    // A preset carries its own class, so it can stand in for a build snapshot
+    // when nothing has been imported yet.
+    build.value = {
+      className: preset.className,
+      ascendClassName: preset.ascendClassName,
+      level: null,
+      treeVersion: preset.treeVersion,
+      passiveNodes: preset.nodes,
+      treeSpecUrls: [],
+      skills: [],
+      items: [],
+    }
+    saveMessage.value = `${t('已载入预设')}「${preset.name}」。`
+    return
+  }
+  const sameClass = !preset.className || preset.className === b.className
+  patchBuild({
+    passiveNodes: preset.nodes,
+    ascendClassName: preset.ascendClassName ?? b.ascendClassName,
+    ...(sameClass ? {} : { className: preset.className }),
+  })
+  saveMessage.value = sameClass
+    ? `${t('已套用预设')}「${preset.name}」。`
+    : `${t('已套用预设')}「${preset.name}」${t(',职业随之改为')} ${preset.className}。`
+}
+
+function deleteTreePreset(id: string) {
+  presets.value = removeTreePreset(presets.value, id)
 }
 </script>
 
@@ -276,7 +434,23 @@ function deleteStored(id: string) {
 
     <!-- ===================== 功能视图 ===================== -->
     <main v-else-if="view === 'tree'" class="full">
-      <TreeCanvas :tree="tree" :active="activeSet" :progress="progressSet" />
+      <TreePanel
+        :tree="tree"
+        :build="build"
+        :active="activeSet"
+        :progress="progressSet"
+        :presets="presets"
+        :ascendancies="ascendancies"
+        :check="treeCheck"
+        :save-message="saveMessage"
+        @toggle-node="toggleTreeNode"
+        @set-ascendancy="setAscendancy"
+        @save="saveTree"
+        @remove-orphans="removeOrphans"
+        @save-preset="saveTreePreset"
+        @apply-preset="applyTreePreset"
+        @delete-preset="deleteTreePreset"
+      />
     </main>
 
     <main v-else-if="view === 'gear'" class="centered">

@@ -69,6 +69,20 @@ export interface TreeGeometry {
 export const TREE_ART_INDEX = indexJson as unknown as TreeArtIndex
 export const TREE_GEOMETRY = geometryJson as unknown as TreeGeometry
 
+let edgesCache: [number, number][] | null = null
+
+/**
+ * The tree's graph as numeric pairs, for callers that need to walk it.
+ *
+ * This is GGG's own edge list rather than `node.connections`, which only
+ * carries part of the real graph — a walk over `connections` alone reaches 3
+ * main-tree nodes from a class start where this reaches 7.
+ */
+export function treeEdges(): [number, number][] {
+  if (!edgesCache) edgesCache = TREE_GEOMETRY.edges.map(([a, b]) => [Number(a), Number(b)])
+  return edgesCache
+}
+
 /** Atlas name -> the module URL Vite emitted for it. */
 const SOURCES: Record<string, string> = {
   skills: skillsUrl,

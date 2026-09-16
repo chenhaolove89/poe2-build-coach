@@ -20,7 +20,18 @@ const props = defineProps<{
   active: Set<number>
   /** Allocated-so-far subset of `active` (leveling progress) — drawn bright. */
   progress?: Set<number>
+  /** Turns a node click into a `toggleNode` event. Off means the tree is read-only. */
+  editable?: boolean
+  /**
+   * Ascendancy whose cluster is shown in the middle of the main tree. PoE2
+   * parks each ascendancy tree far outside the main one (~17000 units out), so
+   * at any usable zoom it is simply off screen; the main tree is an annulus
+   * with an empty centre, which is where the cluster belongs.
+   */
+  ascendancy?: string | null
 }>()
+
+const emit = defineEmits<{ toggleNode: [id: number] }>()
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const wrapEl = ref<HTMLDivElement | null>(null)
@@ -33,16 +44,34 @@ interface Pt {
   y: number
 }
 
+interface Cluster {
+  centroid: Pt
+  /** Distance from the centroid to the cluster's furthest node. */
+  radius: number
+}
+
 let art: TreeArt | null = null
 let positions = new Map<number, Pt>()
 let edges: [number, number][] = []
 let bounds = { minX: 0, minY: 0, maxX: 0, maxY: 0 }
+
+/** Centre of the main tree, and how far its innermost node sits from it. */
+let mainCentre: Pt = { x: 0, y: 0 }
+let holeRadius = 0
+/** Ascendancy name -> where its cluster sits in the raw data. */
+let clusters = new Map<string, Cluster>()
+/** Uniform scale applied to the relocated cluster, so it fits the hole. */
+let ascScale = 1
+/** Offset-less: the relocated cluster is placed by reprojecting about its centroid. */
+let placedCluster: Cluster | null = null
 
 let scale = 0.03
 let panX = 0
 let panY = 0
 let dragging = false
 let lastMouse: Pt | null = null
+/** Where the current press started, to tell a click from a pan. */
+let downPos: Pt | null = null
 let raf = 0
 let resizeObs: ResizeObserver | null = null
 
@@ -82,6 +111,53 @@ function escapeHtml(s: string): string {
 }
 
 /**
+ * Find the main tree's empty centre and where each ascendancy cluster sits.
+ *
+ * The main tree is an annulus — its innermost node is ~1300 units from the
+ * bounds centre — so `holeRadius` is the room available for a relocated
+ * ascendancy cluster. Runs once: it depends only on the shipped data.
+ */
+function analyseGeometry() {
+  const clustersByName = new Map<string, Pt[]>()
+  const main: Pt[] = []
+  for (const [id, xy] of Object.entries(TREE_GEOMETRY.positions)) {
+    const node = props.tree.nodes[Number(id)]
+    if (!node) continue
+    const point = { x: xy[0], y: xy[1] }
+    if (node.ascendancyName) {
+      const list = clustersByName.get(node.ascendancyName)
+      if (list) list.push(point)
+      else clustersByName.set(node.ascendancyName, [point])
+    } else {
+      main.push(point)
+    }
+  }
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const p of main) {
+    if (p.x < minX) minX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.x > maxX) maxX = p.x
+    if (p.y > maxY) maxY = p.y
+  }
+  mainCentre = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 }
+  holeRadius = main.reduce((best, p) => Math.min(best, Math.hypot(p.x - mainCentre.x, p.y - mainCentre.y)), Infinity)
+
+  clusters = new Map()
+  for (const [name, points] of clustersByName) {
+    const centroid = {
+      x: points.reduce((s, p) => s + p.x, 0) / points.length,
+      y: points.reduce((s, p) => s + p.y, 0) / points.length,
+    }
+    const radius = points.reduce((best, p) => Math.max(best, Math.hypot(p.x - centroid.x, p.y - centroid.y)), 0)
+    clusters.set(name, { centroid, radius })
+  }
+}
+
+/**
  * Coordinates come from the trade-independent tree export rather than from the
  * orbited-group maths in core, because the artwork is authored in that same
  * space: the frames are sized so a node's ring lands on its neighbours, and the
@@ -91,13 +167,40 @@ function escapeHtml(s: string): string {
  * Nothing outside painting reads these. `buildLevelingPlan` walks the
  * connection graph, and `resolveStartNode` reads `classesStart`, so both are
  * unaffected by which coordinate space the renderer uses.
+ *
+ * The selected ascendancy's cluster is reprojected to the main tree's centre
+ * and scaled to fit the hole. Scaling positions *and* the node sizes together
+ * is what keeps that safe: a uniform scale preserves the spacing-to-frame ratio
+ * inside the cluster, so nothing starts overlapping. 13 of the 22 clusters are
+ * bigger than the hole as shipped, which is why scaling is needed at all.
  */
 function rebuildGeometry() {
+  const wanted = props.ascendancy ? clusters.get(props.ascendancy) ?? null : null
+  placedCluster = wanted
+  ascScale = 1
+  if (wanted && wanted.radius > 0 && Number.isFinite(holeRadius)) {
+    ascScale = Math.min(1, (holeRadius * 0.92) / wanted.radius)
+  }
+
   positions = new Map()
+  const inBounds = new Set<number>()
   for (const [id, xy] of Object.entries(TREE_GEOMETRY.positions)) {
     const nodeId = Number(id)
-    if (props.tree.nodes[nodeId]) positions.set(nodeId, { x: xy[0], y: xy[1] })
+    const node = props.tree.nodes[nodeId]
+    if (!node) continue
+    let point = { x: xy[0], y: xy[1] }
+    if (node.ascendancyName && wanted && node.ascendancyName === props.ascendancy) {
+      point = {
+        x: mainCentre.x + (point.x - wanted.centroid.x) * ascScale,
+        y: mainCentre.y + (point.y - wanted.centroid.y) * ascScale,
+      }
+      inBounds.add(nodeId)
+    } else if (!node.ascendancyName) {
+      inBounds.add(nodeId)
+    }
+    positions.set(nodeId, point)
   }
+
   edges = []
   for (const [a, b] of TREE_GEOMETRY.edges) {
     const from = Number(a)
@@ -105,11 +208,15 @@ function rebuildGeometry() {
     if (positions.has(from) && positions.has(to)) edges.push([from, to])
   }
 
+  // Frame the main tree plus the relocated cluster. Every other ascendancy
+  // cluster stays parked ~17000 units out, and letting those into the bounds is
+  // what used to shrink the tree to half the canvas.
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
   let maxY = -Infinity
-  for (const p of positions.values()) {
+  for (const id of inBounds) {
+    const p = positions.get(id)!
     if (p.x < minX) minX = p.x
     if (p.y < minY) minY = p.y
     if (p.x > maxX) maxX = p.x
@@ -270,8 +377,16 @@ function draw() {
   }
 
   for (const { node, pos } of ordered) {
+    // Only the selected ascendancy is shown. The other 21 belong to classes
+    // this character does not have, and they sit ~17000 units out, so drawing
+    // them just leaves stray clusters around the edges.
+    if (node.ascendancyName && node.ascendancyName !== props.ascendancy) continue
+
     const kind = node.isKeystone ? 'keystone' : node.isNotable ? 'notable' : 'normal'
-    const drawSize = index?.draw[kind] ?? 40
+    // A relocated ascendancy cluster is drawn at its own scale, so its frames
+    // stay proportional to the spacing the reprojection gave them.
+    const shrink = placedCluster && node.ascendancyName === props.ascendancy ? ascScale : 1
+    const drawSize = (index?.draw[kind] ?? 40) * shrink
     const half = drawSize / 2
     if (pos.x + half < viewMinX || pos.x - half > viewMaxX || pos.y + half < viewMinY || pos.y - half > viewMaxY)
       continue
@@ -302,7 +417,7 @@ function draw() {
     const kindName = frameKind(node, kind)
     const shape = frameState(state)
     const frameRect = index?.frames[`${kindName}.${shape}`]
-    const frameSize = index?.drawFrame[`${kindName}.${shape}`] ?? drawSize * 1.5
+    const frameSize = (index?.drawFrame[`${kindName}.${shape}`] ?? drawSize * 1.5) * shrink
     if (state === 'allocated') {
       ctx.shadowColor = 'rgba(240,186,88,0.55)'
       ctx.shadowBlur = 10 / scale
@@ -407,6 +522,7 @@ function onWheel(e: WheelEvent) {
 function onDown(e: MouseEvent) {
   dragging = true
   lastMouse = screenPos(e)
+  downPos = lastMouse
 }
 
 function onMove(e: MouseEvent) {
@@ -423,9 +539,23 @@ function onMove(e: MouseEvent) {
   else hover.value = null
 }
 
-function onUp() {
+/**
+ * A press that never turned into a pan counts as a click on whatever node is
+ * under it. Panning has no threshold of its own — the view follows the cursor
+ * from the first pixel — so the click is decided here, by how far the press
+ * travelled, and panning keeps its current feel.
+ */
+function onUp(e: MouseEvent) {
+  const wasDragging = dragging
+  const start = downPos
   dragging = false
   lastMouse = null
+  downPos = null
+  if (!props.editable || !wasDragging || !start) return
+  const end = screenPos(e)
+  if (Math.hypot(end.x - start.x, end.y - start.y) > 5) return
+  const node = pickNode(toWorld(start))
+  if (node) emit('toggleNode', node.id)
 }
 
 function onDblClick() {
@@ -440,7 +570,19 @@ watch(
 )
 watch(nextUp, () => scheduleDraw())
 
+/** A different ascendancy means a different cluster in the middle. */
+watch(
+  () => props.ascendancy,
+  () => {
+    rebuildGeometry()
+    buildGrid()
+    fitToContent()
+    scheduleDraw()
+  },
+)
+
 onMounted(async () => {
+  analyseGeometry()
   rebuildGeometry()
   buildGrid()
   fitToContent()
@@ -480,7 +622,9 @@ onBeforeUnmount(() => {
   <div ref="wrapEl" class="tree-wrap">
     <canvas ref="canvasEl" />
     <div v-if="hover" class="tooltip" :style="{ left: hover.x + 14 + 'px', top: hover.y + 14 + 'px' }" v-html="hoverHtml" />
-    <div class="hint">{{ t('滚轮缩放 · 拖拽平移 · 双击复位') }}</div>
+    <div class="hint">
+      {{ editable ? t('点击节点加/减 · 滚轮缩放 · 拖拽平移 · 双击复位') : t('滚轮缩放 · 拖拽平移 · 双击复位') }}
+    </div>
     <div class="credit">© Grinding Gear Games</div>
   </div>
 </template>
