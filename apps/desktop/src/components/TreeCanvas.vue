@@ -260,6 +260,20 @@ function frameKind(node: TreeNode, kind: string): string {
 }
 
 /**
+ * Nodes that are allocated merely by existing: the class start, and the start
+ * node of the ascendancy the character has taken. The game charges nothing for
+ * either and neither can be un-allocated, so both are always lit and both anchor
+ * their own tree's path.
+ */
+const implicitIds = computed(() => {
+  const ids = new Set<number>()
+  if (props.startNode != null) ids.add(props.startNode)
+  const cluster = props.ascendancy ? clusters.get(props.ascendancy) : undefined
+  if (cluster?.startId != null) ids.add(cluster.startId)
+  return ids
+})
+
+/**
  * Four visual states, because the tree answers two different questions: which
  * nodes this build wants (`active`), and which of them are already taken
  * (`progress`). Frames only ship unallocated / canAllocate / allocated, so
@@ -267,7 +281,7 @@ function frameKind(node: TreeNode, kind: string): string {
  * apart by the glow.
  */
 function stateOf(node: TreeNode): NodeState {
-  if (props.progress?.has(node.id)) return 'allocated'
+  if (props.progress?.has(node.id) || implicitIds.value.has(node.id)) return 'allocated'
   if (props.active.has(node.id)) return nextUp.value.has(node.id) ? 'canAllocate' : 'planned'
   return 'unallocated'
 }
@@ -377,11 +391,18 @@ function draw() {
   const WANTED_ALPHA = 0.82
   const connectorThick = connector && index ? connector.h / index.atlases.line.scale : 0
   const lineImage = art?.images.line
-  const startId = props.startNode ?? null
-  // The class start is always allocated in game, whether or not the build's node
-  // list mentions it, so it anchors the highlight on its own.
-  const taken = (id: number) => progress.has(id) || id === startId
-  const wanted = (id: number) => props.active.has(id) || id === startId
+  // The class start and the ascendancy start are always allocated in game,
+  // whether or not the build's node list mentions them, so they anchor the
+  // highlight on their own.
+  const implicit = implicitIds.value
+  const taken = (id: number) => progress.has(id) || implicit.has(id)
+  const wanted = (id: number) => props.active.has(id) || implicit.has(id)
+  /**
+   * Which tree a node belongs to. A class start connects straight to its
+   * ascendancy's start node — the Witch start has six such links — but no
+   * character can walk that link, so it must never light up as part of a path.
+   */
+  const treeOf = (id: number) => props.tree.nodes[id]?.ascendancyName ?? null
   if (lineImage && connector && connectorActive && index) {
     for (const [a, b] of edges) {
       const pa = positions.get(a)!
@@ -397,8 +418,9 @@ function draw() {
       const dy = pb.y - pa.y
       const len = Math.hypot(dx, dy)
       if (len < 1) continue
-      const onTakenPath = taken(a) && taken(b)
-      const onWantedPath = !onTakenPath && wanted(a) && wanted(b)
+      const sameTree = treeOf(a) === treeOf(b)
+      const onTakenPath = sameTree && taken(a) && taken(b)
+      const onWantedPath = sameTree && !onTakenPath && wanted(a) && wanted(b)
       const rect = onTakenPath || onWantedPath ? connectorActive : connector
       ctx.save()
       ctx.globalAlpha = onWantedPath ? WANTED_ALPHA : 1
@@ -412,11 +434,12 @@ function draw() {
     for (const [a, b] of edges) {
       const pa = positions.get(a)!
       const pb = positions.get(b)!
-      const both = taken(a) && taken(b)
+      const sameTree = treeOf(a) === treeOf(b)
+      const both = sameTree && taken(a) && taken(b)
       ctx.strokeStyle = both
         ? 'rgba(240,186,88,0.95)'
-        : wanted(a) && wanted(b)
-          ? 'rgba(180,140,60,0.75)'
+        : sameTree && wanted(a) && wanted(b)
+          ? 'rgba(214,168,74,0.8)'
           : 'rgba(122,136,176,0.7)'
       ctx.beginPath()
       ctx.moveTo(pa.x, pa.y)
