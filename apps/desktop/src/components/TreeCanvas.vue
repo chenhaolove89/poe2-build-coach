@@ -81,6 +81,18 @@ interface Cluster {
 }
 
 let art: TreeArt | null = null
+/**
+ * One orbit ring: the nodes sharing a group and an orbit, with their angle about
+ * the group centre. The art is drawn as four 90-degree tiles around this point.
+ */
+interface Ring {
+  centre: Pt
+  orbit: number
+  /** Visible nodes on the ring, by angle ascending. */
+  nodes: { id: number; angle: number }[]
+}
+
+let rings: Ring[] = []
 let positions = new Map<number, Pt>()
 let edges: [number, number][] = []
 let bounds = { minX: 0, minY: 0, maxX: 0, maxY: 0 }
@@ -279,6 +291,8 @@ function rebuildGeometry() {
     if (p.x > maxX) maxX = p.x
     if (p.y > maxY) maxY = p.y
   }
+  buildRings()
+
   if (framed) {
     // One node's own width, so a single selected node is centred rather than
     // filling the card with its own edge.
@@ -347,6 +361,46 @@ function frameState(state: NodeState): 'unallocated' | 'canAllocate' | 'allocate
   if (state === 'allocated') return 'allocated'
   if (state === 'unallocated') return 'unallocated'
   return 'canAllocate'
+}
+
+/**
+ * Collect the orbit rings that should be drawn.
+ *
+ * A ring needs at least two nodes to be worth drawing, and its centre comes from
+ * the official group data. When the group belongs to the relocated ascendancy
+ * cluster its centre is reprojected with the same transform its nodes got, or
+ * the ring would be drawn where the nodes no longer are.
+ */
+function buildRings() {
+  const byGroupOrbit = new Map<string, { group: number; orbit: number; nodes: { id: number; point: Pt }[] }>()
+  for (const [id, point] of positions) {
+    const node = props.tree.nodes[id]
+    if (!node || !node.orbit || node.orbit < 1 || node.group == null) continue
+    const key = `${node.group}:${node.orbit}`
+    const bucket = byGroupOrbit.get(key)
+    if (bucket) bucket.nodes.push({ id, point })
+    else byGroupOrbit.set(key, { group: node.group, orbit: node.orbit, nodes: [{ id, point }] })
+  }
+
+  const relocated = props.ascendancy ? clusters.get(props.ascendancy) : null
+  rings = []
+  for (const { group, orbit, nodes: members } of byGroupOrbit.values()) {
+    if (members.length < 2) continue
+    const raw = TREE_GEOMETRY.groups[String(group)]
+    if (!raw) continue
+    let centre: Pt = { x: raw[0], y: raw[1] }
+    const node = props.tree.nodes[members[0].id]
+    if (relocated && node?.ascendancyName === props.ascendancy) {
+      centre = {
+        x: mainCentre.x + (centre.x - relocated.centre.x) * ascScale,
+        y: mainCentre.y + (centre.y - relocated.centre.y) * ascScale,
+      }
+    }
+    const nodes = members
+      .map((m) => ({ id: m.id, angle: Math.atan2(m.point.y - centre.y, m.point.x - centre.x) }))
+      .sort((a, b) => a.angle - b.angle)
+    rings.push({ centre, orbit, nodes })
+  }
 }
 
 function fitToContent() {
@@ -432,9 +486,8 @@ function draw() {
   }
 
   // ---- connections -------------------------------------------------------
-  // The connector art is a long uniform band, so stretching it over an
-  // arbitrary span keeps its look; the rings the atlas also ships are arc
-  // segments whose placement convention is not documented, so they are unused.
+  // Two kinds of link, as the game has them. Nodes sharing an orbit are joined
+  // by the ring art; everything else by a straight connector band.
   //
   // The path taken and the path this build wants both draw with the lit art;
   // without it a hand-picked tree shows its nodes ringed in gold but no route
@@ -462,6 +515,72 @@ function draw() {
    * character can walk that link, so it must never light up as part of a path.
    */
   const treeOf = (id: number) => props.tree.nodes[id]?.ascendancyName ?? null
+
+  /*
+   * Orbit rings, as four 90-degree tiles about the group centre.
+   *
+   * The tiles are quarter arcs with the arc's centre at the tile's bottom-right
+   * corner and a radius equal to the tile's side, which is why the tile side
+   * measures the same as the orbit radius. Four 90-degree rotations therefore
+   * close into a full ring — measured at 100% angular coverage.
+   *
+   * Only the tile facing the path is lit, so an allocated route shows as lit
+   * arcs along its own ring rather than the whole circle glowing. The tile drawn
+   * unrotated covers 180-270 degrees about the centre, so quadrant q covers
+   * 180+90q onwards.
+   */
+  if (lineImage && index) {
+    const lineScale = index.atlases.line.scale
+    const quadrantOf = (angle: number) => {
+      const deg = (angle * 180) / Math.PI
+      return Math.floor((((deg - 180) % 360) + 360) % 360 / 90)
+    }
+    for (const ring of rings) {
+      const base = index.lines[`Orbit${ring.orbit}Normal`]
+      if (!base) continue
+      const size = base.w / lineScale
+      // Zoomed out a small ring is a few pixels of arc, and thousands of those
+      // read as noise rather than as guides.
+      if (size * scale < 16) continue
+      const litRect = index.lines[`Orbit${ring.orbit}Active`] ?? base
+
+      // Which quarter-tiles the path runs through, taken and wanted alike but
+      // recorded separately so the two can be drawn at different strengths.
+      const lit = new Set<number>()
+      const count = ring.nodes.length
+      for (let i = 0; i < count; i++) {
+        const from = ring.nodes[i]
+        const to = ring.nodes[(i + 1) % count]
+        // With exactly two nodes the wrap-around is the same pair again.
+        if (count === 2 && i === count - 1) continue
+        const onPath = (taken(from.id) && taken(to.id)) || (wanted(from.id) && wanted(to.id))
+        if (!onPath || treeOf(from.id) !== treeOf(to.id)) continue
+        // Walk the shorter way round and mark every quadrant it passes through.
+        let delta = to.angle - from.angle
+        while (delta > Math.PI) delta -= Math.PI * 2
+        while (delta < -Math.PI) delta += Math.PI * 2
+        const steps = Math.max(2, Math.ceil(Math.abs(delta) / 0.3))
+        for (let k = 0; k <= steps; k++) lit.add(quadrantOf(from.angle + (delta * k) / steps))
+      }
+
+      for (let q = 0; q < 4; q++) {
+        const rect = lit.has(q) ? litRect : base
+        ctx.save()
+        ctx.translate(ring.centre.x, ring.centre.y)
+        ctx.rotate((q * Math.PI) / 2)
+        ctx.drawImage(lineImage, rect.x, rect.y, rect.w, rect.h, -size, -size, size, size)
+        ctx.restore()
+      }
+    }
+  }
+
+  /** Nodes sharing a group and orbit are joined by the ring, not a band. */
+  const onSameOrbit = (a: number, b: number) => {
+    const na = props.tree.nodes[a]
+    const nb = props.tree.nodes[b]
+    return na != null && nb != null && na.group === nb.group && na.orbit === nb.orbit && !!na.orbit
+  }
+
   if (lineImage && connector && connectorActive && index) {
     for (const [a, b] of edges) {
       const pa = positions.get(a)!
@@ -473,6 +592,9 @@ function draw() {
         (pa.y > viewMaxY && pb.y > viewMaxY)
       )
         continue
+      // The ring already draws this link, and a straight chord across it would
+      // sit on top of the curve.
+      if (onSameOrbit(a, b)) continue
       const dx = pb.x - pa.x
       const dy = pb.y - pa.y
       const len = Math.hypot(dx, dy)

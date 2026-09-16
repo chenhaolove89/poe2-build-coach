@@ -253,6 +253,18 @@ for (const [id, node] of Object.entries(official.nodes)) {
 const officialEdges = (official.edges ?? []).map((e) =>
   Array.isArray(e) ? e.map(String) : [String(e[0] ?? e.from), String(e[1] ?? e.to)],
 )
+/**
+ * Group centres, which the ring art is drawn around.
+ *
+ * Orbit rings are concentric about their group, and the arc tiles are placed
+ * relative to that point, so the centre has to come from the official data —
+ * node positions alone do not identify it.
+ */
+const groupCentres = {}
+for (const [id, group] of Object.entries(official.groups ?? {})) {
+  if (typeof group.x === 'number' && typeof group.y === 'number') groupCentres[id] = [group.x, group.y]
+}
+
 const missingPositions = Object.keys(tree.nodes).filter((id) => !positions[id]).length
 
 // ------------------------------------------------------------------ diagnostics
@@ -272,7 +284,9 @@ console.log(
 )
 console.log('draw sizes (tree units):', JSON.stringify(draw))
 console.log('frame sizes (tree units):', JSON.stringify(drawFrame))
-console.log(`geometry: ${Object.keys(positions).length} positions, ${officialEdges.length} official edges`)
+console.log(
+  `geometry: ${Object.keys(positions).length} positions, ${officialEdges.length} official edges, ${Object.keys(groupCentres).length} group centres`,
+)
 console.log(`  our tree nodes without an official position: ${missingPositions}`)
 
 // A sanity figure for the draw sizes: same-orbit neighbours should be roughly
@@ -327,6 +341,7 @@ const geometry = {
   source: pack.source,
   positions,
   edges: officialEdges,
+  groups: groupCentres,
 }
 
 const indexBytes = JSON.stringify(pack).length

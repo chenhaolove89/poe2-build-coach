@@ -83,6 +83,8 @@ export interface TreeGeometry {
   positions: Record<string, [number, number]>
   /** Official connection list, as id strings. */
   edges: [string, string][]
+  /** Group id -> its centre. Orbit rings are concentric about this point. */
+  groups: Record<string, [number, number]>
 }
 
 export const TREE_ART_INDEX = indexJson as unknown as TreeArtIndex
