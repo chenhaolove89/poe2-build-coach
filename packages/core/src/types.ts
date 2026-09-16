@@ -15,6 +15,11 @@ export interface TreeNode {
   /** Present on ascendancy tree nodes (also used as the ascendancy marker). */
   ascendancyName?: string
   isAscendancyStart?: boolean
+  /** Costs no point to allocate. */
+  isFreeAllocate?: boolean
+  /** One option of a multiple-choice node; selecting one deselects its siblings. */
+  isMultipleChoiceOption?: boolean
+  isMultipleChoice?: boolean
   connections?: { id: number; orbit?: number }[]
   stringId?: string
   skill?: number

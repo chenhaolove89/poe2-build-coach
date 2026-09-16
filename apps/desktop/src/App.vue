@@ -4,9 +4,11 @@ import {
   PobParseError,
   buildLevelingPlan,
   buildToShareCode,
+  countPoints,
   isAscendancy,
   parseItemText,
   parsePobCode,
+  QUEST_POINT_TOTAL,
   resolveStartNode,
   validateTreeSelection,
 } from '@poe2coach/core'
@@ -200,6 +202,18 @@ const treeCheck = computed(() =>
     : null,
 )
 
+/**
+ * Campaign Books of Specialisation taken, 0-24. They are consumable quest
+ * items, so the ceiling genuinely depends on this and it cannot be derived from
+ * the build; 24 is what Path of Building assumes, and what a finished character
+ * has.
+ */
+const questPoints = ref(QUEST_POINT_TOTAL)
+
+const pointBudget = computed(() =>
+  countPoints(tree, build.value?.passiveNodes ?? [], { level: build.value?.level ?? null, questPoints: questPoints.value }, treeEdges()),
+)
+
 const startNodeId = computed(() => resolveStartNode(tree, build.value?.className ?? null))
 
 /** Replace the whole array: `activeSet` and `plan` recompute off its identity. */
@@ -278,6 +292,15 @@ function currentCode(): string | null {
 function saveTree() {
   const b = build.value
   if (!b) return
+  const budget = pointBudget.value
+  if (budget.ascendancyUsed > budget.ascendancyCap) {
+    saveMessage.value = `${t('升华已用')} ${budget.ascendancyUsed} ${t('点,超过上限')} ${budget.ascendancyCap} ${t('点,无法保存。')}`
+    return
+  }
+  if (budget.mainCap != null && budget.mainUsed > budget.mainCap) {
+    saveMessage.value = `${t('主树已用')} ${budget.mainUsed} ${t('点,超过上限')} ${budget.mainCap} ${t('点,无法保存。')}`
+    return
+  }
   const check = treeCheck.value
   if (check && check.orphans.length > 0) {
     saveMessage.value = `${t('有')} ${check.orphans.length} ${t('个节点没有连回职业起点,无法保存。先用「移除孤立节点」修好。')}`
@@ -292,6 +315,11 @@ function saveTree() {
   builds.value = addBuild(builds.value, named, code).list
   codeInput.value = code
   saveMessage.value = t('已保存到 Build 库(分享码按当前天赋重新生成)。')
+}
+
+function setQuestPoints(value: number) {
+  questPoints.value = Math.max(0, Math.min(QUEST_POINT_TOTAL, value))
+  saveMessage.value = null
 }
 
 function removeOrphans() {
@@ -481,10 +509,13 @@ function deleteTreePreset(id: string) {
         :classes="classNames"
         :ascendancies="ascendancies"
         :check="treeCheck"
+        :budget="pointBudget"
+        :quest-points="questPoints"
         :save-message="saveMessage"
         @toggle-node="toggleTreeNode"
         @set-class="setClass"
         @set-ascendancy="setAscendancy"
+        @set-quest-points="setQuestPoints"
         @save="saveTree"
         @remove-orphans="removeOrphans"
         @save-preset="saveTreePreset"

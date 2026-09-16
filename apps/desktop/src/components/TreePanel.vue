@@ -10,7 +10,8 @@
  * share code that a save writes.
  */
 import { computed, ref } from 'vue'
-import type { BuildSnapshot, TreeData, TreeSelectionCheck } from '@poe2coach/core'
+import type { BuildSnapshot, PointBudget, TreeData, TreeSelectionCheck } from '@poe2coach/core'
+import { QUEST_POINT_TOTAL } from '@poe2coach/core'
 import { bilingual, t } from '../i18n'
 import type { StoredTreePreset } from '../treePresetStore'
 import TreeCanvas from './TreeCanvas.vue'
@@ -27,6 +28,13 @@ const props = defineProps<{
   ascendancies: string[]
   /** Result of validating the current selection, for the save button's state. */
   check: TreeSelectionCheck | null
+  /** Points spent against their caps, for the readout and the save guard. */
+  budget: PointBudget
+  /**
+   * Campaign books taken, 0-24. They are consumable quest items rather than an
+   * automatic reward, so the caller has to say — the ceiling depends on it.
+   */
+  questPoints: number
   /** Set after a save attempt that was refused or completed. */
   saveMessage: string | null
 }>()
@@ -35,6 +43,7 @@ const emit = defineEmits<{
   toggleNode: [id: number]
   setClass: [name: string | null]
   setAscendancy: [name: string | null]
+  setQuestPoints: [value: number]
   save: []
   removeOrphans: []
   savePreset: [name: string]
@@ -46,19 +55,12 @@ const editing = ref(false)
 const presetName = ref('')
 
 const selected = computed(() => props.build?.passiveNodes.length ?? 0)
-const ascendancyCount = computed(() => props.check?.ascendancy.length ?? 0)
-/** The main-tree points, which is what the game charges for. */
-const mainlineCount = computed(() => selected.value - ascendancyCount.value)
 const orphanCount = computed(() => props.check?.orphans.length ?? 0)
 
-/**
- * How the selection compares to the build that was imported, which is the
- * honest "am I over budget" signal available: nothing in this app knows the
- * level-to-points rule, so it does not pretend to.
- */
-const originalCount = ref<number | null>(null)
-const delta = computed(() => (originalCount.value == null ? null : selected.value - originalCount.value))
-if (props.build) originalCount.value = props.build.passiveNodes.length
+/** Both pools are capped, and either one being over is a reason to refuse. */
+const mainOver = computed(() => props.budget.mainCap != null && props.budget.mainUsed > props.budget.mainCap)
+const ascendancyOver = computed(() => props.budget.ascendancyUsed > props.budget.ascendancyCap)
+const overBudget = computed(() => mainOver.value || ascendancyOver.value)
 
 /**
  * Ascendancy already in the selection, which the current class may no longer
@@ -114,17 +116,35 @@ function onSavePreset() {
       </span>
 
       <span class="points">
-        {{ t('已选') }} <b>{{ selected }}</b> {{ t('点') }}
-        <span class="dim">({{ t('主树') }} {{ mainlineCount }}<template v-if="ascendancyCount"> · {{ t('升华') }} {{ ascendancyCount }}</template>)</span>
-        <template v-if="delta !== null && delta !== 0">
-          <span :class="delta > 0 ? 'up' : 'down'">{{ delta > 0 ? '+' : '' }}{{ delta }}</span>
-        </template>
+        <span :class="{ over: mainOver }">
+          {{ t('主树') }} <b>{{ budget.mainUsed }}</b>
+          <template v-if="budget.mainCap != null"> / {{ budget.mainCap }}</template>
+        </span>
+        <span :class="{ over: ascendancyOver }">
+          · {{ t('升华') }} <b>{{ budget.ascendancyUsed }}</b> / {{ budget.ascendancyCap }}
+        </span>
+        <span v-if="budget.granted" class="dim"> · {{ t('节点加成 +') }}{{ budget.granted }}</span>
         <span v-if="build?.level" class="dim"> · Lv{{ build.level }}</span>
       </span>
 
+      <label class="field" :title="t('战役里的 12 本书各给 2 点,是消耗品、不是自动获得,所以要你来填。默认按做完战役算。')">
+        <span class="dim">{{ t('战役书') }}</span>
+        <input
+          class="quests"
+          type="number"
+          min="0"
+          :max="QUEST_POINT_TOTAL"
+          step="2"
+          :value="questPoints"
+          @change="emit('setQuestPoints', Number(($event.target as HTMLInputElement).value) || 0)"
+        />
+      </label>
+
       <span class="spacer" />
 
-      <button class="primary" :disabled="!build" @click="emit('save')">{{ t('保存为 Build') }}</button>
+      <button class="primary" :disabled="!build || overBudget" @click="emit('save')">
+        {{ t('保存为 Build') }}
+      </button>
     </div>
 
     <p v-if="!build" class="notice">
@@ -135,6 +155,13 @@ function onSavePreset() {
     </p>
     <p v-else-if="!editing" class="notice dim">
       {{ t('勾选「编辑模式」后点击节点即可加/减天赋。修改会同步到升级顺序。') }}
+    </p>
+    <p v-else-if="ascendancyOver" class="notice warn">
+      {{ t('升华已用') }} {{ budget.ascendancyUsed }} {{ t('点,超过上限') }} {{ budget.ascendancyCap }} {{ t('点(4 次试炼各 2 点)。') }}
+    </p>
+    <p v-else-if="mainOver" class="notice warn">
+      {{ t('主树已用') }} {{ budget.mainUsed }} {{ t('点,超过 Lv') }}{{ build?.level }}{{ t(' 加战役书的') }}
+      {{ budget.mainCap }} {{ t('点上限。') }}
     </p>
     <p v-else-if="orphanCount" class="notice warn">
       {{ t('有') }} {{ orphanCount }} {{ t('个节点没有连回职业起点,游戏里点不出来。保存时会被拦下。') }}
@@ -225,13 +252,24 @@ select {
   color: #e8b04b;
   font-size: 14px;
 }
-.up {
-  color: #7dd087;
-  margin-left: 4px;
-}
-.down {
+.points .over, .points .over b {
   color: #e06c6c;
-  margin-left: 4px;
+}
+.points span {
+  margin-right: 8px;
+}
+.quests {
+  width: 58px;
+  background: #0b0d12;
+  color: #cfd4e4;
+  border: 1px solid #2c3244;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+.quests:focus {
+  outline: none;
+  border-color: #e8b04b;
 }
 .spacer {
   flex: 1;

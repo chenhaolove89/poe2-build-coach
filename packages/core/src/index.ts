@@ -6,6 +6,8 @@ export { nodePosition, nodeNeighbours, buildEdges, treeBounds } from './tree/pos
 export type { NodePosition } from './tree/position.js'
 export { resolveStartNode, buildLevelingPlan, nodePlaced, isAscendancy, validateTreeSelection } from './tree/leveling.js'
 export type { LevelingPlan, LevelingStep, TreeSelectionCheck } from './tree/leveling.js'
+export { countPoints, grantedPoints, exclusiveOptionGroups, isFreeNode, ASCENDANCY_POINT_CAP, QUEST_POINT_TOTAL } from './tree/points.js'
+export type { PointBudget } from './tree/points.js'
 export { parseItemText } from './items/parseItemText.js'
 export { itemResistances, sumResistances, resistanceGap, modResistances } from './items/resistance.js'
 export { compareItems } from './items/compare.js'
