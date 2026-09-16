@@ -16,3 +16,12 @@ body {
   overflow: hidden;
 }
 
+/*
+ * The overlay window is transparent and the game shows through it, so the app
+ * chrome itself must not paint. Set by main.ts when the page is opened as the
+ * overlay.
+ */
+body.overlay-window {
+  background: transparent;
+}
+

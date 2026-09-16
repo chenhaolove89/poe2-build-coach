@@ -14,6 +14,8 @@ import type { BuildSnapshot, PointBudget, TreeData, TreeSelectionCheck } from '@
 import { QUEST_POINT_TOTAL } from '@poe2coach/core'
 import { bilingual, t } from '../i18n'
 import type { StoredTreePreset } from '../treePresetStore'
+import { isDesktopRuntime } from '../tradeClient'
+import { OVERLAY_HOTKEY, toggleTreeOverlay } from '../overlayClient'
 import TreeCanvas from './TreeCanvas.vue'
 
 const props = defineProps<{
@@ -71,6 +73,23 @@ function commitLevel() {
 
 const editing = ref(false)
 const presetName = ref('')
+const desktop = isDesktopRuntime()
+const overlayOn = ref(false)
+const overlayError = ref<string | null>(null)
+
+/**
+ * Summon or dismiss the overlay. It is a separate always-on-top window, so this
+ * only asks Rust to show it; what it draws is the tree with the allocation
+ * order on it, read from the share code this window leaves in storage.
+ */
+async function onToggleOverlay() {
+  overlayError.value = null
+  try {
+    overlayOn.value = await toggleTreeOverlay()
+  } catch {
+    overlayError.value = t('叠加层需要桌面版运行。')
+  }
+}
 
 const selected = computed(() => props.build?.passiveNodes.length ?? 0)
 const orphanCount = computed(() => props.check?.orphans.length ?? 0)
@@ -174,6 +193,16 @@ function onSavePreset() {
 
       <span class="spacer" />
 
+      <button
+        class="overlay-btn"
+        :class="{ on: overlayOn }"
+        :disabled="!desktop || !build"
+        :title="t('把天赋树半透明叠在游戏上(F8)。需要游戏在窗口化/无边框模式 —— 独占全屏下任何叠加层都显示不出来。')"
+        @click="onToggleOverlay"
+      >
+        {{ overlayOn ? t('收起叠加层') : t('叠加到游戏') }} · {{ OVERLAY_HOTKEY }}
+      </button>
+
       <button class="primary" :disabled="!build || overBudget" @click="emit('save')">
         {{ t('保存为 Build') }}
       </button>
@@ -199,6 +228,7 @@ function onSavePreset() {
       {{ t('有') }} {{ orphanCount }} {{ t('个节点没有连回职业起点,游戏里点不出来。保存时会被拦下。') }}
     </p>
     <p v-if="saveMessage" class="notice ok">{{ saveMessage }}</p>
+    <p v-if="overlayError" class="notice warn">{{ overlayError }}</p>
 
     <div class="canvas-wrap">
       <TreeCanvas
@@ -348,6 +378,14 @@ button.stage-add {
   border-radius: 9px;
   color: #7dd087;
   border-color: #2f4a38;
+}
+button.overlay-btn {
+  font-size: 11.5px;
+}
+button.overlay-btn.on {
+  border-color: #e8b04b;
+  color: #e8b04b;
+  background: #1f1a10;
 }
 .level {
   width: 58px;

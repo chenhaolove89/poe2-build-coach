@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
   PobParseError,
   buildLevelingPlan,
@@ -185,6 +185,27 @@ function loadStored(stored: StoredBuild) {
 function deleteStored(id: string) {
   builds.value = removeBuild(builds.value, id)
 }
+
+/**
+ * The overlay lives in its own window, so it has its own JavaScript context and
+ * cannot see this one's state. The share code is the hand-off: both windows
+ * share an origin, so localStorage carries it, and a `storage` event tells the
+ * overlay to re-read when this changes.
+ */
+const OVERLAY_BUILD_KEY = 'poe2coach.currentBuild'
+
+watch(
+  build,
+  (b) => {
+    try {
+      if (b) localStorage.setItem(OVERLAY_BUILD_KEY, buildToShareCode(b))
+      else localStorage.removeItem(OVERLAY_BUILD_KEY)
+    } catch {
+      /* storage unavailable — the overlay just will not see a build */
+    }
+  },
+  { immediate: true },
+)
 
 // ---------------------------------------------------------------- tree editing
 

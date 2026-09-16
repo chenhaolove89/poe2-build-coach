@@ -1,8 +1,16 @@
 import { createApp } from 'vue'
 import App from './App.vue'
+import TreeOverlay from './components/TreeOverlay.vue'
 import './style.css'
 
-const app = createApp(App)
+/**
+ * The overlay is its own window at `index.html?overlay=tree`, so it renders only
+ * the tree — with a transparent body, because the game has to show through it.
+ */
+const isOverlay = new URLSearchParams(location.search).get('overlay') === 'tree'
+if (isOverlay) document.body.classList.add('overlay-window')
+
+const app = createApp(isOverlay ? TreeOverlay : App)
 
 // Surface fatal errors on-screen instead of a silent black canvas.
 app.config.errorHandler = (err, _instance, info) => {

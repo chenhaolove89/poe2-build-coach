@@ -34,6 +34,17 @@ const props = defineProps<{
    * node list usually does not mention it — the game always has it allocated.
    */
   startNode?: number | null
+  /**
+   * `null` leaves the canvas transparent, for the overlay, where the game's own
+   * tree shows through underneath.
+   */
+  background?: string | null
+  /**
+   * Node id -> the step it is taken at in the leveling order. Drawn as a number
+   * on the node, which is what turns the overlay from "these are your targets"
+   * into "click this one next".
+   */
+  order?: Map<number, number>
 }>()
 
 const emit = defineEmits<{ toggleNode: [id: number] }>()
@@ -353,8 +364,11 @@ function draw() {
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.clearRect(0, 0, w, h)
-  ctx.fillStyle = '#080a0f'
-  ctx.fillRect(0, 0, w, h)
+  const background = props.background === undefined ? '#080a0f' : props.background
+  if (background) {
+    ctx.fillStyle = background
+    ctx.fillRect(0, 0, w, h)
+  }
 
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * panX, dpr * panY)
 
@@ -608,6 +622,19 @@ function draw() {
 
     // Mastery nodes have no entry in this build's atlas, so they keep the bare
     // frame rather than a hole.
+
+    // The allocation order, so the overlay answers "which one next".
+    const order = props.order?.get(node.id)
+    if (order != null) {
+      ctx.font = `600 ${Math.max(9 / scale, drawSize * 0.62)}px 'Segoe UI', sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.lineWidth = 3 / scale
+      ctx.strokeStyle = 'rgba(8,10,15,0.9)'
+      ctx.strokeText(String(order), pos.x, pos.y)
+      ctx.fillStyle = '#ffd979'
+      ctx.fillText(String(order), pos.x, pos.y)
+    }
   }
 }
 
