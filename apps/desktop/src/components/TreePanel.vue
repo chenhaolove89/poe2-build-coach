@@ -46,12 +46,28 @@ const emit = defineEmits<{
   setClass: [name: string | null]
   setAscendancy: [name: string | null]
   setQuestPoints: [value: number]
+  setLevel: [level: number | null]
   save: []
   removeOrphans: []
   savePreset: [name: string]
   applyPreset: [id: string]
   deletePreset: [id: string]
+  /** Write the current nodes as this preset's stage for the current level. */
+  saveStage: [id: string]
+  /** Load a preset's stage for a specific level. */
+  applyStage: [id: string, level: number]
+  deleteStage: [id: string, level: number]
 }>()
+
+/** Editable copy of the level, so a half-typed number is not committed. */
+const levelDraft = ref<number | null>(props.build?.level ?? null)
+
+function commitLevel() {
+  const raw = levelDraft.value
+  const level = raw == null || Number.isNaN(raw) ? null : Math.max(1, Math.min(100, Math.round(raw)))
+  levelDraft.value = level
+  emit('setLevel', level)
+}
 
 const editing = ref(false)
 const presetName = ref('')
@@ -129,6 +145,20 @@ function onSavePreset() {
         <span v-if="build?.level" class="dim"> · Lv{{ build.level }}</span>
       </span>
 
+      <label class="field" :title="t('等级决定主树点数上限(每级 1 点)。改等级也会切换预设里对应等级的天赋。')">
+        <span class="dim">{{ t('等级') }}</span>
+        <input
+          class="level"
+          type="number"
+          min="1"
+          max="100"
+          :value="levelDraft ?? ''"
+          @input="levelDraft = ($event.target as HTMLInputElement).value === '' ? null : Number(($event.target as HTMLInputElement).value)"
+          @change="commitLevel"
+          @keyup.enter="commitLevel"
+        />
+      </label>
+
       <label class="field" :title="t('战役里的 12 本书各给 2 点,是消耗品、不是自动获得,所以要你来填。默认按做完战役算。')">
         <span class="dim">{{ t('战役书') }}</span>
         <input
@@ -189,15 +219,34 @@ function onSavePreset() {
         <button :disabled="!selected" @click="onSavePreset">{{ t('保存预设') }}</button>
       </div>
       <div v-for="p in presets" :key="p.id" class="preset-item">
-        <span class="preset-label" :title="t('套用到当前 Build')" @click="emit('applyPreset', p.id)">
+        <span class="preset-label" :title="t('套用最接近当前等级的 stage')" @click="emit('applyPreset', p.id)">
           {{ p.name }}
-          <span class="dim">{{ p.className ?? t('未知职业') }} · {{ p.nodes.length }} {{ t('点') }}</span>
+          <span class="dim">{{ p.className ?? t('未知职业') }}</span>
         </span>
-        <span class="dim">{{ new Date(p.savedAt).toLocaleDateString() }}</span>
-        <span class="del" :title="t('删除')" @click="emit('deletePreset', p.id)">✕</span>
+        <span class="stages">
+          <span
+            v-for="s in p.stages"
+            :key="s.level"
+            class="stage"
+            :class="{ current: s.level === (build?.level ?? null) }"
+            :title="`${t('载入 Lv')}${s.level} ${t('的这一套')} (${s.nodes.length} ${t('点')})`"
+            @click="emit('applyStage', p.id, s.level)"
+          >
+            Lv{{ s.level }}
+            <span class="stage-del" :title="t('删除这个等级')" @click.stop="emit('deleteStage', p.id, s.level)">×</span>
+          </span>
+          <button
+            class="stage-add"
+            :title="p.stages.some((s) => s.level === (build?.level ?? 0)) ? t('用当前天赋覆盖这个等级') : t('把当前天赋存成这个等级')"
+            @click="emit('saveStage', p.id)"
+          >
+            {{ p.stages.some((s) => s.level === (build?.level ?? 0)) ? '⟳ ' : '+ ' }}Lv{{ build?.level ?? '?' }}
+          </button>
+        </span>
+        <span class="del" :title="t('删除整套预设')" @click="emit('deletePreset', p.id)">✕</span>
       </div>
       <div v-if="!presets.length" class="dim small">
-        {{ t('保存后可以随时套用到别的 Build,或作为起点重新配置。') }}
+        {{ t('一套预设可以绑多个等级,每个等级一套天赋。先填等级和天赋,再保存预设。') }}
       </div>
     </div>
   </div>
@@ -260,6 +309,58 @@ select {
 }
 .points span {
   margin-right: 8px;
+}
+.stages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  color: #9aa3bd;
+  border: 1px solid #2c3244;
+  border-radius: 9px;
+  padding: 1px 7px;
+  cursor: pointer;
+}
+.stage:hover {
+  border-color: #e8b04b;
+  color: #e8b04b;
+}
+.stage.current {
+  border-color: #e8b04b;
+  color: #e8b04b;
+  background: #1f1a10;
+}
+.stage-del {
+  color: #5b6379;
+}
+.stage-del:hover {
+  color: #e06c6c;
+}
+button.stage-add {
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 9px;
+  color: #7dd087;
+  border-color: #2f4a38;
+}
+.level {
+  width: 58px;
+  background: #0b0d12;
+  color: #cfd4e4;
+  border: 1px solid #2c3244;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+.level:focus {
+  outline: none;
+  border-color: #e8b04b;
 }
 .quests {
   width: 58px;

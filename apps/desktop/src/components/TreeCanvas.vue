@@ -525,14 +525,30 @@ function draw() {
      */
     const entry = index?.nodes[node.icon ?? '']?.[kind]
     const lit = state !== 'unallocated'
-    const iconRect = lit ? entry?.allocated : entry?.unallocated
-    if (iconRect) {
+    // A mastery has no skills-atlas entry; its plate comes from the mastery
+    // atlas and is drawn to fill the frame's inner disc, because the art is
+    // authored far larger than a node (488 units against a 102-unit frame).
+    const mastery = !entry && node.activeEffectImage ? index?.masteries[node.activeEffectImage] : undefined
+    const discSize = (mastery ? frameSize : drawSize) * 0.98
+    if (mastery) {
       ctx.save()
       ctx.beginPath()
-      ctx.arc(pos.x, pos.y, (drawSize / 2) * 0.99, 0, Math.PI * 2)
+      ctx.arc(pos.x, pos.y, discSize / 2, 0, Math.PI * 2)
       ctx.clip()
-      blit(ctx, lit ? 'skills' : 'skills-disabled', iconRect, pos.x, pos.y, drawSize)
+      // Only the lit set ships, so an unallocated mastery is dimmed instead.
+      if (!lit) ctx.globalAlpha = 0.55
+      blit(ctx, 'mastery-effect-active', mastery, pos.x, pos.y, discSize)
       ctx.restore()
+    } else if (entry) {
+      const iconRect = lit ? entry.allocated : entry.unallocated
+      if (iconRect) {
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(pos.x, pos.y, (discSize / 2) * 0.99, 0, Math.PI * 2)
+        ctx.clip()
+        blit(ctx, lit ? 'skills' : 'skills-disabled', iconRect, pos.x, pos.y, discSize)
+        ctx.restore()
+      }
     }
 
     if (state === 'allocated') {

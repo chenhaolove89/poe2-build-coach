@@ -25,7 +25,13 @@ import { loadTree } from './treeData'
 import { bilingual, t } from './i18n'
 import { addBuild, loadBuilds, removeBuild } from './buildStore'
 import type { StoredBuild } from './buildStore'
-import { addTreePreset, loadTreePresets, removeTreePreset } from './treePresetStore'
+import {
+  addTreePreset,
+  loadTreePresets,
+  removeTreePreset,
+  removeTreeStage,
+  upsertTreeStage,
+} from './treePresetStore'
 import type { StoredTreePreset } from './treePresetStore'
 import { treeEdges } from './treeArt'
 import { realm } from './settings'
@@ -217,7 +223,12 @@ const pointBudget = computed(() =>
 const startNodeId = computed(() => resolveStartNode(tree, build.value?.className ?? null))
 
 /** Replace the whole array: `activeSet` and `plan` recompute off its identity. */
-function patchBuild(patch: { className?: string | null; ascendClassName?: string | null; passiveNodes?: number[] }) {
+function patchBuild(patch: {
+  className?: string | null
+  ascendClassName?: string | null
+  passiveNodes?: number[]
+  level?: number | null
+}) {
   if (!build.value) return
   build.value = { ...build.value, ...patch }
   saveMessage.value = null
@@ -259,10 +270,13 @@ function setClass(name: string | null) {
     return
   }
   if (b.className === name) return
-  patchBuild({ className: name, ascendClassName: null })
+  // A different class means a different start node, so the whole tree is void:
+  // every node was picked as reachable from the old one. Ascendancy changes are
+  // narrower — see setAscendancy, which only drops the old ascendancy's nodes.
+  patchBuild({ className: name, ascendClassName: null, passiveNodes: [] })
   saveMessage.value = name
-    ? `${t('职业已改为')} ${name}${t(',升华已清空(升华属于职业)。')}`
-    : t('已取消职业选择。')
+    ? `${t('职业已改为')} ${name}${t(',天赋与升华已清空(起点变了)。')}`
+    : t('已取消职业选择,天赋与升华已清空。')
 }
 
 /**
@@ -339,45 +353,89 @@ function saveTreePreset(name: string) {
     className: b.className,
     ascendClassName: b.ascendClassName,
     treeVersion: b.treeVersion,
-    nodes: b.passiveNodes,
+    stages: [{ level: b.level ?? 1, nodes: b.passiveNodes }],
   })
   presets.value = result.list
-  saveMessage.value = `${t('已保存预设')}「${result.preset.name}」。`
+  saveMessage.value = `${t('已保存预设')}「${result.preset.name}」${t('(Lv')}${b.level ?? 1})。`
 }
 
-function applyTreePreset(id: string) {
-  const preset = presets.value.find((p) => p.id === id)
-  if (!preset) return
+/** Write the current nodes as this preset's stage for the current level. */
+function saveTreeStage(id: string) {
   const b = build.value
+  const preset = presets.value.find((p) => p.id === id)
+  if (!b || !preset) return
+  const level = b.level ?? 1
+  const replaced = preset.stages.some((s) => s.level === level)
+  presets.value = upsertTreeStage(presets.value, id, level, b.passiveNodes)
+  saveMessage.value = `${t(replaced ? '已更新' : '已加入')}「${preset.name}」${t('的 Lv')}${level}${t('天赋')}。`
+}
+
+function loadStage(id: string, level: number) {
+  const preset = presets.value.find((p) => p.id === id)
+  const stage = preset?.stages.find((s) => s.level === level)
+  if (!preset || !stage) return
+  const b = build.value
+  const sameClass = !preset.className || preset.className === b?.className
   if (!b) {
-    // A preset carries its own class, so it can stand in for a build snapshot
-    // when nothing has been imported yet.
+    // A preset carries its own class and level, so it can stand in for a build
+    // snapshot when nothing has been imported yet.
     build.value = {
       className: preset.className,
       ascendClassName: preset.ascendClassName,
-      level: null,
+      level,
       treeVersion: preset.treeVersion,
-      passiveNodes: preset.nodes,
+      passiveNodes: stage.nodes,
       treeSpecUrls: [],
       skills: [],
       items: [],
     }
-    saveMessage.value = `${t('已载入预设')}「${preset.name}」。`
+  } else {
+    patchBuild({
+      passiveNodes: stage.nodes,
+      level,
+      ascendClassName: preset.ascendClassName ?? b.ascendClassName,
+      ...(sameClass ? {} : { className: preset.className }),
+    })
+  }
+  saveMessage.value =
+    `${t('已载入')}「${preset.name}」${t('的 Lv')}${level}${t('天赋')}(${stage.nodes.length} ${t('点')})` +
+    (sameClass ? '。' : `${t(',职业随之改为')} ${preset.className}。`)
+}
+
+/**
+ * Applying a preset loads the stage for the current level when it has one, and
+ * otherwise the nearest stage below it — a plan for level 30 is the right thing
+ * to see when you are at 45 and have not planned 45 yet.
+ */
+function applyTreePreset(id: string) {
+  const preset = presets.value.find((p) => p.id === id)
+  if (!preset || preset.stages.length === 0) return
+  const level = build.value?.level ?? null
+  if (level == null) {
+    loadStage(id, preset.stages[preset.stages.length - 1].level)
     return
   }
-  const sameClass = !preset.className || preset.className === b.className
-  patchBuild({
-    passiveNodes: preset.nodes,
-    ascendClassName: preset.ascendClassName ?? b.ascendClassName,
-    ...(sameClass ? {} : { className: preset.className }),
-  })
-  saveMessage.value = sameClass
-    ? `${t('已套用预设')}「${preset.name}」。`
-    : `${t('已套用预设')}「${preset.name}」${t(',职业随之改为')} ${preset.className}。`
+  const exact = preset.stages.find((s) => s.level === level)
+  if (exact) {
+    loadStage(id, level)
+    return
+  }
+  const below = [...preset.stages].filter((s) => s.level < level).sort((a, b) => b.level - a.level)[0]
+  loadStage(id, (below ?? preset.stages[0]).level)
+}
+
+function deleteTreeStage(id: string, level: number) {
+  presets.value = removeTreeStage(presets.value, id, level)
 }
 
 function deleteTreePreset(id: string) {
   presets.value = removeTreePreset(presets.value, id)
+}
+
+/** The level drives the main-tree ceiling, so it is part of the draft. */
+function setLevel(level: number | null) {
+  if (!build.value) return
+  patchBuild({ level })
 }
 </script>
 
@@ -517,11 +575,15 @@ function deleteTreePreset(id: string) {
         @set-class="setClass"
         @set-ascendancy="setAscendancy"
         @set-quest-points="setQuestPoints"
+        @set-level="setLevel"
         @save="saveTree"
         @remove-orphans="removeOrphans"
         @save-preset="saveTreePreset"
         @apply-preset="applyTreePreset"
         @delete-preset="deleteTreePreset"
+        @save-stage="saveTreeStage"
+        @apply-stage="loadStage"
+        @delete-stage="deleteTreeStage"
       />
     </main>
 

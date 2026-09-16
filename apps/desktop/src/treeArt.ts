@@ -15,6 +15,7 @@ import indexJson from '@poe2coach/data/tree-art/index.json'
 import geometryJson from '@poe2coach/data/tree-art/geometry.json'
 import frameUrl from '@poe2coach/data/tree-art/frame.webp'
 import groupBackgroundUrl from '@poe2coach/data/tree-art/group-background.webp'
+import masteryActiveUrl from '@poe2coach/data/tree-art/mastery-effect-active.webp'
 import lineUrl from '@poe2coach/data/tree-art/line.webp'
 import skillsDisabledUrl from '@poe2coach/data/tree-art/skills-disabled.webp'
 import skillsUrl from '@poe2coach/data/tree-art/skills.webp'
@@ -59,6 +60,16 @@ export interface TreeArtIndex {
    */
   groups: Record<string, Rect>
   /**
+   * Mastery nodes have no entry in `nodes`; their plate is keyed by the node's
+   * `activeEffectImage`. The atlas is authored far larger than a node (488 tree
+   * units against a 102-unit frame), so it is drawn at the frame's size rather
+   * than its own — it is a high-resolution pattern, not a big node.
+   *
+   * Only the lit set is packaged, so an unallocated mastery is drawn from it at
+   * reduced opacity.
+   */
+  masteries: Record<string, Rect>
+  /**
    * Our tree.json's exact `icon` string (still `.dds`) -> rects per node kind.
    * A path can be listed under several kinds; the renderer picks by the node's
    * own kind. Mastery nodes are absent — their art lives in a separate atlas
@@ -98,6 +109,7 @@ const SOURCES: Record<string, string> = {
   frame: frameUrl,
   line: lineUrl,
   'group-background': groupBackgroundUrl,
+  'mastery-effect-active': masteryActiveUrl,
 }
 
 export interface TreeArt {

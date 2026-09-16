@@ -15,6 +15,11 @@ export interface TreeNode {
   /** Present on ascendancy tree nodes (also used as the ascendancy marker). */
   ascendancyName?: string
   isAscendancyStart?: boolean
+  /**
+   * Mastery nodes key their artwork by this instead of `icon`, which for them
+   * is only a placeholder. The tree-art pack resolves it to an atlas rect.
+   */
+  activeEffectImage?: string
   /** Costs no point to allocate. */
   isFreeAllocate?: boolean
   /** One option of a multiple-choice node; selecting one deselects its siblings. */

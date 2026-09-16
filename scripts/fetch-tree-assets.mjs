@@ -37,7 +37,7 @@ const REPO = 'https://raw.githubusercontent.com/grindinggear/poe2-skilltree-expo
 const UA = 'poe2-build-coach/0.4 (data pipeline; contact via github.com/chenhaolove89)'
 
 /** Atlas sheets we ship. The disabled variants carry the unallocated node art. */
-const ATLASES = ['skills', 'skills-disabled', 'frame', 'line', 'group-background']
+const ATLASES = ['skills', 'skills-disabled', 'frame', 'line', 'group-background', 'mastery-effect-active']
 
 /** Icon section per node kind, as the atlas keys spell it. */
 const ICON_SECTIONS = {
@@ -84,6 +84,14 @@ const FRAMES = {
     allocated: 'AscendancyStartNode',
   },
 }
+
+/**
+ * Mastery nodes carry no entry in the skills atlas — their icon paths are
+ * placeholders — and are keyed instead by the node's `activeEffectImage`, with
+ * `.png` appended. The atlas ships a lit and an unlit set; only the lit one is
+ * packaged, so an unallocated mastery is drawn from it at reduced opacity.
+ */
+const MASTERY_PREFIX = 'masteryEffectActive:'
 
 /** The disc a relocated ascendancy cluster sits on, plus its unlit variant. */
 const GROUP_BACKGROUNDS = { circleActive: 'startNode:MainCircleActive', circle: 'startNode:MainCircle' }
@@ -187,6 +195,25 @@ for (const [key, value] of Object.entries(lineAtlas)) {
  * centre, so the renderer scales it to the hole rather than trusting the art's
  * own size.
  */
+/**
+ * activeEffectImage -> rect, for the nodes the skills atlas cannot serve. Built
+ * from our own tree's values rather than the whole atlas, so the index stays
+ * proportional to what this tree actually uses (56 of 56 here).
+ */
+const masteryFrames = sheets['mastery-effect-active'].json.frames
+const masteries = {}
+const masteryValues = new Set()
+for (const node of Object.values(tree.nodes)) {
+  if (!node.icon || nodes[node.icon]) continue
+  if (node.activeEffectImage) masteryValues.add(node.activeEffectImage)
+}
+const unmatchedMasteries = []
+for (const value of masteryValues) {
+  const hit = masteryFrames[`${MASTERY_PREFIX}${value}.png`]
+  if (hit) masteries[value] = rect(hit.frame)
+  else unmatchedMasteries.push(value)
+}
+
 const groupAtlas = sheets['group-background'].json.frames
 const groups = {}
 const missingGroups = []
@@ -239,6 +266,10 @@ console.log(
     (groups.circle ? ` (disc ${groups.circle.w * 2} units across)` : ''),
 )
 console.log(`lines: ${Object.keys(lines).length} keys -> ${Object.keys(lines).slice(0, 6).join(', ')}...`)
+console.log(
+  `masteries: ${Object.keys(masteries).length}` +
+    (unmatchedMasteries.length ? ` mapped, ${unmatchedMasteries.length} unmatched (${unmatchedMasteries[0]})` : ' mapped'),
+)
 console.log('draw sizes (tree units):', JSON.stringify(draw))
 console.log('frame sizes (tree units):', JSON.stringify(drawFrame))
 console.log(`geometry: ${Object.keys(positions).length} positions, ${officialEdges.length} official edges`)
@@ -289,6 +320,7 @@ const pack = {
   frames,
   lines,
   groups,
+  masteries,
   nodes,
 }
 const geometry = {
