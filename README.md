@@ -86,6 +86,22 @@ git tag v0.1.0 && git push origin v0.1.0
 - 天赋树:`packages/data/trees/0_5/tree.json`,取自 [PathOfBuilding-PoE2](https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2)(MIT License)。
 - 版本升级(如 12 月 1.0):下载新版 `TreeData/<ver>/tree.json` 放入 `packages/data/trees/<ver>/`,`apps/desktop/src/treeData.ts` 指向新版本即可。
 
+### 天赋树美术
+
+`packages/data/tree-art/` 里是节点图标、边框、连线四张图集(约 950KB)以及两个派生索引,**取自 GGG 官方发布的 [poe2-skilltree-export](https://github.com/grindinggear/poe2-skilltree-export)**。官方开发者文档写明游戏内数据一概不提供、「唯一例外是天赋树」,所以这是第一方来源,不是逆向或第三方镜像。
+
+**美术版权归 Grinding Gear Games 所有**,按 GGG 第三方工具政策在非商业粉丝工具中分发:本应用免费、不使用其素材制作其他游戏、不与游戏进程或游戏文件交互。界面上标注了版权,本仓库亦不主张对这些素材的任何权利。
+
+`index.json` 把每个节点在树里的 `icon` 路径预先解析成图集矩形(图集是 0.5 倍存的,绘制尺寸由脚本换算好),`geometry.json` 是官方节点的绝对坐标与官方连线表 —— 渲染用的是这套坐标,因为它和美术同一坐标系,而 `packages/core` 里由 group+orbit 推算的坐标不是(同一个 group 在两边相差一个平移加缩放)。逻辑层不读坐标:`buildLevelingPlan` 只走连接图的 BFS,`resolveStartNode` 只读 `classesStart`。
+
+重新抓取(GGG 更新天赋树后):
+
+```bash
+node scripts/fetch-tree-assets.mjs --write
+```
+
+覆盖情况:显著天赋 1193/1193、核心天赋 33/33、升华 222/222、普通节点 3097/3466。未命中的 369 个是 `Mastery*` 占位图标,它们的专属美术在另一套 `mastery-effect` 图集里(约 1.2MB),本版本没有打包,所以这些节点画成空边框 —— 需要的话再加。
+
 三个服的词缀模板与通货名重新抓取(联赛更新后跑一次):
 
 ```bash

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { buildEdges, nodePosition, treeBounds, translateStat } from '@poe2coach/core'
+import { translateStat } from '@poe2coach/core'
 import type { TreeData, TreeNode } from '@poe2coach/core'
 import statTranslationJson from '@poe2coach/data/stat-translations.json'
 import { dialect, t, zhName } from '../i18n'
+import { loadTreeArt, TREE_GEOMETRY } from '../treeArt'
+import type { Rect, TreeArt } from '../treeArt'
 
 const STAT_TRANSLATIONS = statTranslationJson as unknown as Parameters<typeof translateStat>[1]
 
@@ -23,14 +25,19 @@ const props = defineProps<{
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const wrapEl = ref<HTMLDivElement | null>(null)
 const hover = ref<{ x: number; y: number; node: TreeNode } | null>(null)
+/** False until the atlases decode; drawing before that would paint nothing. */
+const artReady = ref(false)
 
 interface Pt {
   x: number
   y: number
 }
 
+let art: TreeArt | null = null
 let positions = new Map<number, Pt>()
 let edges: [number, number][] = []
+let bounds = { minX: 0, minY: 0, maxX: 0, maxY: 0 }
+
 let scale = 0.03
 let panX = 0
 let panY = 0
@@ -74,27 +81,107 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
+/**
+ * Coordinates come from the trade-independent tree export rather than from the
+ * orbited-group maths in core, because the artwork is authored in that same
+ * space: the frames are sized so a node's ring lands on its neighbours, and the
+ * two spaces are not related by a simple scale (the same group sits at
+ * -15304.9,-7077.3 in core's derivation and -22597.4,-2727.5 officially).
+ *
+ * Nothing outside painting reads these. `buildLevelingPlan` walks the
+ * connection graph, and `resolveStartNode` reads `classesStart`, so both are
+ * unaffected by which coordinate space the renderer uses.
+ */
 function rebuildGeometry() {
   positions = new Map()
-  for (const node of Object.values(props.tree.nodes)) {
-    const pos = nodePosition(node, props.tree)
-    if (pos) positions.set(node.id, pos)
+  for (const [id, xy] of Object.entries(TREE_GEOMETRY.positions)) {
+    const nodeId = Number(id)
+    if (props.tree.nodes[nodeId]) positions.set(nodeId, { x: xy[0], y: xy[1] })
   }
-  edges = buildEdges(props.tree)
+  edges = []
+  for (const [a, b] of TREE_GEOMETRY.edges) {
+    const from = Number(a)
+    const to = Number(b)
+    if (positions.has(from) && positions.has(to)) edges.push([from, to])
+  }
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const p of positions.values()) {
+    if (p.x < minX) minX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.x > maxX) maxX = p.x
+    if (p.y > maxY) maxY = p.y
+  }
+  bounds = Number.isFinite(minX) ? { minX, minY, maxX, maxY } : { minX: 0, minY: 0, maxX: 1, maxY: 1 }
+}
+
+/**
+ * Target nodes adjacent to the allocated set: what the player should take next.
+ * Recomputed when the progress or the build changes, not per frame — there are
+ * ~6000 edges.
+ */
+const nextUp = computed(() => {
+  const progress = new Set([...(props.progress ?? [])])
+  const out = new Set<number>()
+  if (progress.size === 0) return out
+  for (const [a, b] of edges) {
+    if (progress.has(a) && !progress.has(b) && props.active.has(b)) out.add(b)
+    else if (progress.has(b) && !progress.has(a) && props.active.has(a)) out.add(a)
+  }
+  return out
+})
+
+type NodeState = 'allocated' | 'canAllocate' | 'planned' | 'unallocated'
+
+/** Which frame family a node uses: ascendancy art differs from the main tree. */
+function frameKind(node: TreeNode, kind: string): string {
+  if (!node.ascendancyName) return kind
+  return node.isNotable ? 'ascendancyNotable' : 'ascendancyNormal'
+}
+
+/**
+ * Four visual states, because the tree answers two different questions: which
+ * nodes this build wants (`active`), and which of them are already taken
+ * (`progress`). Frames only ship unallocated / canAllocate / allocated, so
+ * both "next up" and "wanted later" wear the highlighted frame and are told
+ * apart by the glow.
+ */
+function stateOf(node: TreeNode): NodeState {
+  if (props.progress?.has(node.id)) return 'allocated'
+  if (props.active.has(node.id)) return nextUp.value.has(node.id) ? 'canAllocate' : 'planned'
+  return 'unallocated'
+}
+
+/** The frame a state draws with; planned reuses the highlighted rim. */
+function frameState(state: NodeState): 'unallocated' | 'canAllocate' | 'allocated' {
+  if (state === 'allocated') return 'allocated'
+  if (state === 'unallocated') return 'unallocated'
+  return 'canAllocate'
 }
 
 function fitToContent() {
-  const b = treeBounds(props.tree)
   const canvas = canvasEl.value
   if (!canvas) return
   const w = canvas.clientWidth
   const h = canvas.clientHeight
-  const pad = 30
-  scale = Math.min(w / (b.maxX - b.minX + pad * 2), h / (b.maxY - b.minY + pad * 2))
-  const cx = (b.minX + b.maxX) / 2
-  const cy = (b.minY + b.maxY) / 2
+  const pad = 200
+  scale = Math.min(w / (bounds.maxX - bounds.minX + pad * 2), h / (bounds.maxY - bounds.minY + pad * 2))
+  const cx = (bounds.minX + bounds.maxX) / 2
+  const cy = (bounds.minY + bounds.maxY) / 2
   panX = w / 2 - cx * scale
   panY = h / 2 - cy * scale
+}
+
+/** blit one atlas rect centred on a point, in tree units. */
+function blit(ctx: CanvasRenderingContext2D, imageName: string, rect: Rect | null | undefined, x: number, y: number, size: number) {
+  if (!rect || !art) return
+  const image = art.images[imageName]
+  if (!image) return
+  const half = size / 2
+  ctx.drawImage(image, rect.x, rect.y, rect.w, rect.h, x - half, y - half, size, size)
 }
 
 function draw() {
@@ -111,68 +198,139 @@ function draw() {
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.clearRect(0, 0, w, h)
-  ctx.fillStyle = '#0b0d12'
+  ctx.fillStyle = '#080a0f'
   ctx.fillRect(0, 0, w, h)
 
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * panX, dpr * panY)
 
-  const active = props.active
   const progress = props.progress ?? new Set<number>()
-  ctx.lineCap = 'round'
+  const index = art?.index
 
-  // Edges: screen-constant hairlines, bright enough to read when zoomed out.
-  const lw = 1 / scale
-  for (const [a, b] of edges) {
-    const pa = positions.get(a)!
-    const pb = positions.get(b)!
-    const inProgress = progress.has(a) && progress.has(b)
-    const inActive = active.has(a) && active.has(b)
-    if (inProgress) {
-      ctx.strokeStyle = 'rgba(240,186,88,0.95)'
-      ctx.lineWidth = lw * 2.2
-    } else if (inActive) {
-      ctx.strokeStyle = 'rgba(180,140,60,0.55)'
-      ctx.lineWidth = lw * 1.6
-    } else {
-      ctx.strokeStyle = 'rgba(122,136,176,0.7)'
-      ctx.lineWidth = lw
+  // Viewport in world units, so both layers can skip what is off screen.
+  const viewMinX = -panX / scale
+  const viewMinY = -panY / scale
+  const viewMaxX = (w - panX) / scale
+  const viewMaxY = (h - panY) / scale
+
+  // ---- connections -------------------------------------------------------
+  // The connector art is a long uniform band, so stretching it over an
+  // arbitrary span keeps its look; the rings the atlas also ships are arc
+  // segments whose placement convention is not documented, so they are unused.
+  const connector = index?.lines.LineConnectorNormal
+  const connectorActive = index?.lines.LineConnectorActive
+  const connectorThick = connector && index ? connector.h / index.atlases.line.scale : 0
+  const lineImage = art?.images.line
+  if (lineImage && connector && connectorActive && index) {
+    for (const [a, b] of edges) {
+      const pa = positions.get(a)!
+      const pb = positions.get(b)!
+      if (
+        (pa.x < viewMinX && pb.x < viewMinX) ||
+        (pa.x > viewMaxX && pb.x > viewMaxX) ||
+        (pa.y < viewMinY && pb.y < viewMinY) ||
+        (pa.y > viewMaxY && pb.y > viewMaxY)
+      )
+        continue
+      const dx = pb.x - pa.x
+      const dy = pb.y - pa.y
+      const len = Math.hypot(dx, dy)
+      if (len < 1) continue
+      const onPath = progress.has(a) && progress.has(b)
+      const rect = onPath ? connectorActive : connector
+      ctx.save()
+      ctx.translate(pa.x, pa.y)
+      ctx.rotate(Math.atan2(dy, dx))
+      ctx.drawImage(lineImage, rect.x, rect.y, rect.w, rect.h, 0, -connectorThick / 2, len, connectorThick)
+      ctx.restore()
     }
-    ctx.beginPath()
-    ctx.moveTo(pa.x, pa.y)
-    ctx.lineTo(pb.x, pb.y)
-    ctx.stroke()
+  } else {
+    ctx.strokeStyle = 'rgba(122,136,176,0.7)'
+    ctx.lineWidth = 1 / scale
+    for (const [a, b] of edges) {
+      const pa = positions.get(a)!
+      const pb = positions.get(b)!
+      ctx.beginPath()
+      ctx.moveTo(pa.x, pa.y)
+      ctx.lineTo(pb.x, pb.y)
+      ctx.stroke()
+    }
   }
 
-  // Nodes: screen-constant radius so they stay readable when zoomed out.
-  for (const node of Object.values(props.tree.nodes)) {
-    const pos = positions.get(node.id)
-    if (!pos) continue
-    const isActive = active.has(node.id)
-    const isProgress = progress.has(node.id)
-    const kindR = node.isKeystone ? 7.5 : node.isNotable ? 5 : node.ascendancyName ? 3.5 : 2.8
-    const r = (isProgress ? kindR + 3.5 : isActive ? kindR + 1 : kindR) / scale
-    if (pos.x < (0 - panX) / scale - r * 2 || pos.x > (w - panX) / scale + r * 2) continue
-    if (pos.y < (0 - panY) / scale - r * 2 || pos.y > (h - panY) / scale + r * 2) continue
+  // ---- nodes -------------------------------------------------------------
+  // Small kinds first so a keystone's larger frame overlaps its neighbours the
+  // way it does in the client.
+  const ordered = Object.values(props.tree.nodes)
+    .map((node) => ({ node, pos: positions.get(node.id) }))
+    .filter((e): e is { node: TreeNode; pos: Pt } => !!e.pos)
+    .sort((a, b) => rank(a.node) - rank(b.node))
+  function rank(node: TreeNode) {
+    if (node.isKeystone) return 2
+    if (node.isNotable) return 1
+    return 0
+  }
 
-    if (isActive && isProgress) {
-      ctx.shadowColor = 'rgba(240,186,88,0.9)'
-      ctx.shadowBlur = 12 / scale
-      ctx.fillStyle = '#f0ba58'
-    } else if (isActive) {
-      ctx.fillStyle = '#8a6f35'
-    } else if (node.isKeystone) {
-      ctx.fillStyle = '#b0524e'
-    } else if (node.isNotable) {
-      ctx.fillStyle = '#6f7fb5'
-    } else if (node.ascendancyName) {
-      ctx.fillStyle = '#4a5270'
-    } else {
-      ctx.fillStyle = '#39415a'
+  for (const { node, pos } of ordered) {
+    const kind = node.isKeystone ? 'keystone' : node.isNotable ? 'notable' : 'normal'
+    const drawSize = index?.draw[kind] ?? 40
+    const half = drawSize / 2
+    if (pos.x + half < viewMinX || pos.x - half > viewMaxX || pos.y + half < viewMinY || pos.y - half > viewMaxY)
+      continue
+
+    // Zoomed far out the art is a few pixels wide and 5000 nodes of drawImage
+    // is what makes panning stutter, so fall back to a single dot.
+    if (drawSize * scale < 5) {
+      const planned = props.active.has(node.id)
+      const taken = progress.has(node.id)
+      ctx.fillStyle = taken
+        ? '#f0ba58'
+        : planned
+          ? '#8a6f35'
+          : node.isKeystone
+            ? '#b0524e'
+            : node.isNotable
+              ? '#6f7fb5'
+              : node.ascendancyName
+                ? '#4a5270'
+                : '#39415a'
+      ctx.beginPath()
+      ctx.arc(pos.x, pos.y, (node.isKeystone ? 4.5 : node.isNotable ? 3.4 : 2.6) / scale, 0, Math.PI * 2)
+      ctx.fill()
+      continue
     }
-    ctx.beginPath()
-    ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2)
-    ctx.fill()
+
+    const state = stateOf(node)
+    const kindName = frameKind(node, kind)
+    const shape = frameState(state)
+    const frameRect = index?.frames[`${kindName}.${shape}`]
+    const frameSize = index?.drawFrame[`${kindName}.${shape}`] ?? drawSize * 1.5
+    if (state === 'allocated') {
+      ctx.shadowColor = 'rgba(240,186,88,0.55)'
+      ctx.shadowBlur = 10 / scale
+    } else if (state === 'canAllocate') {
+      // The immediate next step, so it reads even among the planned nodes.
+      ctx.shadowColor = 'rgba(240,186,88,0.85)'
+      ctx.shadowBlur = 16 / scale
+    }
+    blit(ctx, 'frame', frameRect, pos.x, pos.y, frameSize)
     ctx.shadowBlur = 0
+
+    // The atlas only ships three frames and the highlighted one is a subtle
+    // rim, which is not enough to pick a build's target nodes out of ~4900.
+    // Draw an explicit ring on top of it.
+    if (state === 'planned' || state === 'canAllocate') {
+      const next = state === 'canAllocate'
+      ctx.strokeStyle = next ? 'rgba(255,214,120,0.95)' : 'rgba(226,172,72,0.8)'
+      ctx.lineWidth = (next ? 3.5 : 2.5) / scale
+      ctx.beginPath()
+      ctx.arc(pos.x, pos.y, (frameSize / 2) * 0.94, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+
+    const entry = index?.nodes[node.icon ?? '']?.[kind]
+    const iconRect = state === 'allocated' ? entry?.allocated : entry?.unallocated
+    // Mastery nodes have no entry in this build's atlas, so they keep the bare
+    // frame rather than a hole.
+    blit(ctx, state === 'allocated' ? 'skills' : 'skills-disabled', iconRect, pos.x, pos.y, drawSize)
   }
 }
 
@@ -188,6 +346,50 @@ function screenPos(e: MouseEvent): Pt {
 
 function toWorld(p: Pt): Pt {
   return { x: (p.x - panX) / scale, y: (p.y - panY) / scale }
+}
+
+/**
+ * Nodes bucketed into a world-space grid, so hovering tests the handful of
+ * candidates near the cursor instead of all ~4900 nodes. 400 units per cell is
+ * roughly two node spacings, so a cell holds a handful of entries.
+ */
+const CELL = 400
+let grid = new Map<string, number[]>()
+let pickRadius = 60
+
+function buildGrid() {
+  grid = new Map()
+  for (const [id, p] of positions) {
+    const key = `${Math.floor(p.x / CELL)},${Math.floor(p.y / CELL)}`
+    const bucket = grid.get(key)
+    if (bucket) bucket.push(id)
+    else grid.set(key, [id])
+  }
+}
+
+function pickNode(world: Pt): TreeNode | null {
+  const cx = Math.floor(world.x / CELL)
+  const cy = Math.floor(world.y / CELL)
+  let best: TreeNode | null = null
+  let bestDist = Infinity
+  for (let gx = cx - 1; gx <= cx + 1; gx++) {
+    for (let gy = cy - 1; gy <= cy + 1; gy++) {
+      const bucket = grid.get(`${gx},${gy}`)
+      if (!bucket) continue
+      for (const id of bucket) {
+        const pos = positions.get(id)!
+        const dx = pos.x - world.x
+        const dy = pos.y - world.y
+        const d = dx * dx + dy * dy
+        if (d < bestDist) {
+          bestDist = d
+          best = props.tree.nodes[id] ?? null
+        }
+      }
+    }
+  }
+  const reach = Math.max(pickRadius, 9 / scale)
+  return best && Math.sqrt(bestDist) < reach ? best : null
 }
 
 function onWheel(e: WheelEvent) {
@@ -216,26 +418,9 @@ function onMove(e: MouseEvent) {
     scheduleDraw()
     return
   }
-  // Hover pick: nearest node within 9 screen px.
-  const world = toWorld(mouse)
-  let best: TreeNode | null = null
-  let bestDist = Infinity
-  for (const node of Object.values(props.tree.nodes)) {
-    const pos = positions.get(node.id)
-    if (!pos) continue
-    const dx = pos.x - world.x
-    const dy = pos.y - world.y
-    const d = dx * dx + dy * dy
-    if (d < bestDist) {
-      bestDist = d
-      best = node
-    }
-  }
-  if (best && Math.sqrt(bestDist) * scale < 9) {
-    hover.value = { x: mouse.x, y: mouse.y, node: best }
-  } else {
-    hover.value = null
-  }
+  const node = pickNode(toWorld(mouse))
+  if (node) hover.value = { x: mouse.x, y: mouse.y, node }
+  else hover.value = null
 }
 
 function onUp() {
@@ -253,9 +438,11 @@ watch(
   () => scheduleDraw(),
   { deep: false },
 )
+watch(nextUp, () => scheduleDraw())
 
-onMounted(() => {
+onMounted(async () => {
   rebuildGeometry()
+  buildGrid()
   fitToContent()
   const canvas = canvasEl.value!
   canvas.addEventListener('wheel', onWheel, { passive: false })
@@ -265,6 +452,19 @@ onMounted(() => {
   canvas.addEventListener('dblclick', onDblClick)
   resizeObs = new ResizeObserver(scheduleDraw)
   resizeObs.observe(wrapEl.value!)
+
+  // The artwork is ~1MB across four sheets; paint the geometry immediately so
+  // the view is usable, then repaint once the atlases decode.
+  draw()
+  try {
+    art = await loadTreeArt()
+    // Frame art is drawn around the icon, so hovering should reach a little
+    // past the icon itself.
+    pickRadius = (art.index.drawFrame['normal.unallocated'] ?? 102) / 2
+    artReady.value = true
+  } catch {
+    /* fall back to the plain style rather than a blank canvas */
+  }
   draw()
 })
 
@@ -281,6 +481,7 @@ onBeforeUnmount(() => {
     <canvas ref="canvasEl" />
     <div v-if="hover" class="tooltip" :style="{ left: hover.x + 14 + 'px', top: hover.y + 14 + 'px' }" v-html="hoverHtml" />
     <div class="hint">{{ t('滚轮缩放 · 拖拽平移 · 双击复位') }}</div>
+    <div class="credit">© Grinding Gear Games</div>
   </div>
 </template>
 
@@ -324,6 +525,14 @@ canvas:active {
   bottom: 10px;
   font-size: 11px;
   color: #5b6379;
+  user-select: none;
+}
+.credit {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  font-size: 10px;
+  color: #3d4457;
   user-select: none;
 }
 </style>

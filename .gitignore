@@ -7,3 +7,6 @@ dist/
 **/src-tauri/gen/
 .tmp
 .tmp-*
+
+# ZCode tooling scratch (plan mode writes here).
+.zcode/
