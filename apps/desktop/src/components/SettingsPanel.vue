@@ -138,7 +138,7 @@ async function startLink() {
 const LINK_STATE_TEXT: Record<LinkProgress, string> = {
   waiting: '等待登录中…请在打开的窗口完成登录',
   verifying: '已取得会话,正在验证它是否真的登录了…',
-  unverified: '窗口里已有会话,但**还没登录**(匿名访客也会拿到 cookie)。请在窗口里用 QQ / 微信登录。',
+  unverified: '窗口里已有会话,但还没登录 —— 匿名访客也会拿到 cookie。请在窗口里用 QQ / 微信登录,登录成功后这个窗口会自己关闭。',
 }
 </script>
 
