@@ -8,12 +8,13 @@
  * could before — matching used the realm's pack while the UI showed the other
  * script.
  */
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { REALMS, REALM_IDS, type RealmId } from '@poe2coach/core'
 import { t } from '../i18n'
 import { cnSession, realmId, selectRealm, setCnSession, zhVariant } from '../settings'
 import { linkRealmSession, SessionLinkError } from '../sessionLink'
-import { isDesktopRuntime } from '../tradeClient'
+import { probeStashAccess, stashVerdict, type ProbeStep } from '../stashProbe'
+import { fetchLeagues, isDesktopRuntime, savedLeague } from '../tradeClient'
 
 const draft = ref(cnSession.value)
 const saved = ref(false)
@@ -25,6 +26,61 @@ const desktop = isDesktopRuntime()
 const active = computed(() => REALMS[realmId.value])
 /** The one realm whose trade site will not answer without a login. */
 const needsSession = computed(() => active.value.loginRequired)
+
+// ------------------------------------------------------------- 仓库接口诊断
+
+const probeLeague = ref(savedLeague() ?? '')
+const probeAccount = ref('')
+const probing = ref(false)
+const probeError = ref<string | null>(null)
+const steps = ref<ProbeStep[]>([])
+
+/**
+ * Fill the league in rather than making the player type it.
+ *
+ * The league list is a public endpoint on all three realms, and the probe needs
+ * a real league name in its query — a wrong one would come back as a search
+ * failure and look like a credential problem.
+ */
+onMounted(async () => {
+  if (probeLeague.value.trim() || !desktop) return
+  try {
+    probeLeague.value = (await fetchLeagues(active.value))[0] ?? ''
+  } catch {
+    /* no session yet — the field stays empty and the button stays disabled */
+  }
+})
+
+/**
+ * Ask the realm, with the credential already stored, whether PoE2 gives out
+ * stash contents. This is a question the docs do not answer: the API reference
+ * marks the stash endpoints as PoE1 only, yet the routes are plainly still
+ * there, so only a real session settles it.
+ */
+async function runProbe() {
+  probing.value = true
+  probeError.value = null
+  steps.value = []
+  try {
+    steps.value = await probeStashAccess({
+      realm: active.value,
+      league: probeLeague.value.trim(),
+      account: probeAccount.value,
+    })
+  } catch (e) {
+    probeError.value = e instanceof Error ? e.message : String(e)
+  } finally {
+    probing.value = false
+  }
+}
+
+const verdict = computed(() => (steps.value.length > 0 ? stashVerdict(steps.value) : null))
+const VERDICT_TEXT: Record<string, string> = {
+  items: '拿到物品了 —— PoE2 的仓库可以读,"今日净值差"这条路走得通。',
+  empty: '接口通了,但那一页是空的。换个 tabIndex 或先在游戏里放点东西再试。',
+  refused: '被拒了。对照那一步是 200 的话,说明凭证没问题、是这个接口对 PoE2 关着。',
+  unknown: '200 但不是 JSON —— 通常是 HTML 登录页,也就是凭证过期了。',
+}
 
 function chooseRealm(id: RealmId) {
   selectRealm(id)
@@ -147,6 +203,55 @@ async function startLink() {
       </ul>
       <p v-if="cnSession" class="state ok">{{ t('已保存凭证，可以查询国服。') }}</p>
       <p v-else class="state warn">{{ t('尚未填写，国服只能做本地词缀匹配，无法取回价格。') }}</p>
+    </section>
+
+    <section class="block">
+      <h3>{{ t('仓库接口诊断') }}</h3>
+      <p class="hint">
+        {{
+          t(
+            '「今日收益多少 D」这类数字,查价器不是从掉落算的,是定时快照你的仓库、定价、再相减。那需要读仓库,而官方文档把仓库接口标成只支持 PoE1。点下面的按钮会用你已保存的凭证实测一次,看 PoE2 到底给不给。',
+          )
+        }}
+      </p>
+      <div class="probe-row">
+        <label class="mini">
+          <span class="dim">{{ t('赛季') }}</span>
+          <input v-model="probeLeague" spellcheck="false" :placeholder="t('和查价页一致,如 奥杜尔秘符')" />
+        </label>
+        <label class="mini">
+          <span class="dim">{{ t('账号名') }}</span>
+          <input v-model="probeAccount" spellcheck="false" :placeholder="t('留空则自动取')" />
+        </label>
+        <button :disabled="!desktop || probing || !probeLeague.trim()" @click="runProbe">
+          {{ probing ? t('测试中…') : t('测试仓库接口') }}
+        </button>
+      </div>
+      <p v-if="!desktop" class="state warn">{{ t('需要桌面版:浏览器会被跨域策略拦掉。') }}</p>
+      <p v-if="probeError" class="state err">{{ t(probeError) }}</p>
+
+      <div v-if="steps.length" class="probe-steps">
+        <div v-for="s in steps" :key="s.label" class="probe-step">
+          <span class="code" :class="{ ok: s.status === 200, bad: s.status === 0 || s.status >= 400 }">
+            {{ s.status || '—' }}
+          </span>
+          <span class="what">
+            <b>{{ t(s.label) }}</b>
+            <span class="dim">{{ s.summary }}</span>
+            <span v-if="s.items != null" class="dim">
+              · items {{ s.items }}<template v-if="s.tabs != null">, tabs {{ s.tabs }}</template>
+            </span>
+            <span class="url dim">{{ s.url }}</span>
+            <span v-if="s.body" class="raw">{{ s.body }}</span>
+          </span>
+        </div>
+        <p v-if="verdict" class="state" :class="verdict === 'items' ? 'ok' : 'warn'">
+          {{ t(VERDICT_TEXT[verdict]) }}
+        </p>
+      </div>
+      <p class="note dim">
+        {{ t('凭证只发给它所属的那个服,不会显示、不会记录、不会发给另外两个服。这个测试不写任何账号数据。') }}
+      </p>
     </section>
 
     <section class="block">
@@ -352,5 +457,77 @@ button.primary:hover:not(:disabled) {
 }
 .dim {
   color: #6b7390;
+}
+.probe-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mini {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+.mini input {
+  background: #0b0d12;
+  color: #cfd4e4;
+  border: 1px solid #2c3244;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: 12px;
+  min-width: 180px;
+}
+.mini input:focus {
+  outline: none;
+  border-color: #e8b04b;
+}
+.probe-steps {
+  margin-top: 12px;
+  border-top: 1px dashed #2c3244;
+  padding-top: 10px;
+}
+.probe-step {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid #171b26;
+}
+.probe-step .code {
+  flex: 0 0 42px;
+  font-family: 'Consolas', 'Menlo', monospace;
+  font-size: 12px;
+  color: #9aa3bd;
+}
+.probe-step .code.ok {
+  color: #7dd087;
+}
+.probe-step .code.bad {
+  color: #e06060;
+}
+.probe-step .what {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12px;
+  color: #cfd4e4;
+}
+.probe-step .url {
+  font-family: 'Consolas', 'Menlo', monospace;
+  font-size: 10px;
+  word-break: break-all;
+}
+.probe-step .raw {
+  font-family: 'Consolas', 'Menlo', monospace;
+  font-size: 10px;
+  color: #7a8299;
+  background: #0b0d12;
+  border-radius: 4px;
+  padding: 4px 6px;
+  word-break: break-all;
+  max-height: 90px;
+  overflow: hidden;
 }
 </style>
