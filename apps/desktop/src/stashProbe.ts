@@ -146,6 +146,18 @@ const CONTROL_QUERY = {
   sort: { price: 'asc' },
 }
 
+export interface ProbeReport {
+  steps: ProbeStep[]
+  /**
+   * Whether a credential went out at all, and how long it is — never its value.
+   *
+   * Without this, "still 401" cannot be told apart from "nothing was sent", and
+   * those have different fixes (re-link vs. look for a bug). It is the question
+   * the first run of this probe could not answer.
+   */
+  credential: { attached: boolean; length: number }
+}
+
 export interface ProbeOptions {
   realm: Realm
   league: string
@@ -162,7 +174,7 @@ export interface ProbeOptions {
  * the cookie never reached the server, and those two lead to opposite
  * conclusions.
  */
-export async function probeStashAccess(options: ProbeOptions): Promise<ProbeStep[]> {
+export async function probeStashAccess(options: ProbeOptions): Promise<ProbeReport> {
   if (!isDesktopRuntime()) throw new Error('这个测试需要桌面版:浏览器的跨域策略会拦掉它。')
   const { realm, league, account } = options
   const cookie = realm.id === 'cn' ? (cnSession.value ? sessionCookie(cnSession.value) : '') : ''
@@ -224,7 +236,7 @@ export async function probeStashAccess(options: ProbeOptions): Promise<ProbeStep
     ),
   )
 
-  return steps
+  return { steps, credential: { attached: cookie.length > 0, length: cookie.length } }
 }
 
 /**

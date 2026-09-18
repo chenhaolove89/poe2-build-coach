@@ -13,7 +13,7 @@ import { REALMS, REALM_IDS, type RealmId } from '@poe2coach/core'
 import { t } from '../i18n'
 import { cnSession, realmId, selectRealm, setCnSession, zhVariant } from '../settings'
 import { linkRealmSession, SessionLinkError } from '../sessionLink'
-import { probeStashAccess, stashVerdict, type ProbeStep } from '../stashProbe'
+import { probeStashAccess, stashVerdict, type ProbeReport, type ProbeStep } from '../stashProbe'
 import { fetchLeagues, isDesktopRuntime, savedLeague } from '../tradeClient'
 
 const draft = ref(cnSession.value)
@@ -33,7 +33,7 @@ const probeLeague = ref(savedLeague() ?? '')
 const probeAccount = ref('')
 const probing = ref(false)
 const probeError = ref<string | null>(null)
-const steps = ref<ProbeStep[]>([])
+const report = ref<ProbeReport | null>(null)
 
 /**
  * Fill the league in rather than making the player type it.
@@ -60,9 +60,9 @@ onMounted(async () => {
 async function runProbe() {
   probing.value = true
   probeError.value = null
-  steps.value = []
+  report.value = null
   try {
-    steps.value = await probeStashAccess({
+    report.value = await probeStashAccess({
       realm: active.value,
       league: probeLeague.value.trim(),
       account: probeAccount.value,
@@ -74,7 +74,8 @@ async function runProbe() {
   }
 }
 
-const verdict = computed(() => (steps.value.length > 0 ? stashVerdict(steps.value) : null))
+const steps = computed(() => report.value?.steps ?? [])
+const verdict = computed(() => (report.value ? stashVerdict(report.value.steps) : null))
 const VERDICT_TEXT: Record<string, string> = {
   served: '拿到仓库结构了 —— PoE2 的仓库可以读,"今日净值差"这条路走得通。(items 为空只是那一页没东西,不是失败。)',
   refused: '被拒了。对照那一步若是 200,说明凭证没问题、是这个接口对 PoE2 关着;国服是 401 而国际服/台服是 403,两个都是"路由在、不放行"。',
@@ -241,7 +242,13 @@ async function startLink() {
       </p>
       <p v-if="probeError" class="state err">{{ t(probeError) }}</p>
 
-      <div v-if="steps.length" class="probe-steps">
+      <div v-if="report" class="probe-steps">
+        <p class="state" :class="report.credential.attached ? 'dim' : 'err'">
+          <template v-if="report.credential.attached">
+            {{ t('本次请求带上了凭证(长度') }} {{ report.credential.length }}{{ t(')。') }}
+          </template>
+          <template v-else>{{ t('本次请求没有带上任何凭证 —— 下面全 401 是必然的。') }}</template>
+        </p>
         <div v-for="s in steps" :key="s.label" class="probe-step">
           <span class="code" :class="{ ok: s.status === 200, bad: s.status === 0 || s.status >= 400 }">
             {{ s.status || '—' }}
