@@ -95,10 +95,11 @@ pub fn read_log_tail(path: String, bytes: u64) -> Result<LogChunk, String> {
 /// Where the game keeps its log, if it can be found.
 #[tauri::command]
 pub fn find_client_log() -> Option<String> {
-    candidates().into_iter().find(|p| std::path::Path::new(p).is_file())
+    let list = candidates();
+    list.into_iter().find(|p| std::path::Path::new(p).is_file())
 }
 
-/// Candidate log paths, best first.
+/// Candidate log paths, best first, without duplicates.
 fn candidates() -> Vec<String> {
     let mut out = Vec::new();
 
@@ -121,17 +122,73 @@ fn candidates() -> Vec<String> {
         }
     }
 
+    out.extend(wegame_logs());
+
     // The crash logs live under Documents, so check there too in case a build
     // puts the client log alongside them.
     if let Ok(home) = std::env::var("USERPROFILE") {
         if let Ok(entries) = std::fs::read_dir(format!("{home}\\Documents\\My Games\\Path of Exile 2")) {
             for entry in entries.flatten() {
-                let dir = entry.path().join("logs").join("Client.txt");
-                out.push(dir.to_string_lossy().to_string());
+                // Only directories: the folder also holds files (crash logs),
+                // and appending to those produced nonsense like `1.txt\logs\...`.
+                if !entry.path().is_dir() {
+                    continue;
+                }
+                out.push(entry.path().join("logs").join("Client.txt").to_string_lossy().to_string());
             }
         }
     }
 
+    dedup_paths(out)
+}
+
+/// Drop repeats, case-insensitively — Windows treats `E:\steam` and `E:\Steam`
+/// as one directory, and the Steam library list happily supplies both spellings
+/// of paths the drive-letter guesses already produced.
+fn dedup_paths(paths: Vec<String>) -> Vec<String> {
+    let mut seen = std::collections::HashSet::new();
+    paths.into_iter().filter(|p| seen.insert(p.to_ascii_lowercase())).collect()
+}
+
+/// Log paths inside a WeGame installation.
+///
+/// WeGame is how 国服 is distributed, and it names the game's folder after the
+/// game's Chinese title, so guessing the folder name is hopeless. Instead the
+/// known WeGame roots are listed one and two levels deep and every folder is
+/// tested for a `logs\Client.txt` — the folder's name does not matter, only that
+/// the log is where the executable is.
+fn wegame_logs() -> Vec<String> {
+    let mut roots = Vec::new();
+    if let Ok(drive) = std::env::var("SystemDrive") {
+        roots.push(format!("{drive}\\WeGameApps"));
+    }
+    for key in ["ProgramFiles(x86)", "ProgramFiles"] {
+        if let Ok(base) = std::env::var(key) {
+            roots.push(format!("{base}\\WeGame"));
+            roots.push(format!("{base}\\腾讯游戏"));
+        }
+    }
+
+    let mut out = Vec::new();
+    for root in dedup_paths(roots) {
+        let Ok(entries) = std::fs::read_dir(&root) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            if !entry.path().is_dir() {
+                continue;
+            }
+            out.push(entry.path().join("logs").join("Client.txt").to_string_lossy().to_string());
+            // `rail_apps\<game>` is one level further down.
+            if let Ok(inner) = std::fs::read_dir(entry.path()) {
+                for nested in inner.flatten() {
+                    if nested.path().is_dir() {
+                        out.push(nested.path().join("logs").join("Client.txt").to_string_lossy().to_string());
+                    }
+                }
+            }
+        }
+    }
     out
 }
 
@@ -365,5 +422,23 @@ mod tests {
     #[test]
     fn a_missing_file_is_an_error_rather_than_an_empty_read() {
         assert!(read_log_from("C:\\definitely\\not\\here\\Client.txt".into(), 0).is_err());
+    }
+
+    #[test]
+    fn candidates_are_unique_and_never_point_through_a_file() {
+        let list = candidates();
+        assert_eq!(list.len(), dedup_paths(list.clone()).len(), "duplicate candidates");
+        for path in &list {
+            assert!(path.to_ascii_lowercase().ends_with("client.txt"), "{path}");
+            // Every candidate must be a path to a log, not a log's parent file.
+            assert_eq!(path.matches("Client.txt").count(), 1, "{path}");
+        }
+    }
+
+    #[test]
+    fn wegame_roots_are_guessed_from_the_drive_and_the_program_files() {
+        // Not asserting a hit — the game may not be installed — only that a
+        // missing root is skipped rather than panicking.
+        let _ = wegame_logs();
     }
 }
