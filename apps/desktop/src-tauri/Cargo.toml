@@ -13,7 +13,17 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 # The trade site and poe.ninja send no CORS headers, so requests have to leave
 # through Rust instead of the webview.
-tauri-plugin-http = "2"
+#
+# `unsafe-headers` is load-bearing, not a nicety. Without it the plugin drops
+# every header the fetch spec calls forbidden — `cookie`, `origin` and `referer`
+# among them — and prints a warning to a stderr nobody reads. That made the
+# whole 国服 credential path a no-op: the session cookie was set on the request
+# and then silently thrown away, so a search came back 401 looking exactly like
+# an expired session. The plugin is reachable only from the main window (see
+# capabilities/default.json), and the main window only ever loads our own
+# bundle, so the protection being given up is protection against a page we
+# never load.
+tauri-plugin-http = { version = "2", features = ["unsafe-headers"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-global-shortcut = "2.3.2"

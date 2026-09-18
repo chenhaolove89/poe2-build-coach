@@ -5,6 +5,7 @@ import {
   matchItemMods,
   realmOf,
   shouldRetryOffline,
+  siteOrigin,
   summarisePrices,
 } from '@poe2coach/core'
 import type { BuiltQuery, GameItem, PriceSummary, Realm, RealmId, StatIndex, StatIndexEntry, StatMatch } from '@poe2coach/core'
@@ -151,7 +152,13 @@ function requestHeaders(target: Realm, extra?: HeadersInit): Record<string, stri
     if (cnSession.value) headers.cookie = sessionCookie(cnSession.value)
     // The Tencent API also wants the request to look like it came from its own
     // trade page; tools that talk to 国服 successfully send both of these.
-    headers.origin = target.siteBase
+    //
+    // The origin has to be the *host*, not `siteBase` — that one is a path
+    // (`https://poe.game.qq.com/trade2`), and a path in an Origin header is not
+    // a valid origin. This only started mattering once the plugin stopped
+    // dropping these headers (see the `unsafe-headers` note in Cargo.toml);
+    // before that the value was never sent, so it was never wrong out loud.
+    headers.origin = siteOrigin(target)
     headers.referer = `${target.siteBase}/search`
   }
   return headers
