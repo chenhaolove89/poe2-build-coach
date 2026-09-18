@@ -18,6 +18,16 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-global-shortcut = "2.3.2"
 
+# Used to ask the running game where its executable lives, which is the only
+# reliable way to find Client.txt on 国服: WeGame installs games under its own
+# tree, not under Program Files. Windows-only, so Linux CI still builds.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_Threading",
+] }
+
 [profile.release]
 strip = true
 lto = true

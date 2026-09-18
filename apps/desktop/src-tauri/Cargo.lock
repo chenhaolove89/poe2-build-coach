@@ -2505,6 +2505,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-global-shortcut",
  "tauri-plugin-http",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

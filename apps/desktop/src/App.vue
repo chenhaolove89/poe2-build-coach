@@ -20,6 +20,7 @@ import LevelingPanel from './components/LevelingPanel.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import MapsPanel from './components/MapsPanel.vue'
 import PricePanel from './components/PricePanel.vue'
+import FarmPanel from './components/FarmPanel.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import { loadTree } from './treeData'
 import { bilingual, t } from './i18n'
@@ -39,7 +40,7 @@ import mapsJson from '@poe2coach/data/maps.json'
 
 const MAP_COUNT = (mapsJson as unknown as { maps: unknown[] }).maps.length
 
-type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps' | 'price' | 'settings'
+type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps' | 'price' | 'farm' | 'settings'
 
 const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'home', label: '主页' },
@@ -51,6 +52,9 @@ const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'leveling', label: '升级', requiresBuild: true },
   { key: 'price', label: '查价' },
   { key: 'maps', label: '地图' },
+  // Also build-independent: a farming session is about the clock and the book,
+  // not about which build is loaded.
+  { key: 'farm', label: '刷图' },
   { key: 'settings', label: '设置' },
 ]
 
@@ -557,6 +561,12 @@ function setLevel(level: number | null) {
         <p class="go">{{ t('进入') }} →</p>
       </button>
 
+      <button class="card feature" @click="view = 'farm'">
+        <h3>⏱ {{ t('刷图') }}</h3>
+        <p class="desc">{{ t('读客户端日志算地图数/每图耗时/死亡 · 产出靠粘贴记账') }}</p>
+        <p class="go">{{ t('进入') }} →</p>
+      </button>
+
       <button class="card feature" @click="view = 'settings'">
         <h3>⚙️ {{ t('设置') }}</h3>
         <p class="desc">{{ t('切换国际服 / 国服 / 台服，切换简体与繁体') }}</p>
@@ -626,6 +636,10 @@ function setLevel(level: number | null) {
 
     <main v-else-if="view === 'price'" class="centered">
       <PricePanel @open-settings="view = 'settings'" />
+    </main>
+
+    <main v-else-if="view === 'farm'" class="full">
+      <FarmPanel />
     </main>
 
     <main v-else-if="view === 'settings'" class="centered">

@@ -6,6 +6,8 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
+mod logtail;
+
 /// The cookie the trade site keeps a logged-in session in, on every realm.
 ///
 /// It is HttpOnly, so the page's own JavaScript cannot read it — only the
@@ -263,7 +265,10 @@ fn main() {
             toggle_tree_overlay,
             set_overlay_click_through,
             tree_overlay_visible,
-            overlay_hotkey
+            overlay_hotkey,
+            logtail::find_client_log,
+            logtail::read_log_from,
+            logtail::read_log_tail
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
