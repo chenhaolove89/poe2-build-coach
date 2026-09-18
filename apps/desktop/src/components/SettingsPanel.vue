@@ -12,7 +12,7 @@ import { computed, onMounted, ref } from 'vue'
 import { REALMS, REALM_IDS, type RealmId } from '@poe2coach/core'
 import { t } from '../i18n'
 import { cnSession, realmId, selectRealm, setCnSession, zhVariant } from '../settings'
-import { linkRealmSession, SessionLinkError } from '../sessionLink'
+import { linkRealmSession, SessionLinkError, type LinkProgress } from '../sessionLink'
 import { probeStashAccess, stashVerdict, type ProbeReport, type ProbeStep } from '../stashProbe'
 import { fetchLeagues, isDesktopRuntime, savedLeague } from '../tradeClient'
 
@@ -20,6 +20,7 @@ const draft = ref(cnSession.value)
 const saved = ref(false)
 const linking = ref(false)
 const linkError = ref<string | null>(null)
+const linkProgress = ref<LinkProgress>('waiting')
 
 const desktop = isDesktopRuntime()
 
@@ -115,8 +116,12 @@ async function startLink() {
   if (linking.value) return
   linking.value = true
   linkError.value = null
+  linkProgress.value = 'waiting'
   try {
-    const cookie = await linkRealmSession(active.value)
+    // The window stays open until a real search comes back authorised. Merely
+    // finding a cookie would succeed immediately: 国服 hands one to anonymous
+    // visitors, so the window would close before the player could log in.
+    const cookie = await linkRealmSession(active.value, (state) => (linkProgress.value = state))
     draft.value = cookie
     setCnSession(cookie)
   } catch (e) {
@@ -127,6 +132,13 @@ async function startLink() {
   } finally {
     linking.value = false
   }
+}
+
+/** What the login window is waiting on, in the player's words. */
+const LINK_STATE_TEXT: Record<LinkProgress, string> = {
+  waiting: '等待登录中…请在打开的窗口完成登录',
+  verifying: '已取得会话,正在验证它是否真的登录了…',
+  unverified: '窗口里已有会话,但**还没登录**(匿名访客也会拿到 cookie)。请在窗口里用 QQ / 微信登录。',
 }
 </script>
 
@@ -181,9 +193,7 @@ async function startLink() {
       <p v-if="!desktop" class="state warn">
         {{ t('关联登录需要桌面版:它要用内嵌浏览器打开登录页。浏览器预览只能用下面的手动方式。') }}
       </p>
-      <p v-else-if="linking" class="state warn">
-        {{ t('登录窗口已打开。完成登录后这里会自动获取凭证;关掉窗口即取消。') }}
-      </p>
+      <p v-else-if="linking" class="state warn">{{ t(LINK_STATE_TEXT[linkProgress]) }}</p>
 
       <p class="hint manual">
         {{ t('也可以手动粘贴:在浏览器登录 poe.game.qq.com 后,按 F12 → Application/应用 → Cookies → 复制 POESESSID 的值。') }}

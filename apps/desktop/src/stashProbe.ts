@@ -18,6 +18,7 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { characterWindowUrl, searchUrl, siteOrigin } from '@poe2coach/core'
 import type { Realm } from '@poe2coach/core'
 import { cnSession } from './settings'
+import { MINIMAL_QUERY } from './sessionCheck'
 import { isDesktopRuntime } from './tradeClient'
 
 export interface ProbeStep {
@@ -134,17 +135,8 @@ async function call(
   }
 }
 
-/**
- * The smallest search the trade site accepts.
- *
- * It has to be a *valid* query: the control's whole job is to tell "the
- * credential is accepted" apart from "the credential never arrived", and a
- * malformed body would come back 400 either way, answering neither.
- */
-const CONTROL_QUERY = {
-  query: { status: { option: 'online' }, stats: [{ type: 'and', filters: [] }] },
-  sort: { price: 'asc' },
-}
+/** Shared with the login flow, so both agree on what a valid search is. */
+const CONTROL_QUERY = MINIMAL_QUERY
 
 export interface ProbeReport {
   steps: ProbeStep[]
