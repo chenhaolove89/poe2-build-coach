@@ -38,9 +38,30 @@ export interface ProbeStep {
   items: number | null
   tabs: number | null
   accountName: string | null
+  /** Leagues seen in a character list — a league the account demonstrably has. */
+  leagues: string[] | null
+  /** Character names seen in a character list. */
+  characters: string[] | null
 }
 
 const BODY_PREVIEW = 600
+
+/**
+ * Minimum gap between probe requests.
+ *
+ * The trade API allows 5 requests / 10s per IP, and the probe fires a handful in
+ * a row. Without pacing the later ones come back 429, which looks like a refusal
+ * and would be read as an answer. 2.5s keeps at most four inside any ten-second
+ * window.
+ */
+const REQUEST_GAP_MS = 2500
+let lastRequestAt = 0
+
+async function pace(): Promise<void> {
+  const wait = lastRequestAt + REQUEST_GAP_MS - Date.now()
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
+  lastRequestAt = Date.now()
+}
 const UA = 'poe2-build-coach (desktop; github.com/chenhaolove89/poe2-build-coach)'
 
 function head(text: string): string {
@@ -76,16 +97,32 @@ function describe(text: string): string {
   }
 }
 
-function numbersOf(text: string): { items: number | null; tabs: number | null; accountName: string | null } {
+function numbersOf(text: string): {
+  items: number | null
+  tabs: number | null
+  accountName: string | null
+  leagues: string[] | null
+  /** Character names, which some builds of the stash call accept in place of an account. */
+  characters: string[] | null
+} {
   try {
     const parsed = JSON.parse(text) as { items?: unknown; tabs?: unknown; accountName?: unknown }
+    const list = Array.isArray(parsed) ? (parsed as { league?: unknown; name?: unknown }[]) : null
+    const strings = (pick: (c: { league?: unknown; name?: unknown }) => unknown) =>
+      list
+        ? [...new Set(list.map(pick).filter((v): v is string => typeof v === 'string' && v.length > 0))]
+        : null
+    const leagues = strings((c) => c?.league)
+    const characters = strings((c) => c?.name)
     return {
       items: Array.isArray(parsed?.items) ? parsed.items.length : null,
       tabs: Array.isArray(parsed?.tabs) ? parsed.tabs.length : null,
       accountName: typeof parsed?.accountName === 'string' ? parsed.accountName : null,
+      leagues,
+      characters,
     }
   } catch {
-    return { items: null, tabs: null, accountName: null }
+    return { items: null, tabs: null, accountName: null, leagues: null, characters: null }
   }
 }
 
@@ -118,6 +155,7 @@ async function call(
     payload = new URLSearchParams(body.form).toString()
   }
   try {
+    await pace()
     const res = await tauriFetch(url, { method: 'POST', headers, body: payload })
     const text = await res.text()
     return { label, url, status: res.status, summary: describe(text), body: head(text), ...numbersOf(text) }
@@ -131,6 +169,8 @@ async function call(
       items: null,
       tabs: null,
       accountName: null,
+      leagues: null,
+      characters: null,
     }
   }
 }
@@ -195,40 +235,82 @@ export async function probeStashAccess(options: ProbeOptions): Promise<ProbeRepo
     `${realm.siteBase}/`,
   )
   if (who.status === 404) {
-    // Measured: this route exists on 国服 (401) and is absent on the other two
-    // (404). Saying so keeps a bare 404 from reading like a failure.
-    who.summary = `${who.summary} —— 这个服没有这个接口(实测国服有、国际服与台服没有)`
+    // With a *valid* session this 404s on 国服 too, so the endpoint simply does
+    // not exist. An earlier note here claimed 国服 had it, based on a 401 — but
+    // 国服's login wall answers 401 for paths that do not exist as readily as for
+    // ones that do, so that reading was worthless. Saying "does not exist" stops
+    // a bare 404 from looking like a failure to fix.
+    who.summary = `${who.summary} —— 这个接口不存在(带着有效会话也是 404),账号名得另找`
   }
   steps.push(who)
 
-  steps.push(
-    await call(
-      '取角色列表',
-      characterWindowUrl(realm, 'get-characters'),
-      cookie,
-      { form: {} },
-      realm,
-      `${realm.siteBase}/`,
-    ),
+  const chars = await call(
+    '取角色列表',
+    characterWindowUrl(realm, 'get-characters'),
+    cookie,
+    { form: {} },
+    realm,
+    `${realm.siteBase}/`,
   )
+  steps.push(chars)
 
   const name = account?.trim() || who.accountName || ''
-  steps.push(
-    await call(
-      name ? `读仓库(${name} / ${league})` : '读仓库(未取到账号名)',
-      characterWindowUrl(realm, 'get-stash-items'),
-      cookie,
-      {
-        form: name
-          ? { accountName: name, league, tabs: '1', tabIndex: '0' }
-          : { league, tabs: '1', tabIndex: '0' },
-      },
-      realm,
-      `${realm.siteBase}/`,
-    ),
-  )
+  for (const variant of stashVariants(league, chars.leagues, name, chars.characters)) {
+    steps.push(
+      await call(
+        `读仓库 · ${variant.label}`,
+        characterWindowUrl(realm, 'get-stash-items'),
+        cookie,
+        { form: variant.form },
+        realm,
+        `${realm.siteBase}/`,
+      ),
+    )
+  }
 
   return { steps, credential: { attached: cookie.length > 0, length: cookie.length } }
+}
+
+/**
+ * Parameter shapes for the stash read, tried in order.
+ *
+ * The endpoint answers 400 "Invalid query" with a valid session and no account
+ * name, which means the route is open and the *request* is wrong — a different
+ * problem from a 401/403, and one that only a few more attempts can settle.
+ * Each variant costs one request and they are paced, so the whole matrix is a
+ * couple of extra seconds rather than a new round trip.
+ *
+ * The alternate league comes from the character list: an account that has a
+ * character in a league definitely has a stash there, so it removes "the league
+ * name is wrong" from the list of suspects.
+ */
+function stashVariants(
+  league: string,
+  characterLeagues: string[] | null,
+  accountName: string,
+  characterNames: string[] | null,
+): { label: string; form: Record<string, string> }[] {
+  const base: Record<string, string> = { league, tabs: '1', tabIndex: '0' }
+  if (accountName) base.accountName = accountName
+  const tag = accountName ? `${accountName} / ` : ''
+
+  const variants: { label: string; form: Record<string, string> }[] = [
+    { label: `${tag}${league}`, form: { ...base } },
+    { label: `+realm=poe2`, form: { ...base, realm: 'poe2' } },
+    { label: `+realm=pc`, form: { ...base, realm: 'pc' } },
+    { label: 'tabs=0', form: { ...base, tabs: '0' } },
+  ]
+  for (const other of characterLeagues ?? []) {
+    if (other === league) continue
+    variants.push({ label: `league=${other}`, form: { ...base, league: other } })
+  }
+  // No endpoint hands over the account name, so the only other identity to hand
+  // the call is a character's. Cheap to try, and it rules the parameter out.
+  const character = characterNames?.[0]
+  if (!accountName && character) {
+    variants.push({ label: `accountName=${character}`, form: { ...base, accountName: character } })
+  }
+  return variants
 }
 
 /**
@@ -244,10 +326,13 @@ export async function probeStashAccess(options: ProbeOptions): Promise<ProbeRepo
  * structure at all — usually the site's HTML login page, which is what a stale
  * cookie looks like.
  */
-export function stashVerdict(steps: ProbeStep[]): 'served' | 'refused' | 'unknown' {
-  const stash = steps[steps.length - 1]
-  if (!stash) return 'unknown'
-  if (stash.status !== 200) return stash.status > 0 ? 'refused' : 'unknown'
-  if (stash.items == null && stash.tabs == null) return 'unknown'
-  return 'served'
+export function stashVerdict(steps: ProbeStep[]): 'served' | 'badparams' | 'refused' | 'unknown' {
+  const stash = steps.filter((s) => s.label.startsWith('读仓库'))
+  if (stash.length === 0) return 'unknown'
+  if (stash.some((s) => s.status === 200 && (s.items != null || s.tabs != null))) return 'served'
+  // 400 is the endpoint arguing about the request, not refusing the caller —
+  // and it is only reachable at all once the session is accepted.
+  if (stash.some((s) => s.status === 400)) return 'badparams'
+  if (stash.some((s) => s.status === 401 || s.status === 403)) return 'refused'
+  return 'unknown'
 }

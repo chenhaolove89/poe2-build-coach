@@ -79,8 +79,9 @@ const steps = computed(() => report.value?.steps ?? [])
 const verdict = computed(() => (report.value ? stashVerdict(report.value.steps) : null))
 const VERDICT_TEXT: Record<string, string> = {
   served: '拿到仓库结构了 —— PoE2 的仓库可以读,"今日净值差"这条路走得通。(items 为空只是那一页没东西,不是失败。)',
-  refused: '被拒了。对照那一步若是 200,说明凭证没问题、是这个接口对 PoE2 关着;国服是 401 而国际服/台服是 403,两个都是"路由在、不放行"。',
-  unknown: '200 但没带仓库结构 —— 通常是 HTML 登录页,也就是凭证过期了,重新关联一次再试。',
+  badparams: '路由通、凭证也通,它只是在拒绝请求的参数(400 Invalid query)。这不是"接口关着",是"还没调对"—— 离能用很近,继续试参数就有结果。',
+  refused: '被拒了(401/403)。对照是 200 说明凭证没问题,那么是接口对 PoE2 关着。',
+  unknown: '没拿到明确答复。若全是 200 却带 HTML,那是凭证过期;重新关联一次再试。',
 }
 
 /**
