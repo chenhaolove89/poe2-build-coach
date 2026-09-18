@@ -82,6 +82,15 @@ const VERDICT_TEXT: Record<string, string> = {
   unknown: '200 但不是 JSON —— 通常是 HTML 登录页,也就是凭证过期了。',
 }
 
+/**
+ * Running this without a credential would be worse than not running it: every
+ * step comes back 401, which reads like an answer ("the endpoint refuses PoE2")
+ * when it is really just an empty request. So the button stays off until there
+ * is something to send.
+ */
+const needsCredential = computed(() => active.value.loginRequired && !cnSession.value)
+const probeReady = computed(() => desktop && !!probeLeague.value.trim() && !needsCredential.value)
+
 function chooseRealm(id: RealmId) {
   selectRealm(id)
   linkError.value = null
@@ -223,11 +232,14 @@ async function startLink() {
           <span class="dim">{{ t('账号名') }}</span>
           <input v-model="probeAccount" spellcheck="false" :placeholder="t('留空则自动取')" />
         </label>
-        <button :disabled="!desktop || probing || !probeLeague.trim()" @click="runProbe">
+        <button :disabled="!probeReady || probing" @click="runProbe">
           {{ probing ? t('测试中…') : t('测试仓库接口') }}
         </button>
       </div>
       <p v-if="!desktop" class="state warn">{{ t('需要桌面版:浏览器会被跨域策略拦掉。') }}</p>
+      <p v-else-if="needsCredential" class="state warn">
+        {{ t('先在上面「关联登录」或粘贴 POESESSID —— 没有凭证跑这个测试,四步都会返回 401,那个 401 说明不了任何事。') }}
+      </p>
       <p v-if="probeError" class="state err">{{ t(probeError) }}</p>
 
       <div v-if="steps.length" class="probe-steps">
