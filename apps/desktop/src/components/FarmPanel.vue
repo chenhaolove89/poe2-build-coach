@@ -11,27 +11,28 @@
  *    event — verified by counting keywords in a real 国服 log — so income is
  *    whatever the player pastes in. Claiming otherwise would be inventing data.
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   buildSession,
-  emptyFollow,
-  ingestChunk,
   parseItemText,
-  parseLogLines,
-  resumeEvents,
   summariseLedger,
   summariseSession,
   visitNetMs,
 } from '@poe2coach/core'
-import type { FollowState, GameItem, LedgerEntry, LogEvent } from '@poe2coach/core'
+import type { GameItem } from '@poe2coach/core'
+// The session module stores its messages as authored Simplified, so they go
+// through t() at render like every other piece of app copy.
 import { currencyName, dialect, t } from '../i18n'
+import { findClientLog, rememberLogPath } from '../farmClient'
 import {
-  findClientLog,
-  readLogFrom,
-  readLogTail,
-  rememberLogPath,
-  savedLogPath,
-} from '../farmClient'
+  addLedgerEntry,
+  farm,
+  ledger,
+  previewFarmSession,
+  removeLedgerEntry,
+  startFarmSession,
+  stopFarmSession,
+} from '../farmSession'
 import {
   ensureRealmData,
   fetchLeagues,
@@ -42,35 +43,22 @@ import {
   TradeError,
 } from '../tradeClient'
 
-/** How much of the log to read back when a session starts, to find the area. */
-const TAIL_BYTES = 64 * 1024
-const POLL_MS = 1000
 /** Visits shown in the list; a long session runs into the hundreds. */
 const VISIT_ROWS = 60
 
 const desktop = isDesktopRuntime()
-const path = ref(savedLogPath())
-const following = ref(false)
-const follow = ref<FollowState>(emptyFollow())
-const startedAt = ref<number | null>(null)
-const now = ref(Date.now())
-const error = ref<string | null>(null)
-const notice = ref<string | null>(null)
 const finding = ref(false)
 
-let timer: number | null = null
-
 const session = computed(() =>
-  startedAt.value == null ? null : buildSession(follow.value.events, { startedAt: startedAt.value }),
+  farm.startedAt == null ? null : buildSession(farm.follow.events, { startedAt: farm.startedAt }),
 )
-const summary = computed(() => (session.value ? summariseSession(session.value, now.value) : null))
+const summary = computed(() => (session.value ? summariseSession(session.value, farm.now) : null))
 
 /** Newest first, because the last map is the one being asked about. */
 const visits = computed(() => [...(session.value?.visits ?? [])].reverse().slice(0, VISIT_ROWS))
 
 // ---------------------------------------------------------------- the ledger
 
-const ledger = ref<LedgerEntry[]>([])
 const paste = ref('')
 const amount = ref<number | null>(null)
 const currency = ref('exalted')
@@ -119,24 +107,19 @@ function book(kind: 'income' | 'cost') {
     priceNote.value = t('先填一个大于 0 的数量。')
     return
   }
-  ledger.value = [
-    ...ledger.value,
-    {
-      id: `${Date.now()}-${ledger.value.length}`,
-      at: Date.now(),
-      label: pasteLabel.value || t('未命名'),
-      amount: value,
-      currency: currency.value,
-      kind,
-    },
-  ]
+  addLedgerEntry({
+    label: pasteLabel.value || t('未命名'),
+    amount: value,
+    currency: currency.value,
+    kind,
+  })
   paste.value = ''
   amount.value = null
   priceNote.value = null
 }
 
 function unbook(id: string) {
-  ledger.value = ledger.value.filter((entry) => entry.id !== id)
+  removeLedgerEntry(id)
 }
 
 /**
@@ -180,89 +163,41 @@ async function onPrice() {
 
 // ------------------------------------------------------------- following it
 
-function stopFollowing() {
-  following.value = false
-  if (timer != null) {
-    clearInterval(timer)
-    timer = null
-  }
-  now.value = Date.now()
-}
-
 async function onFind() {
   finding.value = true
-  error.value = null
+  farm.error = null
   try {
     const found = await findClientLog()
     if (found) {
-      path.value = found
+      farm.path = found
       rememberLogPath(found)
-      notice.value = t('已找到游戏日志。')
+      farm.notice = t('已找到游戏日志。')
     } else {
-      notice.value = t('没找到日志。游戏没在运行时无法从进程反查,请手动粘贴 Client.txt 的完整路径(在游戏安装目录的 logs 文件夹里)。')
+      farm.notice = t('没找到日志。游戏没在运行时无法从进程反查,请手动粘贴 Client.txt 的完整路径(在游戏安装目录的 logs 文件夹里)。')
     }
   } finally {
     finding.value = false
   }
 }
 
+/** The page owns the made-up log; the session module owns the pipeline. */
+function preview() {
+  previewFarmSession(demoLines())
+}
+
 async function start() {
-  const target = path.value.trim()
-  error.value = null
-  notice.value = null
+  const target = farm.path.trim()
+  farm.error = null
+  farm.notice = null
   if (!target) {
-    error.value = t('先指定 Client.txt 的路径。')
+    farm.error = t('先指定 Client.txt 的路径。')
     return
   }
   try {
-    // Read the end of the log first: the player is already somewhere, and
-    // tailing from the end would leave the tracker blind until they next change
-    // area — a whole map away.
-    const tail = await readLogTail(target, TAIL_BYTES)
-    const at = Date.now()
-    follow.value = { offset: tail.offset, events: resumeEvents(tail.lines, at), resets: 0 }
-    startedAt.value = at
-    ledger.value = []
-    path.value = target
-    rememberLogPath(target)
-    following.value = true
-    now.value = at
-    timer = window.setInterval(tick, POLL_MS)
-    if (follow.value.events.length === 0) {
-      notice.value = t('开始记录了。日志里还没看到当前区域,下次进图就会跟上。')
-    }
+    await startFarmSession(target)
   } catch (e) {
-    error.value = String(e)
+    farm.error = String(e)
   }
-}
-
-async function tick() {
-  if (!following.value) return
-  now.value = Date.now()
-  try {
-    const chunk = await readLogFrom(path.value.trim(), follow.value.offset)
-    const before = follow.value.resets
-    follow.value = ingestChunk(follow.value, chunk)
-    if (follow.value.resets > before) {
-      notice.value = t('日志被游戏重写了,之前的记录已清空,从这一行继续。')
-    }
-  } catch (e) {
-    error.value = `${t('读取日志失败:')}${e instanceof Error ? e.message : String(e)}`
-    stopFollowing()
-  }
-}
-
-/** Feed a made-up session through the real pipeline, to see the page working. */
-function preview() {
-  const lines = demoLines()
-  const events: LogEvent[] = parseLogLines(lines)
-  if (events.length === 0) return
-  startedAt.value = events[0].at
-  follow.value = { offset: 0, events, resets: 0 }
-  following.value = false
-  now.value = Date.now()
-  error.value = null
-  notice.value = t('这是示例数据,不是你的日志。点「开始记录」会清掉它。')
 }
 
 /**
@@ -337,9 +272,8 @@ onMounted(async () => {
   }
 })
 
-// A realm switch changes the currency labels and nothing else here — the log is
-// the same file either way.
-onBeforeUnmount(stopFollowing)
+// The session itself lives in farmSession.ts, so leaving this view does not end
+// it — a player who checks their tree mid-run comes back to a running clock.
 </script>
 
 <template>
@@ -348,34 +282,34 @@ onBeforeUnmount(stopFollowing)
       <label class="field wide">
         <span class="dim">{{ t('客户端日志') }}</span>
         <input
-          v-model="path"
+          v-model="farm.path"
           class="path"
           spellcheck="false"
           :placeholder="t('游戏安装目录\\logs\\Client.txt')"
-          :disabled="following"
+          :disabled="farm.following"
         />
       </label>
-      <button :disabled="!desktop || finding || following" @click="onFind">
+      <button :disabled="!desktop || finding || farm.following" @click="onFind">
         {{ finding ? t('查找中…') : t('自动查找') }}
       </button>
       <span class="spacer" />
-      <button v-if="!following" class="primary" :disabled="!desktop" @click="start">
+      <button v-if="!farm.following" class="primary" :disabled="!desktop" @click="start">
         {{ t('开始记录') }}
       </button>
-      <button v-else class="danger" @click="stopFollowing">{{ t('停止记录') }}</button>
-      <button :disabled="following" :title="t('用一段编造的日志看这一页长什么样')" @click="preview">
+      <button v-else class="danger" @click="stopFarmSession">{{ t('停止记录') }}</button>
+      <button :disabled="farm.following" :title="t('用一段编造的日志看这一页长什么样')" @click="preview">
         {{ t('示例预览') }}
       </button>
     </div>
 
     <div class="body">
       <p v-if="!desktop" class="notice warn">{{ t('读取游戏日志需要桌面版。浏览器预览里可以点「示例预览」看界面。') }}</p>
-      <p v-if="error" class="notice warn">{{ error }}</p>
-      <p v-if="notice" class="notice dim">{{ notice }}</p>
+      <p v-if="farm.error" class="notice warn">{{ t(farm.error) }}</p>
+      <p v-if="farm.notice" class="notice dim">{{ t(farm.notice) }}</p>
 
       <section v-if="summary" class="live">
         <div class="live-head">
-          <span class="dot" :class="{ on: following }" />
+          <span class="dot" :class="{ on: farm.following }" />
           <span v-if="summary.current" class="area">
             <b>{{ dialect(summary.current.name) }}</b>
             <span v-if="summary.current.level" class="dim">Lv{{ summary.current.level }}</span>
@@ -509,7 +443,7 @@ onBeforeUnmount(stopFollowing)
               <span v-if="v.code" class="dim mono">{{ v.code }}</span>
             </span>
             <span><span class="kind" :class="v.kind">{{ t(KIND_LABEL[v.kind]) }}</span></span>
-            <span class="num">{{ duration(visitNetMs(v, now)) }}</span>
+            <span class="num">{{ duration(visitNetMs(v, farm.now)) }}</span>
             <span class="num dim">{{ v.loadingMs ? duration(v.loadingMs) : '—' }}</span>
             <span class="num dim">{{ clockOf(v.startAt) }}</span>
           </div>
