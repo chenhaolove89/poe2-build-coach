@@ -15,6 +15,7 @@
  * echoed into the result, and never logged.
  */
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
+import { characterWindowUrl, searchUrl, siteOrigin } from '@poe2coach/core'
 import type { Realm } from '@poe2coach/core'
 import { cnSession } from './settings'
 import { isDesktopRuntime } from './tradeClient'
@@ -93,14 +94,19 @@ async function call(
   cookie: string,
   body: { form?: Record<string, string>; json?: unknown } | null,
   realm: Realm,
+  /** The page a browser would have sent this request from. */
+  page: string,
 ): Promise<ProbeStep> {
   const headers: Record<string, string> = { 'user-agent': UA }
   if (cookie) headers.cookie = cookie
+  // `siteBase` is a path, not an origin, so it must not go into these headers.
+  const origin = siteOrigin(realm)
+  headers.origin = origin
+  headers.referer = page
   if (realm.id === 'cn') {
     // The Tencent API also wants the request to look like it came from its own
     // site, which is what the tools that work against 国服 send.
-    headers.origin = realm.siteBase
-    headers.referer = `${realm.siteBase}/`
+    headers['accept-language'] = 'zh-CN,zh;q=0.9'
   }
   let payload: string | undefined
   if (body?.json !== undefined) {
@@ -166,27 +172,47 @@ export async function probeStashAccess(options: ProbeOptions): Promise<ProbeStep
   steps.push(
     await call(
       '对照:交易站搜索(已知需要凭证)',
-      `${realm.apiBase}/api/trade2/search/poe2/${encodeURIComponent(league)}`,
+      searchUrl(realm, league),
       cookie,
       { json: CONTROL_QUERY },
       realm,
+      `${realm.siteBase}/search`,
     ),
   )
 
   // Who are we logged in as? The stash call wants an account name, and this is
   // the endpoint that hands it over instead of making the player type it.
-  const who = await call('取账号名', `${realm.siteBase}/character-window/get-account-name`, cookie, { form: {} }, realm)
+  const who = await call(
+    '取账号名',
+    characterWindowUrl(realm, 'get-account-name'),
+    cookie,
+    { form: {} },
+    realm,
+    `${realm.siteBase}/`,
+  )
+  if (who.status === 404) {
+    // Measured: this route exists on 国服 (401) and is absent on the other two
+    // (404). Saying so keeps a bare 404 from reading like a failure.
+    who.summary = `${who.summary} —— 这个服没有这个接口(实测国服有、国际服与台服没有)`
+  }
   steps.push(who)
 
   steps.push(
-    await call('取角色列表', `${realm.siteBase}/character-window/get-characters`, cookie, { form: {} }, realm),
+    await call(
+      '取角色列表',
+      characterWindowUrl(realm, 'get-characters'),
+      cookie,
+      { form: {} },
+      realm,
+      `${realm.siteBase}/`,
+    ),
   )
 
   const name = account?.trim() || who.accountName || ''
   steps.push(
     await call(
       name ? `读仓库(${name} / ${league})` : '读仓库(未取到账号名)',
-      `${realm.siteBase}/character-window/get-stash-items`,
+      characterWindowUrl(realm, 'get-stash-items'),
       cookie,
       {
         form: name
@@ -194,6 +220,7 @@ export async function probeStashAccess(options: ProbeOptions): Promise<ProbeStep
           : { league, tabs: '1', tabIndex: '0' },
       },
       realm,
+      `${realm.siteBase}/`,
     ),
   )
 
@@ -203,15 +230,20 @@ export async function probeStashAccess(options: ProbeOptions): Promise<ProbeStep
 /**
  * The answer to the actual question.
  *
- * `refused` means the realm said no with a status; `unknown` means it said yes
- * and then did not send items — usually the HTML login page, which is what a
- * stale cookie looks like. Neither is the same as `empty`, which is a real
- * stash with nothing in the tab that was read.
+ * `served` is the one that matters, and it does **not** require items: a
+ * response carrying an `items` array — even an empty one — means the realm
+ * answered a PoE2 stash read, which is the whole question. An empty array is a
+ * readable stash with nothing in that tab, not a failure, and calling it one
+ * would send the search looking for a problem that is not there.
+ *
+ * `refused` is a status saying no. `unknown` is a 200 that carried no stash
+ * structure at all — usually the site's HTML login page, which is what a stale
+ * cookie looks like.
  */
-export function stashVerdict(steps: ProbeStep[]): 'items' | 'empty' | 'refused' | 'unknown' {
+export function stashVerdict(steps: ProbeStep[]): 'served' | 'refused' | 'unknown' {
   const stash = steps[steps.length - 1]
   if (!stash) return 'unknown'
   if (stash.status !== 200) return stash.status > 0 ? 'refused' : 'unknown'
-  if (stash.items == null) return 'unknown'
-  return stash.items > 0 ? 'items' : 'empty'
+  if (stash.items == null && stash.tabs == null) return 'unknown'
+  return 'served'
 }

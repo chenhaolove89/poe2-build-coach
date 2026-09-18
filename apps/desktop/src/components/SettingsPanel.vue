@@ -76,10 +76,9 @@ async function runProbe() {
 
 const verdict = computed(() => (steps.value.length > 0 ? stashVerdict(steps.value) : null))
 const VERDICT_TEXT: Record<string, string> = {
-  items: '拿到物品了 —— PoE2 的仓库可以读,"今日净值差"这条路走得通。',
-  empty: '接口通了,但那一页是空的。换个 tabIndex 或先在游戏里放点东西再试。',
-  refused: '被拒了。对照那一步是 200 的话,说明凭证没问题、是这个接口对 PoE2 关着。',
-  unknown: '200 但不是 JSON —— 通常是 HTML 登录页,也就是凭证过期了。',
+  served: '拿到仓库结构了 —— PoE2 的仓库可以读,"今日净值差"这条路走得通。(items 为空只是那一页没东西,不是失败。)',
+  refused: '被拒了。对照那一步若是 200,说明凭证没问题、是这个接口对 PoE2 关着;国服是 401 而国际服/台服是 403,两个都是"路由在、不放行"。',
+  unknown: '200 但没带仓库结构 —— 通常是 HTML 登录页,也就是凭证过期了,重新关联一次再试。',
 }
 
 /**
@@ -257,7 +256,7 @@ async function startLink() {
             <span v-if="s.body" class="raw">{{ s.body }}</span>
           </span>
         </div>
-        <p v-if="verdict" class="state" :class="verdict === 'items' ? 'ok' : 'warn'">
+        <p v-if="verdict" class="state" :class="verdict === 'served' ? 'ok' : 'warn'">
           {{ t(VERDICT_TEXT[verdict]) }}
         </p>
       </div>

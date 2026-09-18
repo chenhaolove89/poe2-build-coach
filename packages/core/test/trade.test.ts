@@ -1,3 +1,4 @@
+import { REALM_IDS, characterWindowUrl, realmOf, searchUrl, siteOrigin } from '../src/index.js'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { skeleton, modValues } from '../src/trade/skeleton.js'
@@ -171,5 +172,40 @@ describe('price summarising', () => {
     expect(summary.median).toBeNull()
     expect(summary.currency).toBeNull()
     expect(summary.onlineCount).toBe(0)
+  })
+})
+
+describe('endpoint URLs', () => {
+  it('keeps the character-window endpoints on the host root, not under /trade2', () => {
+    // `siteBase` is a path on the site, so using it as a base produces
+    // `/trade2/character-window/...` — which the site answers with a plain 404,
+    // and a 404 there reads like "PoE2 does not have this endpoint".
+    expect(characterWindowUrl(realmOf('cn'), 'get-stash-items')).toBe(
+      'https://poe.game.qq.com/character-window/get-stash-items',
+    )
+    expect(characterWindowUrl(realmOf('intl'), 'get-account-name')).toBe(
+      'https://www.pathofexile.com/character-window/get-account-name',
+    )
+    expect(characterWindowUrl(realmOf('tw'), 'get-characters')).toBe(
+      'https://pathofexile.tw/character-window/get-characters',
+    )
+  })
+
+  it('posts searches to the realm api base, without repeating it', () => {
+    expect(searchUrl(realmOf('cn'), '奥杜尔秘符')).toBe(
+      'https://poe.game.qq.com/api/trade2/search/poe2/%E5%A5%A5%E6%9D%9C%E5%B0%94%E7%A7%98%E7%AC%A6',
+    )
+    expect(searchUrl(realmOf('intl'), 'Runes of Aldur')).toBe(
+      'https://www.pathofexile.com/api/trade2/search/poe2/Runes%20of%20Aldur',
+    )
+  })
+
+  it('never lets a base leak its path into an origin', () => {
+    for (const id of REALM_IDS) {
+      const origin = siteOrigin(realmOf(id))
+      expect(origin).not.toContain('/trade2')
+      expect(origin).not.toContain('/api/')
+      expect(origin).toMatch(/^https:\/\/[^/]+$/)
+    }
   })
 })
