@@ -164,7 +164,8 @@ function requestHeaders(target: Realm, extra?: HeadersInit): Record<string, stri
   return headers
 }
 
-async function apiFetch(path: string, init?: RequestInit): Promise<unknown> {
+/** The one funnel every official-API call goes through, rate limits included. */
+export async function apiFetch(path: string, init?: RequestInit): Promise<unknown> {
   const target = realmOf(realmId.value)
   if (!isDesktopRuntime()) {
     throw new TradeError('浏览器预览无法直连官方 API(跨域被拦),请使用桌面版。', 'needs_desktop')

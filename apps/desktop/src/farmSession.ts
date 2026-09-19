@@ -137,6 +137,16 @@ export function previewFarmSession(lines: string[]): void {
   lastClipboard = ''
   ledger.value = []
   syncTrades()
+  // A few made-up bookings in the demo's own timeline, so the charts on the
+  // page have something to draw — the preview is also how a player sees what
+  // a filled-in session looks like.
+  const base = events[0].at
+  ledger.value = [
+    ...ledger.value,
+    { id: 'demo-chaos', at: base + 60_000, label: '混沌石', amount: 18, currency: 'chaos', kind: 'income', source: 'drop' },
+    { id: 'demo-divine', at: base + 140_000, label: '神圣石', amount: 1, currency: 'divine', kind: 'income', source: 'drop' },
+    { id: 'demo-ticket', at: base + 200_000, label: '门票', amount: 1, currency: 'chaos', kind: 'cost', source: 'manual' },
+  ] as LedgerEntry[]
   farm.notice = '这是示例数据,不是你的日志。点「开始记录」会清掉它。'
 }
 

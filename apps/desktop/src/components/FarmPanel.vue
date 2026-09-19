@@ -11,7 +11,7 @@
  *    event — verified by counting keywords in a real 国服 log — so income is
  *    whatever the player pastes in. Claiming otherwise would be inventing data.
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   buildSession,
   normalizeCurrency,
@@ -24,7 +24,9 @@ import type { GameItem } from '@poe2coach/core'
 // The session module stores its messages as authored Simplified, so they go
 // through t() at render like every other piece of app copy.
 import { currencyName, dialect, t } from '../i18n'
-import { findClientLog, rememberLogPath } from '../farmClient'
+import { findClientLog, rememberLogPath, savedLogPath } from '../farmClient'
+import { realmId } from '../settings'
+import FarmCharts from './FarmCharts.vue'
 import {
   addLedgerEntry,
   checkClipboardNow,
@@ -210,6 +212,30 @@ async function handlePendingClipboard(kind: 'income' | 'cost') {
 
 // ------------------------------------------------------------- following it
 
+/**
+ * Fill the path from this realm's memory, then from discovery.
+ *
+ * Runs when the page opens and when the realm changes, so the player does not
+ * press 自动查找 every time: the realms are different installs, and the
+ * running game's own directory — discovery's first answer — is the one path
+ * that is right on every distributor.
+ */
+async function autoFind(): Promise<void> {
+  if (!desktop || farm.following) return
+  if (!farm.path.trim()) farm.path = savedLogPath()
+  if (farm.path.trim()) return
+  finding.value = true
+  try {
+    const found = await findClientLog()
+    if (found) {
+      farm.path = found
+      rememberLogPath(found)
+    }
+  } finally {
+    finding.value = false
+  }
+}
+
 async function onFind() {
   finding.value = true
   farm.error = null
@@ -233,11 +259,14 @@ function preview() {
 }
 
 async function start() {
-  const target = farm.path.trim()
   farm.error = null
   farm.notice = null
+  // Starting without a path is not an error yet: the same discovery the page
+  // ran on open gets one more chance before giving up.
+  if (!farm.path.trim()) await autoFind()
+  const target = farm.path.trim()
   if (!target) {
-    farm.error = t('先指定 Client.txt 的路径。')
+    farm.error = t('没找到游戏日志。游戏开着时点「自动查找」;或手动粘贴 Client.txt 的完整路径。')
     return
   }
   try {
@@ -321,6 +350,15 @@ onMounted(async () => {
   } catch {
     /* labels are cosmetic; the raw currency id still shows */
   }
+  void autoFind()
+})
+
+// A realm switch is a different install: refill from the other realm's memory
+// and let discovery take another shot at it.
+watch(realmId, () => {
+  if (farm.following) return
+  farm.path = savedLogPath()
+  void autoFind()
 })
 
 // The session itself lives in farmSession.ts, so leaving this view does not end
@@ -450,6 +488,14 @@ onMounted(async () => {
           </template>
         </p>
 
+        <FarmCharts
+          :entries="ledger"
+          :visits="session?.visits ?? []"
+          :start-at="farm.startedAt ?? 0"
+          :now="farm.now"
+          :labels="labels"
+        />
+
         <div class="farm-options">
           <label class="check-label">
             <input v-model="farm.autoClipboard" type="checkbox" :disabled="!desktop" />
@@ -561,10 +607,10 @@ onMounted(async () => {
       <section v-if="!summary" class="card empty">
         <h3>{{ t('怎么用') }}</h3>
         <ol>
-          <li>{{ t('游戏开着的时候点「自动查找」,它会问游戏进程要安装目录,再拼上 logs\\Client.txt;找不到就手动粘贴完整路径。') }}</li>
+          <li>{{ t('进入这一页就会按当前区服自动查找游戏日志(运行中的游戏进程最准);没找到时手动粘贴 Client.txt 的完整路径(在游戏安装目录的 logs 文件夹里)。') }}</li>
           <li>{{ t('点「开始记录」。它会先读日志结尾,认出你现在站在哪个区域,然后每秒读一次新增的行。') }}</li>
           <li>{{ t('打图。地图数、每图耗时、读图时间、死亡都自动出来。') }}</li>
-          <li>{{ t('掉了值钱的东西,在游戏里 Ctrl+C 复制,粘到「本场收益」里记一笔;门票成本同理。') }}</li>
+          <li>{{ t('掉了值钱的东西,在游戏里 Ctrl+C 复制,粘到「本场收益」里记一笔;门票成本同理。买家私聊成交会自动入账。') }}</li>
         </ol>
         <p class="dim small">
           {{ t('只读:这个功能只打开日志文件读取,不写入、不碰游戏客户端。游戏日志里没有掉落事件,所以产出永远是你手动记的,不是它猜的。') }}
