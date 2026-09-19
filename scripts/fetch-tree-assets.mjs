@@ -250,9 +250,15 @@ const positions = {}
 for (const [id, node] of Object.entries(official.nodes)) {
   if (typeof node.x === 'number' && typeof node.y === 'number') positions[id] = [node.x, node.y]
 }
-const officialEdges = (official.edges ?? []).map((e) =>
-  Array.isArray(e) ? e.map(String) : [String(e[0] ?? e.from), String(e[1] ?? e.to)],
-)
+const officialEdges = (official.edges ?? []).map((e) => {
+  if (Array.isArray(e)) return e.map(String)
+  const from = String(e[0] ?? e.from)
+  const to = String(e[1] ?? e.to)
+  if (e.orbitX != null && e.orbitY != null && e.orbit > 0) {
+    return [from, to, e.orbit, e.orbitX, e.orbitY]
+  }
+  return [from, to]
+})
 /**
  * Group centres, which the ring art is drawn around.
  *

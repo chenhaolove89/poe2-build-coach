@@ -78,11 +78,13 @@ export interface TreeArtIndex {
   nodes: Record<string, Record<string, IconStateRects>>
 }
 
+export type RawEdge = [string, string] | [string, string, number, number, number]
+
 export interface TreeGeometry {
   /** Node id -> absolute [x, y], in the same space as the artwork. */
   positions: Record<string, [number, number]>
-  /** Official connection list, as id strings. */
-  edges: [string, string][]
+  /** Official connection list, as id strings (with optional orbit, orbitX, orbitY for arcs). */
+  edges: RawEdge[]
   /** Group id -> its centre. Orbit rings are concentric about this point. */
   groups: Record<string, [number, number]>
 }

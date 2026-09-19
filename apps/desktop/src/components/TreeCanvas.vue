@@ -81,18 +81,27 @@ interface Cluster {
 }
 
 let art: TreeArt | null = null
-/**
- * One orbit ring: the nodes sharing a group and an orbit, with their angle about
- * the group centre. The art is drawn as four 90-degree tiles around this point.
- */
-interface Ring {
-  centre: Pt
-  orbit: number
-  /** Visible nodes on the ring, by angle ascending. */
-  nodes: { id: number; angle: number }[]
+interface PreparedLineEdge {
+  kind: 'line'
+  a: number
+  b: number
 }
 
-let rings: Ring[] = []
+interface PreparedArcEdge {
+  kind: 'arc'
+  a: number
+  b: number
+  cx: number
+  cy: number
+  radius: number
+  startAngle: number
+  endAngle: number
+  counterclockwise: boolean
+}
+
+type PreparedEdge = PreparedLineEdge | PreparedArcEdge
+
+let preparedEdges: PreparedEdge[] = []
 let positions = new Map<number, Pt>()
 let edges: [number, number][] = []
 let bounds = { minX: 0, minY: 0, maxX: 0, maxY: 0 }
@@ -120,6 +129,9 @@ let resizeObs: ResizeObserver | null = null
 const hoverHtml = computed(() => {
   const h = hover.value
   if (!h) return ''
+  // The tree data has no isMastery flag — a mastery is the one kind carrying
+  // an activeEffectImage without being a notable or keystone.
+  const isMastery = !!h.node.activeEffectImage && !h.node.isNotable && !h.node.isKeystone
   const kind = t(
     h.node.isKeystone
       ? '核心天赋 Keystone'
@@ -127,7 +139,9 @@ const hoverHtml = computed(() => {
         ? '显著天赋 Notable'
         : h.node.ascendancyName
           ? '升华天赋 Ascendancy'
-          : '普通天赋 Passive',
+          : isMastery
+            ? '专精 Mastery'
+            : '普通天赋 Passive',
   )
   const activeMark = props.active.has(h.node.id) ? ` · <b style="color:#e8b04b">${t('已规划')}</b>` : ''
   const stats = h.node.stats
@@ -260,9 +274,10 @@ function rebuildGeometry() {
   }
 
   edges = []
-  for (const [a, b] of TREE_GEOMETRY.edges) {
-    const from = Number(a)
-    const to = Number(b)
+  preparedEdges = []
+  for (const rawEdge of TREE_GEOMETRY.edges) {
+    const from = Number(rawEdge[0])
+    const to = Number(rawEdge[1])
     if (!positions.has(from) || !positions.has(to)) continue
     // A class start connects straight to its ascendancy's start node, but the
     // two trees are separate and no character walks between them — and now that
@@ -270,6 +285,44 @@ function rebuildGeometry() {
     // from the main tree into the centre for no reason.
     if ((props.tree.nodes[from]?.ascendancyName ?? null) !== (props.tree.nodes[to]?.ascendancyName ?? null)) continue
     edges.push([from, to])
+
+    const pa = positions.get(from)!
+    const pb = positions.get(to)!
+    const isArc = rawEdge.length >= 5 && rawEdge[2] != null && (rawEdge[2] as number) > 0
+    if (isArc) {
+      let ox = rawEdge[3] as number
+      let oy = rawEdge[4] as number
+      if (wanted && props.tree.nodes[from]?.ascendancyName === props.ascendancy) {
+        ox = mainCentre.x + (ox - wanted.centre.x) * ascScale
+        oy = mainCentre.y + (oy - wanted.centre.y) * ascScale
+      }
+      const radius = Math.hypot(pa.x - ox, pa.y - oy)
+      if (radius > 1) {
+        const a1 = Math.atan2(pa.y - oy, pa.x - ox)
+        const a2 = Math.atan2(pb.y - oy, pb.x - ox)
+        let diff = (a2 - a1) % (Math.PI * 2)
+        if (diff <= -Math.PI) diff += Math.PI * 2
+        else if (diff > Math.PI) diff -= Math.PI * 2
+        preparedEdges.push({
+          kind: 'arc',
+          a: from,
+          b: to,
+          cx: ox,
+          cy: oy,
+          radius,
+          startAngle: a1,
+          endAngle: a2,
+          counterclockwise: diff < 0,
+        })
+        continue
+      }
+    }
+
+    preparedEdges.push({
+      kind: 'line',
+      a: from,
+      b: to,
+    })
   }
 
   // Frame the main tree plus the relocated cluster. Every other ascendancy
@@ -291,7 +344,6 @@ function rebuildGeometry() {
     if (p.x > maxX) maxX = p.x
     if (p.y > maxY) maxY = p.y
   }
-  buildRings()
 
   if (framed) {
     // One node's own width, so a single selected node is centred rather than
@@ -363,45 +415,7 @@ function frameState(state: NodeState): 'unallocated' | 'canAllocate' | 'allocate
   return 'canAllocate'
 }
 
-/**
- * Collect the orbit rings that should be drawn.
- *
- * A ring needs at least two nodes to be worth drawing, and its centre comes from
- * the official group data. When the group belongs to the relocated ascendancy
- * cluster its centre is reprojected with the same transform its nodes got, or
- * the ring would be drawn where the nodes no longer are.
- */
-function buildRings() {
-  const byGroupOrbit = new Map<string, { group: number; orbit: number; nodes: { id: number; point: Pt }[] }>()
-  for (const [id, point] of positions) {
-    const node = props.tree.nodes[id]
-    if (!node || !node.orbit || node.orbit < 1 || node.group == null) continue
-    const key = `${node.group}:${node.orbit}`
-    const bucket = byGroupOrbit.get(key)
-    if (bucket) bucket.nodes.push({ id, point })
-    else byGroupOrbit.set(key, { group: node.group, orbit: node.orbit, nodes: [{ id, point }] })
-  }
 
-  const relocated = props.ascendancy ? clusters.get(props.ascendancy) : null
-  rings = []
-  for (const { group, orbit, nodes: members } of byGroupOrbit.values()) {
-    if (members.length < 2) continue
-    const raw = TREE_GEOMETRY.groups[String(group)]
-    if (!raw) continue
-    let centre: Pt = { x: raw[0], y: raw[1] }
-    const node = props.tree.nodes[members[0].id]
-    if (relocated && node?.ascendancyName === props.ascendancy) {
-      centre = {
-        x: mainCentre.x + (centre.x - relocated.centre.x) * ascScale,
-        y: mainCentre.y + (centre.y - relocated.centre.y) * ascScale,
-      }
-    }
-    const nodes = members
-      .map((m) => ({ id: m.id, angle: Math.atan2(m.point.y - centre.y, m.point.x - centre.x) }))
-      .sort((a, b) => a.angle - b.angle)
-    rings.push({ centre, orbit, nodes })
-  }
-}
 
 function fitToContent() {
   const canvas = canvasEl.value
@@ -493,16 +507,8 @@ function draw() {
   // without it a hand-picked tree shows its nodes ringed in gold but no route
   // between them, which is the one thing the rings are there to let you trace.
   //
-  // The atlas's third state, LineConnectorIntermediate, is NOT a lit one: its
-  // texels measure the same brightness as Normal (mean 24.4 against 24.6, peak
-  // 85 against 102) where Active measures 106 with 74% of pixels above 60. So
-  // alpha separates the two tiers instead.
-  const connector = index?.lines.LineConnectorNormal
-  const connectorActive = index?.lines.LineConnectorActive
   /** Lit but a touch softer, so "still to take" reads apart from "already taken". */
   const WANTED_ALPHA = 0.82
-  const connectorThick = connector && index ? connector.h / index.atlases.line.scale : 0
-  const lineImage = art?.images.line
   // The class start and the ascendancy start are always allocated in game,
   // whether or not the build's node list mentions them, so they anchor the
   // highlight on their own.
@@ -516,117 +522,108 @@ function draw() {
    */
   const treeOf = (id: number) => props.tree.nodes[id]?.ascendancyName ?? null
 
-  /*
-   * Orbit rings, as four 90-degree tiles about the group centre.
-   *
-   * The tiles are quarter arcs with the arc's centre at the tile's bottom-right
-   * corner and a radius equal to the tile's side, which is why the tile side
-   * measures the same as the orbit radius. Four 90-degree rotations therefore
-   * close into a full ring — measured at 100% angular coverage.
-   *
-   * Only the tile facing the path is lit, so an allocated route shows as lit
-   * arcs along its own ring rather than the whole circle glowing. The tile drawn
-   * unrotated covers 180-270 degrees about the centre, so quadrant q covers
-   * 180+90q onwards.
-   */
-  if (lineImage && index) {
-    const lineScale = index.atlases.line.scale
-    const quadrantOf = (angle: number) => {
-      const deg = (angle * 180) / Math.PI
-      return Math.floor((((deg - 180) % 360) + 360) % 360 / 90)
-    }
-    for (const ring of rings) {
-      const base = index.lines[`Orbit${ring.orbit}Normal`]
-      if (!base) continue
-      const size = base.w / lineScale
-      // Zoomed out a small ring is a few pixels of arc, and thousands of those
-      // read as noise rather than as guides.
-      if (size * scale < 16) continue
-      const litRect = index.lines[`Orbit${ring.orbit}Active`] ?? base
-
-      // Which quarter-tiles the path runs through, taken and wanted alike but
-      // recorded separately so the two can be drawn at different strengths.
-      const lit = new Set<number>()
-      const count = ring.nodes.length
-      for (let i = 0; i < count; i++) {
-        const from = ring.nodes[i]
-        const to = ring.nodes[(i + 1) % count]
-        // With exactly two nodes the wrap-around is the same pair again.
-        if (count === 2 && i === count - 1) continue
-        const onPath = (taken(from.id) && taken(to.id)) || (wanted(from.id) && wanted(to.id))
-        if (!onPath || treeOf(from.id) !== treeOf(to.id)) continue
-        // Walk the shorter way round and mark every quadrant it passes through.
-        let delta = to.angle - from.angle
-        while (delta > Math.PI) delta -= Math.PI * 2
-        while (delta < -Math.PI) delta += Math.PI * 2
-        const steps = Math.max(2, Math.ceil(Math.abs(delta) / 0.3))
-        for (let k = 0; k <= steps; k++) lit.add(quadrantOf(from.angle + (delta * k) / steps))
-      }
-
-      for (let q = 0; q < 4; q++) {
-        const rect = lit.has(q) ? litRect : base
-        ctx.save()
-        ctx.translate(ring.centre.x, ring.centre.y)
-        ctx.rotate((q * Math.PI) / 2)
-        ctx.drawImage(lineImage, rect.x, rect.y, rect.w, rect.h, -size, -size, size, size)
-        ctx.restore()
-      }
-    }
-  }
-
-  /** Nodes sharing a group and orbit are joined by the ring, not a band. */
-  const onSameOrbit = (a: number, b: number) => {
-    const na = props.tree.nodes[a]
-    const nb = props.tree.nodes[b]
-    return na != null && nb != null && na.group === nb.group && na.orbit === nb.orbit && !!na.orbit
-  }
-
-  if (lineImage && connector && connectorActive && index) {
-    for (const [a, b] of edges) {
-      const pa = positions.get(a)!
-      const pb = positions.get(b)!
-      if (
+  const inView = (edge: PreparedEdge) => {
+    if (edge.kind === 'line') {
+      const pa = positions.get(edge.a)!
+      const pb = positions.get(edge.b)!
+      return !(
         (pa.x < viewMinX && pb.x < viewMinX) ||
         (pa.x > viewMaxX && pb.x > viewMaxX) ||
         (pa.y < viewMinY && pb.y < viewMinY) ||
         (pa.y > viewMaxY && pb.y > viewMaxY)
       )
-        continue
-      // The ring already draws this link, and a straight chord across it would
-      // sit on top of the curve.
-      if (onSameOrbit(a, b)) continue
-      const dx = pb.x - pa.x
-      const dy = pb.y - pa.y
-      const len = Math.hypot(dx, dy)
-      if (len < 1) continue
-      const sameTree = treeOf(a) === treeOf(b)
-      const onTakenPath = sameTree && taken(a) && taken(b)
-      const onWantedPath = sameTree && !onTakenPath && wanted(a) && wanted(b)
-      const rect = onTakenPath || onWantedPath ? connectorActive : connector
-      ctx.save()
-      ctx.globalAlpha = onWantedPath ? WANTED_ALPHA : 1
-      ctx.translate(pa.x, pa.y)
-      ctx.rotate(Math.atan2(dy, dx))
-      ctx.drawImage(lineImage, rect.x, rect.y, rect.w, rect.h, 0, -connectorThick / 2, len, connectorThick)
-      ctx.restore()
+    } else {
+      return !(
+        edge.cx + edge.radius < viewMinX ||
+        edge.cx - edge.radius > viewMaxX ||
+        edge.cy + edge.radius < viewMinY ||
+        edge.cy - edge.radius > viewMaxY
+      )
     }
-  } else {
-    ctx.lineWidth = 1 / scale
-    for (const [a, b] of edges) {
-      const pa = positions.get(a)!
-      const pb = positions.get(b)!
-      const sameTree = treeOf(a) === treeOf(b)
-      const both = sameTree && taken(a) && taken(b)
-      ctx.strokeStyle = both
-        ? 'rgba(240,186,88,0.95)'
-        : sameTree && wanted(a) && wanted(b)
-          ? 'rgba(214,168,74,0.8)'
-          : 'rgba(122,136,176,0.7)'
-      ctx.beginPath()
-      ctx.moveTo(pa.x, pa.y)
-      ctx.lineTo(pb.x, pb.y)
-      ctx.stroke()
+  }
+
+  function addEdgeToPath(path: Path2D, edge: PreparedEdge) {
+    if (edge.kind === 'line') {
+      const pa = positions.get(edge.a)!
+      const pb = positions.get(edge.b)!
+      path.moveTo(pa.x, pa.y)
+      path.lineTo(pb.x, pb.y)
+    } else {
+      path.moveTo(
+        edge.cx + edge.radius * Math.cos(edge.startAngle),
+        edge.cy + edge.radius * Math.sin(edge.startAngle),
+      )
+      path.arc(edge.cx, edge.cy, edge.radius, edge.startAngle, edge.endAngle, edge.counterclockwise)
     }
+  }
+
+  const normalPath = new Path2D()
+  const wantedPath = new Path2D()
+  const takenPath = new Path2D()
+
+  let hasNormal = false
+  let hasWanted = false
+  let hasTaken = false
+
+  for (const edge of preparedEdges) {
+    if (!inView(edge)) continue
+    const sameTree = treeOf(edge.a) === treeOf(edge.b)
+    const onTaken = sameTree && taken(edge.a) && taken(edge.b)
+    const onWanted = sameTree && !onTaken && wanted(edge.a) && wanted(edge.b)
+    if (onTaken) {
+      addEdgeToPath(takenPath, edge)
+      hasTaken = true
+    } else if (onWanted) {
+      addEdgeToPath(wantedPath, edge)
+      hasWanted = true
+    } else {
+      addEdgeToPath(normalPath, edge)
+      hasNormal = true
+    }
+  }
+
+  // Width in tree coordinates. When zoomed far out, scale up slightly so lines don't vanish into sub-pixel dust.
+  const baseThick = 14
+  const drawWidth = Math.max(baseThick, 1.8 / scale)
+  const drawGap = Math.max(5.5, drawWidth * 0.42)
+
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+
+  // 1. Normal unallocated paths: twin bronze rails with dark inner channel
+  if (hasNormal) {
+    ctx.lineWidth = drawWidth
+    ctx.strokeStyle = '#625232'
+    ctx.stroke(normalPath)
+
+    ctx.lineWidth = drawGap
+    ctx.strokeStyle = '#0e0d0a'
+    ctx.stroke(normalPath)
+  }
+
+  // 2. Wanted / planned paths: warm gold twin rails
+  if (hasWanted) {
+    ctx.save()
+    ctx.globalAlpha = WANTED_ALPHA
+    ctx.lineWidth = drawWidth
+    ctx.strokeStyle = '#d4a23f'
+    ctx.stroke(wantedPath)
+
+    ctx.lineWidth = drawGap
+    ctx.strokeStyle = '#fff0ba'
+    ctx.stroke(wantedPath)
+    ctx.restore()
+  }
+
+  // 3. Taken / allocated paths: brilliant glowing gold
+  if (hasTaken) {
+    ctx.lineWidth = drawWidth
+    ctx.strokeStyle = '#fcde86'
+    ctx.stroke(takenPath)
+
+    ctx.lineWidth = drawGap
+    ctx.strokeStyle = '#fffbe8'
+    ctx.stroke(takenPath)
   }
 
   // ---- nodes -------------------------------------------------------------
@@ -640,6 +637,25 @@ function draw() {
     if (node.isKeystone) return 2
     if (node.isNotable) return 1
     return 0
+  }
+
+  // Mastery patterns are the client's background flourish: a swirl much larger
+  // than the node itself that sits UNDER everything — the official layout even
+  // parks some masteries directly under a notable's ring. Draw every pattern
+  // before any node so that layering holds, dimmed by allocation state.
+  const MASTERY_FLOURISH = 220
+  for (const { node, pos } of ordered) {
+    if (!node.activeEffectImage) continue
+    const rect = index?.masteries[node.activeEffectImage]
+    if (!rect) continue
+    const half = MASTERY_FLOURISH / 2
+    if (pos.x + half < viewMinX || pos.x - half > viewMaxX || pos.y + half < viewMinY || pos.y - half > viewMaxY)
+      continue
+    const state = stateOf(node)
+    ctx.save()
+    ctx.globalAlpha = state === 'allocated' ? 0.42 : state === 'canAllocate' ? 0.46 : state === 'planned' ? 0.3 : 0.18
+    blit(ctx, 'mastery-effect-active', rect, pos.x, pos.y, MASTERY_FLOURISH)
+    ctx.restore()
   }
 
   for (const { node, pos } of ordered) {
@@ -720,14 +736,16 @@ function draw() {
     const iconSize = (inset ?? drawSize) * shrink
     const discSize = mastery ? frameSize * 0.98 : iconSize
     if (mastery) {
-      ctx.save()
-      ctx.beginPath()
-      ctx.arc(pos.x, pos.y, discSize / 2, 0, Math.PI * 2)
-      ctx.clip()
-      // Only the lit set ships, so an unallocated mastery is dimmed instead.
-      if (!lit) ctx.globalAlpha = 0.55
-      blit(ctx, 'mastery-effect-active', mastery, pos.x, pos.y, discSize)
-      ctx.restore()
+      // Allocated masteries fill their disc brightly; unallocated ones rely on
+      // the dim under-layer flourish drawn earlier plus the bare frame.
+      if (lit) {
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(pos.x, pos.y, discSize / 2, 0, Math.PI * 2)
+        ctx.clip()
+        blit(ctx, 'mastery-effect-active', mastery, pos.x, pos.y, discSize)
+        ctx.restore()
+      }
     } else if (entry) {
       const iconRect = lit ? entry.allocated : entry.unallocated
       if (iconRect) {
@@ -827,10 +845,15 @@ function pickNode(world: Pt): TreeNode | null {
         const pos = positions.get(id)!
         const dx = pos.x - world.x
         const dy = pos.y - world.y
-        const d = dx * dx + dy * dy
+        // The official layout stacks some masteries directly under another
+        // node's ring; whatever is visible on top should win the hover, so
+        // masteries only take the pick when nothing else is as close.
+        const node = props.tree.nodes[id]
+        const hidden = !!node?.activeEffectImage && !node.isNotable && !node.isKeystone
+        const d = (dx * dx + dy * dy) * (hidden ? 2.25 : 1)
         if (d < bestDist) {
           bestDist = d
-          best = props.tree.nodes[id] ?? null
+          best = node ?? null
         }
       }
     }

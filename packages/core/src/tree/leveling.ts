@@ -33,12 +33,20 @@ export function resolveStartNode(tree: TreeData, className: string | null): numb
  * connected to the main tree and come back as `unreachable` (they are bought
  * in the labyrinth, not pathed to).
  *
- * The graph uses every explicit `connections` entry, NOT the length-filtered
- * drawable edges: class start nodes carry a misplaced group reference in the
- * data, so their edges would be wrongly dropped by visual filtering, and in
- * game any allocated node is a valid path.
+ * `edges` is the graph to walk, and it has to be supplied rather than read from
+ * `node.connections`: that field only carries part of the real graph (worst
+ * around the class starts, where a walk over `connections` alone stalls after a
+ * handful of nodes), so a plan built on it misorders the early steps. Callers
+ * pass the same edge set they display, exactly as for
+ * {@link validateTreeSelection}; omitted, the function falls back to
+ * `node.connections`, which keeps small synthetic trees workable.
  */
-export function buildLevelingPlan(tree: TreeData, targetNodes: number[], startNodeId: number | null): LevelingPlan {
+export function buildLevelingPlan(
+  tree: TreeData,
+  targetNodes: number[],
+  startNodeId: number | null,
+  edges?: readonly (readonly [number, number])[],
+): LevelingPlan {
   const allocated = new Set<number>(startNodeId != null ? [startNodeId] : [])
   // Ascendancy nodes are bought in the labyrinth; their data often carries a
   // connector line into the main tree, so exclude them from pathing outright.
@@ -60,8 +68,12 @@ export function buildLevelingPlan(tree: TreeData, targetNodes: number[], startNo
     adjacency.get(a)!.push(b)
     adjacency.get(b)!.push(a)
   }
-  for (const node of Object.values(tree.nodes)) {
-    for (const c of node.connections ?? []) link(node.id, c.id)
+  if (edges) {
+    for (const [a, b] of edges) link(a, b)
+  } else {
+    for (const node of Object.values(tree.nodes)) {
+      for (const c of node.connections ?? []) link(node.id, c.id)
+    }
   }
 
   const steps: LevelingStep[] = []

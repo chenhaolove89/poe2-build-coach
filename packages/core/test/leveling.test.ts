@@ -49,6 +49,26 @@ describe('buildLevelingPlan (small synthetic chain)', () => {
     const plan = buildLevelingPlan(MINI, [1, 2, 3], 1)
     expect(plan.steps.map((s) => s.nodeId)).toEqual([2, 3])
   })
+
+  it('routes over explicit edges when they are supplied', () => {
+    // A direct start→far edge lets the plan skip the mid node entirely: it is
+    // not a target and no longer sits on the path.
+    const plan = buildLevelingPlan(MINI, [3], 1, [
+      [1, 2],
+      [2, 3],
+      [1, 3],
+    ])
+    expect(plan.steps.map((s) => s.nodeId)).toEqual([3])
+  })
+
+  it('matches the connections fallback when handed that same set as pairs', () => {
+    const pairs = Object.values(MINI.nodes).flatMap((n: any) =>
+      (n.connections ?? []).map((c: any) => [n.id, c.id] as [number, number]),
+    )
+    const withEdges = buildLevelingPlan(MINI, [3], 1, pairs)
+    const fallback = buildLevelingPlan(MINI, [3], 1)
+    expect(withEdges.steps.map((s) => s.nodeId)).toEqual(fallback.steps.map((s) => s.nodeId))
+  })
 })
 
 describe('buildLevelingPlan (real build, 158 targets)', () => {
