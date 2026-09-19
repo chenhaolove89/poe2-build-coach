@@ -16,7 +16,7 @@ import type { BuildSnapshot, GameItem, TreeData } from '@poe2coach/core'
 import TreePanel from './components/TreePanel.vue'
 import ResistancePanel from './components/ResistancePanel.vue'
 import GearPanel from './components/GearPanel.vue'
-import LevelingPanel from './components/LevelingPanel.vue'
+import LevelingPage from './components/LevelingPage.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import MapsPanel from './components/MapsPanel.vue'
 import PricePanel from './components/PricePanel.vue'
@@ -69,7 +69,14 @@ const builds = ref<StoredBuild[]>(loadBuilds())
 const activeSet = computed(() => new Set(build.value?.passiveNodes ?? []))
 const gameItems = computed<GameItem[]>(() => (build.value?.items ?? []).map((i) => parseItemText(i.text)))
 const plan = computed(() =>
-  build.value ? buildLevelingPlan(tree, build.value.passiveNodes, resolveStartNode(tree, build.value.className)) : null,
+  build.value
+    ? buildLevelingPlan(
+        tree,
+        build.value.passiveNodes,
+        resolveStartNode(tree, build.value.className),
+        treeEdges(),
+      )
+    : null,
 )
 const progressSet = computed(() => {
   const n = currentPoints.value
@@ -126,11 +133,22 @@ function loadDemo() {
    * allocated. Starting from an arbitrary keystone instead — which this used to
    * do — produces a cluster with no route back to the start, and the save-time
    * connectivity check then reports every node as an orphan.
+   *
+   * The walk uses the official edge list, not `node.connections`: that field is
+   * sparsest around the class starts, where a BFS on it alone stalls after a
+   * couple dozen nodes and the "sample" comes out a stub.
    */
+  const adjacency = new Map<number, number[]>()
+  for (const [a, b] of treeEdges()) {
+    if (!adjacency.has(a)) adjacency.set(a, [])
+    if (!adjacency.has(b)) adjacency.set(b, [])
+    adjacency.get(a)!.push(b)
+    adjacency.get(b)!.push(a)
+  }
   const startNode = resolveStartNode(tree, 'Witch')
   const picked: number[] = []
   const seen = new Set<number>()
-  const queue: number[] = startNode != null ? [startNode] : [Number(Object.keys(tree.nodes)[0])]
+  const queue: number[] = [startNode ?? Number(Object.keys(tree.nodes)[0])]
   while (queue.length > 0 && picked.length < 80) {
     const id = queue.shift()!
     if (seen.has(id)) continue
@@ -140,7 +158,7 @@ function loadDemo() {
     if (!node || node.isMastery || node.ascendancyName) continue
     seen.add(id)
     picked.push(id)
-    for (const c of node.connections ?? []) queue.push(c.id)
+    for (const next of adjacency.get(id) ?? []) queue.push(next)
   }
   const demo: BuildSnapshot = {
     className: 'Witch',
@@ -544,7 +562,7 @@ function setLevel(level: number | null) {
       <button class="card feature" :disabled="!hasBuild" @click="view = 'leveling'">
         <h3>📈 {{ t('升级') }}</h3>
         <p class="desc">
-          {{ hasBuild ? t(`${plan!.steps.length} 步逐级点法 · 输入点数看进度`) : t('先导入一份 Build') }}
+          {{ hasBuild ? t('剧情跑图路线 · 永久奖励清单 · 逐级点法') : t('先导入一份 Build') }}
         </p>
         <p class="go">{{ t('进入') }} →</p>
       </button>
@@ -569,7 +587,7 @@ function setLevel(level: number | null) {
 
       <button class="card feature" @click="view = 'settings'">
         <h3>⚙️ {{ t('设置') }}</h3>
-        <p class="desc">{{ t('切换国际服 / 国服 / 台服，切换简体与繁体') }}</p>
+        <p class="desc">{{ t('切换国际服 / 国服 / 台服；国服在这里关联登录') }}</p>
         <p class="go">{{ t('进入') }} →</p>
       </button>
 
@@ -627,7 +645,13 @@ function setLevel(level: number | null) {
     </main>
 
     <main v-else-if="view === 'leveling'" class="centered">
-      <LevelingPanel v-model:currentPoints="currentPoints" :tree="tree" :build="build!" :plan="plan!" />
+      <LevelingPage
+        v-model:currentPoints="currentPoints"
+        :tree="tree"
+        :build="build!"
+        :plan="plan!"
+        @open-tree="view = 'tree'"
+      />
     </main>
 
     <main v-else-if="view === 'maps'" class="centered">

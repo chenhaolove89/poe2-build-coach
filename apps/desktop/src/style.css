@@ -25,3 +25,18 @@ body.overlay-window {
   background: transparent;
 }
 
+/*
+ * The campaign panel window is a solid little card, not transparent. The body
+ * paints the same dark as the panel so the rounded corners sit on color, and
+ * #app insets the panel a little so the window's own shadow stays visible.
+ */
+body.campaign-overlay-window {
+  background: #0d1017;
+}
+
+body.campaign-overlay-window #app {
+  height: 100vh;
+  padding: 6px;
+  box-sizing: border-box;
+}
+

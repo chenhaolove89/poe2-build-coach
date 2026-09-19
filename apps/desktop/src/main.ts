@@ -1,16 +1,23 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import TreeOverlay from './components/TreeOverlay.vue'
+import CampaignOverlay from './components/CampaignOverlay.vue'
 import './style.css'
 
 /**
- * The overlay is its own window at `index.html?overlay=tree`, so it renders only
- * the tree — with a transparent body, because the game has to show through it.
+ * Overlay windows live at `index.html?overlay=…` and render one component each:
+ * the tree reference over a transparent body (the game shows through), and the
+ * campaign checklist as a small solid card. Both share localStorage with the
+ * main window, which is how they see the build and the campaign progress.
  */
-const isOverlay = new URLSearchParams(location.search).get('overlay') === 'tree'
-if (isOverlay) document.body.classList.add('overlay-window')
+const overlayView = new URLSearchParams(location.search).get('overlay')
+const isTreeOverlay = overlayView === 'tree'
+const isCampaignOverlay = overlayView === 'campaign'
+if (isTreeOverlay) document.body.classList.add('overlay-window')
+if (isCampaignOverlay) document.body.classList.add('campaign-overlay-window')
 
-const app = createApp(isOverlay ? TreeOverlay : App)
+const root = isTreeOverlay ? TreeOverlay : isCampaignOverlay ? CampaignOverlay : App
+const app = createApp(root)
 
 // Surface fatal errors on-screen instead of a silent black canvas.
 app.config.errorHandler = (err, _instance, info) => {

@@ -22,6 +22,9 @@ const LOGIN_LABEL: &str = "realm-login";
 /// The passive-tree overlay the player summons over the game.
 const OVERLAY_LABEL: &str = "tree-overlay";
 
+/// The campaign checklist pinned over the game during the acts.
+const CAMPAIGN_LABEL: &str = "campaign-overlay";
+
 /// Hot keys to show and hide the overlay, tried in order until one registers.
 ///
 /// A bare F8 was the first choice and it is already taken on at least one
@@ -119,20 +122,20 @@ async fn close_login_window(app: AppHandle) -> Result<(), String> {
 /// Size of the overlay card, in logical pixels.
 const OVERLAY_SIZE: (f64, f64) = (560.0, 470.0);
 
-/// Where the overlay first appears: top-right, clear of the game's own HUD.
+/// Where a top-right overlay first appears, clear of the game's own HUD.
 ///
 /// A card rather than a full screen. It used to cover the whole monitor so it
 /// could be lined up with the game's tree, and that could not work: the app
 /// cannot know how the game has panned or zoomed its tree, so the two never
 /// matched. Showing only the region the selection sits in needs no lining up —
 /// it is a reference the player parks somewhere and reads.
-fn overlay_origin(app: &AppHandle) -> (f64, f64) {
+fn top_right_origin(app: &AppHandle, size: (f64, f64)) -> (f64, f64) {
     let margin = 24.0;
     match app.primary_monitor() {
         Ok(Some(monitor)) => {
             let scale = monitor.scale_factor();
             let logical_width = monitor.size().width as f64 / scale;
-            ((logical_width - OVERLAY_SIZE.0 - margin).max(margin), margin)
+            ((logical_width - size.0 - margin).max(margin), margin)
         }
         _ => (margin, margin),
     }
@@ -165,7 +168,7 @@ async fn toggle_tree_overlay(app: AppHandle) -> Result<bool, String> {
         return Ok(!visible);
     }
 
-    let (x, y) = overlay_origin(&app);
+    let (x, y) = top_right_origin(&app, OVERLAY_SIZE);
     let window = WebviewWindowBuilder::new(
         &app,
         OVERLAY_LABEL,
@@ -201,6 +204,55 @@ async fn set_overlay_click_through(app: AppHandle, click_through: bool) -> Resul
         .map_err(|e| e.to_string())
 }
 
+/// Size of the campaign panel, in logical pixels.
+const CAMPAIGN_SIZE: (f64, f64) = (330.0, 400.0);
+
+/// Show or hide the campaign checklist panel, creating it on first use.
+///
+/// A small companion for the acts: always on top of the game, frameless, and
+/// never focusable — clicking its buttons must not pull the game out of the
+/// foreground, so the whole window is made unfocusable after creation and every
+/// click lands like a sticky note, not like switching apps. The game still has
+/// to be in windowed or borderless mode, as for the tree overlay.
+///
+/// Whether the panel can be dragged is the panel's own decision: its header is
+/// a `data-tauri-drag-region` only while unlocked, which needs
+/// `core:window:allow-start-dragging` — granted to this window alone in
+/// capabilities/campaign-overlay.json, alongside allow-hide for its × button.
+#[tauri::command]
+async fn toggle_campaign_overlay(app: AppHandle) -> Result<bool, String> {
+    if let Some(existing) = app.get_webview_window(CAMPAIGN_LABEL) {
+        let visible = existing.is_visible().unwrap_or(false);
+        if visible {
+            existing.hide().map_err(|e| e.to_string())?;
+        } else {
+            existing.show().map_err(|e| e.to_string())?;
+        }
+        return Ok(!visible);
+    }
+
+    let (x, y) = top_right_origin(&app, CAMPAIGN_SIZE);
+    let window = WebviewWindowBuilder::new(
+        &app,
+        CAMPAIGN_LABEL,
+        WebviewUrl::App("index.html?overlay=campaign".into()),
+    )
+    .title("PoE2 Build Coach campaign")
+    .decorations(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .shadow(true)
+    .resizable(false)
+    .focused(false)
+    .position(x, y)
+    .inner_size(CAMPAIGN_SIZE.0, CAMPAIGN_SIZE.1)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    let _ = window.set_focusable(false);
+    Ok(true)
+}
+
 /// The key that actually shows and hides the overlay, or `None` if every
 /// candidate was taken — the UI falls back to its own button then.
 #[tauri::command]
@@ -215,6 +267,46 @@ async fn tree_overlay_visible(app: AppHandle) -> Result<bool, String> {
         .get_webview_window(OVERLAY_LABEL)
         .map(|w| w.is_visible().unwrap_or(false))
         .unwrap_or(false))
+}
+
+/// Read plain text from the system clipboard in the background without stealing focus.
+#[tauri::command]
+fn read_clipboard_text() -> Result<String, String> {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::System::DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard};
+        use windows_sys::Win32::System::Memory::{GlobalLock, GlobalUnlock};
+
+        const CF_UNICODETEXT: u32 = 13;
+
+        unsafe {
+            if OpenClipboard(std::ptr::null_mut()) == 0 {
+                return Ok(String::new());
+            }
+            let handle = GetClipboardData(CF_UNICODETEXT);
+            if handle.is_null() {
+                CloseClipboard();
+                return Ok(String::new());
+            }
+            let ptr = GlobalLock(handle) as *const u16;
+            if ptr.is_null() {
+                CloseClipboard();
+                return Ok(String::new());
+            }
+            let mut len = 0;
+            while *ptr.add(len) != 0 {
+                len += 1;
+            }
+            let text = String::from_utf16_lossy(std::slice::from_raw_parts(ptr, len));
+            GlobalUnlock(handle);
+            CloseClipboard();
+            Ok(text)
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        Ok(String::new())
+    }
 }
 
 fn main() {
@@ -263,9 +355,11 @@ fn main() {
             read_session_cookie,
             close_login_window,
             toggle_tree_overlay,
+            toggle_campaign_overlay,
             set_overlay_click_through,
             tree_overlay_visible,
             overlay_hotkey,
+            read_clipboard_text,
             logtail::find_client_log,
             logtail::read_log_from,
             logtail::read_log_tail

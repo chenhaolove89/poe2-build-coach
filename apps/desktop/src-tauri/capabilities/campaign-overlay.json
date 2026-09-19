@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "campaign-overlay",
+  "description": "The in-game campaign checklist panel. It invokes exactly three things itself: start_dragging for its unlock-to-move header (the lock switch is the panel's own toggle), hide for its close button, and set_size to fit the window to the current act's route map. No network, no filesystem.",
+  "windows": ["campaign-overlay"],
+  "permissions": ["core:window:allow-start-dragging", "core:window:allow-hide", "core:window:allow-set-size"]
+}
