@@ -11,9 +11,10 @@
 //!
 //! - **It cannot be hardcoded.** The log lives in `<install dir>\logs\Client.txt`,
 //!   next to the executable, and the install dir depends on the distributor
-//!   (Steam, GGG's own installer, WeGame on 国服). So it is discovered: first by
-//!   asking the running game process where its executable is, then by checking
-//!   the usual install roots and Steam's library list.
+//!   (Steam, the Epic Games Store, GGG's own installer, WeGame on 国服). So it is
+//!   discovered: first by asking the running game process where its executable
+//!   is, then by checking the usual install roots, Steam's library list and
+//!   Epic's manifest records.
 //! - **It is written continuously while the game runs**, so reads are
 //!   incremental from a remembered byte offset. A trailing fragment without a
 //!   newline yet is left for the next read rather than parsed as a short line.
@@ -122,6 +123,8 @@ fn candidates() -> Vec<String> {
         }
     }
 
+    out.extend(epic_logs());
+
     out.extend(wegame_logs());
 
     // The crash logs live under Documents, so check there too in case a build
@@ -193,6 +196,61 @@ fn wegame_logs() -> Vec<String> {
                         out.push(nested.path().join("logs").join("Client.txt").to_string_lossy().to_string());
                     }
                 }
+            }
+        }
+    }
+    out
+}
+
+/// Log paths of Epic Games Store installs.
+///
+/// Epic is one of the international client's storefronts, alongside Steam and
+/// GGG's own installer. Its launcher records every installed game as a JSON
+/// `.item` manifest under the ProgramData data dir, and the manifest's
+/// `InstallLocation` is the game folder. The game is recognised by name with
+/// spaces squeezed out, because the store id (`PathOfExile2`) and the display
+/// name (`Path of Exile 2`) differ only in that.
+fn epic_logs() -> Vec<String> {
+    let base = match std::env::var("ProgramData") {
+        Ok(base) => base,
+        Err(_) => return Vec::new(),
+    };
+    epic_logs_in(&format!("{base}\\Epic\\EpicGamesLauncher\\Data\\Manifests"))
+}
+
+/// The readable half of `epic_logs`, split out so tests can feed a directory.
+fn epic_logs_in(dir: &str) -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for entry in entries.flatten() {
+        if entry.path().extension().and_then(|e| e.to_str()) != Some("item") {
+            continue;
+        }
+        let Ok(text) = std::fs::read_to_string(entry.path()) else {
+            continue;
+        };
+        let Ok(json) = serde_json::from_str::<serde_json::Value>(&text) else {
+            continue;
+        };
+        let is_poe = ["DisplayName", "AppName"].iter().any(|key| {
+            json.get(key)
+                .and_then(|v| v.as_str())
+                .map(|s| s.replace(' ', "").to_ascii_lowercase().contains("pathofexile"))
+                .unwrap_or(false)
+        });
+        if !is_poe {
+            continue;
+        }
+        if let Some(location) = json.get("InstallLocation").and_then(|v| v.as_str()) {
+            // Some manifests store forward slashes; Windows accepts either,
+            // but the mixed result reads wrong and dedup_paths would treat
+            // the two spellings as different directories.
+            let location = location.replace('/', "\\");
+            let location = location.trim_end_matches('\\');
+            if !location.is_empty() {
+                out.push(format!("{location}\\logs\\Client.txt"));
             }
         }
     }
@@ -359,6 +417,44 @@ mod tests {
         let out = steam_libraries(&file.to_string_lossy());
         let _ = std::fs::remove_file(&file);
         out
+    }
+
+    #[test]
+    fn epic_manifests_recognise_both_name_spellings_and_trim_the_location() {
+        let dir = std::env::temp_dir().join("poe2coach-logtail-epic");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("a.item"),
+            r#"{"InstallLocation": "C:\\Program Files\\Epic Games\\PathOfExile2\\", "DisplayName": "Path of Exile 2"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("b.item"),
+            r#"{"InstallLocation": "D:/Games/PoE2", "AppName": "PathOfExile2"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join("c.item"),
+            r#"{"InstallLocation": "E:\\Somewhere", "DisplayName": "Some Other Game"}"#,
+        )
+        .unwrap();
+        std::fs::write(dir.join("d.item"), "not json at all").unwrap();
+
+        let out = epic_logs_in(&dir.to_string_lossy());
+        assert_eq!(
+            out,
+            vec![
+                "C:\\Program Files\\Epic Games\\PathOfExile2\\logs\\Client.txt",
+                "D:\\Games\\PoE2\\logs\\Client.txt",
+            ]
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn epic_logs_without_the_launcher_dir_are_empty_not_an_error() {
+        assert!(epic_logs_in("Z:\\definitely-not-here\\Manifests").is_empty());
     }
 
     #[test]
