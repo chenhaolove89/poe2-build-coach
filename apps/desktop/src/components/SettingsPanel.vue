@@ -79,8 +79,11 @@ const steps = computed(() => report.value?.steps ?? [])
 const verdict = computed(() => (report.value ? stashVerdict(report.value.steps) : null))
 const VERDICT_TEXT: Record<string, string> = {
   served: '拿到仓库结构了 —— PoE2 的仓库可以读,"今日净值差"这条路走得通。(items 为空只是那一页没东西,不是失败。)',
-  badparams: '路由通、凭证也通,它只是在拒绝请求的参数(400 Invalid query)。这不是"接口关着",是"还没调对"—— 离能用很近,继续试参数就有结果。',
-  refused: '被拒了(401/403)。对照是 200 说明凭证没问题,那么是接口对 PoE2 关着。',
+  'no-data':
+    '身份自检通过(故意无效的联赛被 400 拒绝,说明账号名是对的),但正式读取全部 404 —— 这套 character-window 是 PoE1 的遗留系统,连这个账号的 PoE1 仓库都不返回,PoE2 仓库数据不在里面。国服的"快照差值"没有官方接口可走。',
+  'identity-rejected':
+    '403 权限被拒绝 —— 请求里的账号名和登录身份不是同一个。账号名正常会从页面头部自动抓取(它带着游戏里看不见的 #编号),抓不到才用手填的那个;把账号名清空、重新「关联登录」一次再试。',
+  refused: '被拒了(401)。对照搜索也 401 就是会话过期或没带上,重新关联登录;对照是 200 而只有仓库 401,那是接口本身关着。',
   unknown: '没拿到明确答复。若全是 200 却带 HTML,那是凭证过期;重新关联一次再试。',
 }
 
@@ -241,7 +244,7 @@ const LINK_STATE_TEXT: Record<LinkProgress, string> = {
         </label>
         <label class="mini">
           <span class="dim">{{ t('账号名') }}</span>
-          <input v-model="probeAccount" spellcheck="false" :placeholder="t('留空则自动取')" />
+          <input v-model="probeAccount" spellcheck="false" :placeholder="t('会自动从页面头部抓取,留空即可')" />
         </label>
         <button :disabled="!probeReady || probing" @click="runProbe">
           {{ probing ? t('测试中…') : t('测试仓库接口') }}
@@ -249,7 +252,7 @@ const LINK_STATE_TEXT: Record<LinkProgress, string> = {
       </div>
       <p v-if="!desktop" class="state warn">{{ t('需要桌面版:浏览器会被跨域策略拦掉。') }}</p>
       <p v-else-if="needsCredential" class="state warn">
-        {{ t('先在上面「关联登录」或粘贴 POESESSID —— 没有凭证跑这个测试,四步都会返回 401,那个 401 说明不了任何事。') }}
+        {{ t('先在上面「关联登录」或粘贴 POESESSID —— 没有凭证跑这个测试,每一步都会返回 401,那个 401 说明不了任何事。') }}
       </p>
       <p v-if="probeError" class="state err">{{ t(probeError) }}</p>
 
