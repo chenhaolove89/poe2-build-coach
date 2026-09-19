@@ -36,6 +36,7 @@ import {
 import type { StoredTreePreset } from './treePresetStore'
 import { treeEdges } from './treeArt'
 import { realm } from './settings'
+import { initCampaignFollow } from './campaignFollow'
 import mapsJson from '@poe2coach/data/maps.json'
 
 const MAP_COUNT = (mapsJson as unknown as { maps: unknown[] }).maps.length
@@ -65,6 +66,10 @@ const error = ref<string | null>(null)
 const build = ref<BuildSnapshot | null>(null)
 const currentPoints = ref<number | null>(null)
 const builds = ref<StoredBuild[]>(loadBuilds())
+
+// The campaign guide follows the client log for the app's lifetime; only the
+// main window runs it (the overlay windows re-use this entry point).
+initCampaignFollow()
 
 const activeSet = computed(() => new Set(build.value?.passiveNodes ?? []))
 const gameItems = computed<GameItem[]>(() => (build.value?.items ?? []).map((i) => parseItemText(i.text)))

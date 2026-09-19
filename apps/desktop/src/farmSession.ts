@@ -10,7 +10,7 @@
  * What is deliberately *not* here: the display language, the currency labels and
  * the formatting. Those belong to the page.
  */
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import {
   buildSession,
   emptyFollow,
@@ -24,6 +24,7 @@ import {
 import type { CompletedTrade, FollowState, GameItem, LedgerEntry } from '@poe2coach/core'
 import { readClipboardText, readLogFrom, readLogTail, rememberLogPath, savedLogPath } from './farmClient'
 import { isDesktopRuntime } from './tradeClient'
+import { realmId } from './settings'
 
 /**
  * How much of the log to read back when a session starts.
@@ -64,6 +65,19 @@ const seenTradeIds = new Set<string>()
 let lastClipboard = ''
 
 let timer: number | null = null
+
+/**
+ * A realm switch means a different game install, so whatever log is being
+ * followed belongs to a client the player is no longer looking at. Stop rather
+ * than keep recording the wrong client; the other realm's path is found when a
+ * new session starts.
+ */
+watch(realmId, () => {
+  if (farm.following) {
+    stopFarmSession()
+    farm.notice = '服务器已切换，日志记录已停止。重新开始会读取当前服务器的客户端。'
+  }
+})
 
 /** Start following the log at `path`, resuming from the area already loaded. */
 export async function startFarmSession(path: string): Promise<void> {

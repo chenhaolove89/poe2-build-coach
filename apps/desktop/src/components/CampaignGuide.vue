@@ -14,6 +14,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { t } from '../i18n'
 import { toggleCampaignOverlay, OverlayUnsupported } from '../overlayClient'
+import { campaignFollow } from '../campaignFollow'
 import ZoneMap from './ZoneMap.vue'
 import {
   CAMPAIGN_ACTS,
@@ -38,6 +39,27 @@ import {
 const acts = CAMPAIGN_ACTS
 
 const props = defineProps<{ level: number | null }>()
+
+// ------------------------------------------------------------------ log following
+
+/**
+ * What the log follower is up to, as one status line. The follower writes the
+ * shared pointer and this window reads its reactive state directly — a window
+ * never gets `storage` events for its own writes.
+ */
+const followLine = computed(() => {
+  const key = campaignFollow.zoneKey
+  if (!key) return campaignFollow.error ? `${t('自动跟随未就绪')}:${t(campaignFollow.error)}` : null
+  for (const act of acts) {
+    const index = act.zones.findIndex((z) => zoneKey(act, z) === key)
+    if (index !== -1) {
+      const zone = act.zones[index]
+      const name = zone.zh ? t(zone.zh) : zone.en
+      return `${t('自动跟随')}:${t('当前在')} ${name} (${act.zh} · ${index + 1}/${act.zones.length})`
+    }
+  }
+  return null
+})
 
 // ------------------------------------------------------------------ checked zones
 
@@ -374,6 +396,7 @@ function chipOf(r: CampaignReward): Chip {
         {{ t('已跑过') }} {{ doneZones }} / {{ totalZones }} {{ t('个区域 · 其中') }} {{ donePoints }} / {{ pointTotal }} {{ t('点剧情天赋已到手') }}。
         {{ t('数据基于国际服') }} {{ CAMPAIGN_GAME_VERSION }}{{ t('，勾选进度保存在本机。') }}
       </p>
+      <p v-if="followLine" class="dim small">{{ followLine }}</p>
       <p v-if="pinError" class="dim small">{{ pinError }}</p>
       <div class="io-row">
         <button class="io-btn" @click="doExport">⬆ {{ t('导出进度') }}</button>

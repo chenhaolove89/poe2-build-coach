@@ -28,6 +28,15 @@ export function t(text: string): string {
 }
 
 /**
+ * The Simplified text as Traditional, unconditionally — for building the
+ * campaign follower's name index, which must answer to a 台服 client's
+ * spellings no matter which variant the reader has chosen.
+ */
+export function toHant(text: string): string {
+  return converter.toTraditional(text)
+}
+
+/**
  * Chinese text produced by a client that writes `lang`. A no-op for the English
  * realm, and for a reader who already reads that realm's own variant. Accepts
  * nullish so templates can pass `item.name ?? item.base` straight in.

@@ -9,8 +9,19 @@
 import { invoke } from '@tauri-apps/api/core'
 import type { LogChunk } from '@poe2coach/core'
 import { isDesktopRuntime } from './tradeClient'
+import { realmId } from './settings'
 
-const PATH_KEY = 'poe2coach.clientLog'
+/**
+ * The remembered log path, one per realm.
+ *
+ * The realms are different installs with different paths (国服 under WeGame's
+ * tree, international under Steam's or GGG's), so a single remembered path is
+ * wrong for whichever realm the player is not in at the moment. Each realm gets
+ * its own key; the pre-realm key `poe2coach.clientLog` is still read as a
+ * fallback so an existing player does not lose their setting on upgrade.
+ */
+const PATH_KEY_PREFIX = 'poe2coach.clientLog.'
+const LEGACY_PATH_KEY = 'poe2coach.clientLog'
 
 export class LogUnsupported extends Error {
   constructor() {
@@ -19,18 +30,31 @@ export class LogUnsupported extends Error {
   }
 }
 
-export function savedLogPath(): string {
+export function savedLogPathExact(): string {
   try {
-    return localStorage.getItem(PATH_KEY) ?? ''
+    return localStorage.getItem(PATH_KEY_PREFIX + realmId.value) ?? ''
   } catch {
     return ''
   }
 }
 
+/** The one global path the pre-realm version wrote, if any. */
+export function savedLogPathLegacy(): string {
+  try {
+    return localStorage.getItem(LEGACY_PATH_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+export function savedLogPath(): string {
+  return savedLogPathExact() || savedLogPathLegacy()
+}
+
 export function rememberLogPath(path: string): void {
   try {
-    if (path) localStorage.setItem(PATH_KEY, path)
-    else localStorage.removeItem(PATH_KEY)
+    if (path) localStorage.setItem(PATH_KEY_PREFIX + realmId.value, path)
+    else localStorage.removeItem(PATH_KEY_PREFIX + realmId.value)
   } catch {
     /* storage disabled — the path just will not persist */
   }
