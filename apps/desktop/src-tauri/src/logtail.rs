@@ -157,10 +157,17 @@ fn dedup_paths(paths: Vec<String>) -> Vec<String> {
 /// known WeGame roots are listed one and two levels deep and every folder is
 /// tested for a `logs\Client.txt` — the folder's name does not matter, only that
 /// the log is where the executable is.
+///
+/// The roots are scanned across all usual drive letters, not just the system
+/// drive: WeGame installs wherever it was pointed, and a real machine had it in
+/// `E:\腾讯游戏\WeGame` with the games beside it — a root set pinned to `C:`
+/// found nothing there once the game was closed and the process lookup with it.
 fn wegame_logs() -> Vec<String> {
     let mut roots = Vec::new();
-    if let Ok(drive) = std::env::var("SystemDrive") {
-        roots.push(format!("{drive}\\WeGameApps"));
+    for drive in ["C", "D", "E", "F", "G", "H"] {
+        roots.push(format!("{drive}:\\WeGameApps"));
+        roots.push(format!("{drive}:\\腾讯游戏"));
+        roots.push(format!("{drive}:\\WeGame"));
     }
     for key in ["ProgramFiles(x86)", "ProgramFiles"] {
         if let Ok(base) = std::env::var(key) {
