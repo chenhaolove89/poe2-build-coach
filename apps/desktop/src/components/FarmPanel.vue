@@ -51,6 +51,8 @@ import {
 const VISIT_ROWS = 60
 
 const desktop = isDesktopRuntime()
+/** Discovery came up empty: the manual-paste fallback is the one thing left. */
+const pathNeeded = ref(false)
 
 const session = computed(() =>
   farm.startedAt == null ? null : buildSession(farm.follow.events, { startedAt: farm.startedAt }),
@@ -217,12 +219,16 @@ async function handlePendingClipboard(kind: 'income' | 'cost') {
  * Runs when the page opens and when the realm changes, so the player does not
  * press 自动查找 every time: the realms are different installs, and the
  * running game's own directory — discovery's first answer — is the one path
- * that is right on every distributor.
+ * that is right on every distributor. Coming up empty is what surfaces the
+ * manual-paste field; a found log surfaces nothing.
  */
 async function autoFind(): Promise<void> {
   if (!desktop || farm.following) return
   if (!farm.path.trim()) farm.path = savedLogPath()
-  if (farm.path.trim()) return
+  if (farm.path.trim()) {
+    pathNeeded.value = false
+    return
+  }
   try {
     const found = await findClientLog()
     if (found) {
@@ -230,7 +236,7 @@ async function autoFind(): Promise<void> {
       rememberLogPath(found)
     }
   } finally {
-    /* nothing to report here: 开始记录 re-runs this and speaks up on failure */
+    pathNeeded.value = !farm.path.trim()
   }
 }
 
@@ -247,11 +253,12 @@ async function start() {
   if (!farm.path.trim()) await autoFind()
   const target = farm.path.trim()
   if (!target) {
-    farm.error = t('没找到游戏日志。游戏开着时再点一次「开始记录」会重新查找;或手动粘贴 Client.txt 的完整路径。')
+    farm.error = t('没找到游戏日志。游戏开着时再点一次「开始记录」会重新查找;或在下面手动粘贴 Client.txt 的完整路径。')
     return
   }
   try {
     await startFarmSession(target)
+    pathNeeded.value = false
   } catch (e) {
     farm.error = String(e)
   }
@@ -349,16 +356,6 @@ watch(realmId, () => {
 <template>
   <div class="farm">
     <div class="bar">
-      <label class="field wide">
-        <span class="dim">{{ t('客户端日志') }}</span>
-        <input
-          v-model="farm.path"
-          class="path"
-          spellcheck="false"
-          :placeholder="t('游戏安装目录\\logs\\Client.txt')"
-          :disabled="farm.following"
-        />
-      </label>
       <span class="spacer" />
       <button v-if="!farm.following" class="primary" :disabled="!desktop" @click="start">
         {{ t('开始记录') }}
@@ -367,6 +364,17 @@ watch(realmId, () => {
       <button :disabled="farm.following" :title="t('用一段编造的日志看这一页长什么样')" @click="preview">
         {{ t('示例预览') }}
       </button>
+    </div>
+    <div v-if="pathNeeded && !farm.following" class="bar path-fallback">
+      <label class="field wide">
+        <span class="dim">{{ t('没自动找到,手动粘贴 Client.txt 路径') }}</span>
+        <input
+          v-model="farm.path"
+          class="path"
+          spellcheck="false"
+          :placeholder="t('游戏安装目录\\logs\\Client.txt')"
+        />
+      </label>
     </div>
 
     <div class="body">
@@ -638,6 +646,10 @@ watch(realmId, () => {
 .path:focus {
   outline: none;
   border-color: #e8b04b;
+}
+.path-fallback {
+  background: #241f14;
+  border-bottom-color: #4a3f22;
 }
 .spacer {
   flex: 1;
