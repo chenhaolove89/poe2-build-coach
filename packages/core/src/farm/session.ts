@@ -10,8 +10,35 @@
  */
 import { areaKindOf, isScreenName } from './logEvents.js'
 import type { LogEvent } from './logEvents.js'
+import type { LedgerEntry } from './ledger.js'
 
 export type AreaKind = 'map' | 'hideout' | 'other'
+
+export interface CompletedTrade {
+  id: string
+  at: number
+  direction: 'incoming' | 'outgoing'
+  character: string
+  item: string
+  amount: number
+  currency: string
+  league: string
+}
+
+export function tradeToLedgerEntry(trade: CompletedTrade): LedgerEntry {
+  return {
+    id: `trade-${trade.id}`,
+    at: trade.at,
+    label:
+      trade.direction === 'incoming'
+        ? `出售: ${trade.item} (${trade.character})`
+        : `购买: ${trade.item} (${trade.character})`,
+    amount: trade.amount,
+    currency: trade.currency,
+    kind: trade.direction === 'incoming' ? 'income' : 'cost',
+    source: 'trade',
+  }
+}
 
 export interface AreaVisit {
   /** English area code from `Generating level …`, when one was seen. */
@@ -45,6 +72,8 @@ export interface FarmSession {
   restarts: number
   /** Loading time that could not be tied to any visit. */
   looseLoadingMs: number
+  /** Successfully concluded peer-to-peer trades. */
+  trades: CompletedTrade[]
 }
 
 export interface FarmSummary {
@@ -90,12 +119,14 @@ export function buildSession(events: readonly LogEvent[], options: { startedAt?:
     levelUps: [],
     restarts: 0,
     looseLoadingMs: 0,
+    trades: [],
   }
 
   /** Code and level from the most recent `Generating level …` line. */
   let pendingCode: string | null = null
   let pendingLevel: number | null = null
   let current: AreaVisit | null = null
+  const pendingWhispers: Extract<LogEvent, { kind: 'tradeWhisper' }>[] = []
   /**
    * Display name -> kind, learned the first time that area was generated.
    *
@@ -174,6 +205,39 @@ export function buildSession(events: readonly LogEvent[], options: { startedAt?:
 
       case 'levelUp':
         session.levelUps.push({ at: event.at, level: event.level })
+        break
+
+      case 'tradeWhisper':
+        pendingWhispers.push(event)
+        break
+
+      case 'tradeAccepted': {
+        // Trade completed. Look back up to 10 minutes for the most recent whisper.
+        const cutoff = event.at - 10 * 60_000
+        let matchedIdx = -1
+        for (let i = pendingWhispers.length - 1; i >= 0; i--) {
+          if (pendingWhispers[i].at >= cutoff && pendingWhispers[i].at <= event.at) {
+            matchedIdx = i
+            break
+          }
+        }
+        if (matchedIdx >= 0) {
+          const matched = pendingWhispers.splice(matchedIdx, 1)[0]
+          session.trades.push({
+            id: `${event.at}-${matched.character}`,
+            at: event.at,
+            direction: matched.direction,
+            character: matched.character,
+            item: matched.item,
+            amount: matched.amount,
+            currency: matched.currency,
+            league: matched.league,
+          })
+        }
+        break
+      }
+
+      case 'tradeCancelled':
         break
     }
   }

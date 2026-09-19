@@ -123,6 +123,7 @@ export function parseItemText(text: string): GameItem {
     ward: null,
     rune: null,
     sockets: null,
+    stackSize: null,
     mods: [],
     rawText: text,
   }
@@ -198,7 +199,9 @@ export function parseItemText(text: string): GameItem {
           if (isValueLine(value)) item.ward = firstNumber(value)
           continue
         case 'spirit':
+          continue
         case 'stackSize':
+          item.stackSize = firstNumber(value)
           continue
         case 'implicits':
           pendingImplicits = firstNumber(value) ?? 0

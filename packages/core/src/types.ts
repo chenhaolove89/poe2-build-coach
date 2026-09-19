@@ -149,6 +149,7 @@ export interface GameItem {
   ward: number | null
   rune: string | null
   sockets: string | null
+  stackSize?: number | null
   mods: ItemMod[]
   rawText: string
 }

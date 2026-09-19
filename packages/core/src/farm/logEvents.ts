@@ -36,6 +36,20 @@ export type LogEvent =
   | { kind: 'loading'; at: number; name: string; seconds: number }
   | { kind: 'death'; at: number }
   | { kind: 'levelUp'; at: number; level: number }
+  /** Peer-to-peer trade whisper (asking to buy an item or buying from someone). */
+  | {
+      kind: 'tradeWhisper'
+      at: number
+      direction: 'incoming' | 'outgoing'
+      character: string
+      item: string
+      amount: number
+      currency: string
+      league: string
+      raw: string
+    }
+  | { kind: 'tradeAccepted'; at: number }
+  | { kind: 'tradeCancelled'; at: number }
 
 /**
  * `2026/06/29 22:18:37`, optionally with a millisecond fraction. Read as local
@@ -64,6 +78,35 @@ const DEATH = /has been slain|已被击杀|你已死亡|你被击杀/
 
 /** `: Name is now level 42` — again English-only, for the same reason. */
 const LEVEL_UP = / is now level (\d+)/
+
+const TRADE_ACCEPTED = /^:?\s*Trade accepted\.?$/i
+const TRADE_CANCELLED = /^:?\s*Trade cancelled\.?$/i
+
+/**
+ * Trade whisper patterns:
+ * English: @From Character: Hi, I would like to buy your Item listed for 5 divine in Standard (stash tab ...)
+ * Chinese 1: @来自 角色: 你好，我想购买你的 物品 标价为 5 神圣石 于 赛季 (仓库页 ...)
+ * Chinese 2: @来自 角色: 你好，我想购买你在 赛季 标价为 5 神圣石 的 物品 (仓库页 ...)
+ */
+const WHISPER_EN =
+  /^@(From|To)\s+(?:<[^>]+>\s+)?([^:]+):\s*(?:Hi,\s*)?I\s+(?:would like|d like)\s+to buy your\s+(.+?)\s+listed for\s+([\d.]+)\s+(.+?)\s+in\s+([^(]+?)(?:\s*\(.*)?$/i
+
+const WHISPER_ZH_1 =
+  /^@(来自|來自|向)\s+(?:<[^>]+>\s+)?([^:]+):\s*(?:你好[，,]\s*)?我想(?:购买|購買|买|買)?\s*(?:你的)?\s*(.+?)\s*(?:标价为|標價為|标价|標價|标为|標為|售价为|售價為)\s*([\d.]+)\s*(.+?)\s*[于於]\s*([^(]+?)(?:\s*\(.*)?$/i
+
+const WHISPER_ZH_2 =
+  /^@(来自|來自|向)\s+(?:<[^>]+>\s+)?([^:]+):\s*(?:你好[，,]\s*)?我想(?:购买|購買|买|買)?\s*你在\s*(.+?)\s*(?:标价为|標價為|标价|標價|标为|標為|售价为|售價為)\s*([\d.]+)\s*(.+?)\s*的\s*(.+?)(?:\s*\(.*)?$/i
+
+export function normalizeCurrency(raw: string): string {
+  const s = raw.trim().toLowerCase()
+  if (/^(?:divine(?: orb|s)?|神圣石?|神聖石?)$/i.test(s)) return 'divine'
+  if (/^(?:chaos(?: orb)?|混沌石?)$/i.test(s)) return 'chaos'
+  if (/^(?:exalted(?: orb)?|exalt|崇高石?)$/i.test(s)) return 'exalted'
+  if (/^(?:mirror(?: of kalandra)?|卡兰德的魔镜|卡蘭德的魔鏡|魔镜|魔鏡)$/i.test(s)) return 'mirror'
+  if (/^(?:alch(?:emy)?|orb of alchemy|点金石?|點金石?)$/i.test(s)) return 'alch'
+  if (/^(?:regal(?: orb)?|富豪石?)$/i.test(s)) return 'regal'
+  return s
+}
 
 /** Area display names that are screens rather than places. */
 const NOT_AN_AREA = new Set(['(null)', '(unknown)', 'null', 'unknown'])
@@ -132,6 +175,57 @@ export function parseLogLine(line: string): LogEvent | null {
 
   const level = LEVEL_UP.exec(msg)
   if (level) return { kind: 'levelUp', at, level: Number(level[1]) }
+
+  if (TRADE_ACCEPTED.test(msg)) return { kind: 'tradeAccepted', at }
+  if (TRADE_CANCELLED.test(msg)) return { kind: 'tradeCancelled', at }
+
+  const whisperEn = WHISPER_EN.exec(msg)
+  if (whisperEn) {
+    const direction = whisperEn[1].toLowerCase() === 'from' ? 'incoming' : 'outgoing'
+    return {
+      kind: 'tradeWhisper',
+      at,
+      direction,
+      character: whisperEn[2].trim(),
+      item: whisperEn[3].trim(),
+      amount: Number(whisperEn[4]),
+      currency: normalizeCurrency(whisperEn[5]),
+      league: whisperEn[6].trim(),
+      raw: msg,
+    }
+  }
+
+  const whisperZh1 = WHISPER_ZH_1.exec(msg)
+  if (whisperZh1) {
+    const direction = whisperZh1[1] === '向' ? 'outgoing' : 'incoming'
+    return {
+      kind: 'tradeWhisper',
+      at,
+      direction,
+      character: whisperZh1[2].trim(),
+      item: whisperZh1[3].trim(),
+      amount: Number(whisperZh1[4]),
+      currency: normalizeCurrency(whisperZh1[5]),
+      league: whisperZh1[6].trim(),
+      raw: msg,
+    }
+  }
+
+  const whisperZh2 = WHISPER_ZH_2.exec(msg)
+  if (whisperZh2) {
+    const direction = whisperZh2[1] === '向' ? 'outgoing' : 'incoming'
+    return {
+      kind: 'tradeWhisper',
+      at,
+      direction,
+      character: whisperZh2[2].trim(),
+      item: whisperZh2[6].trim(),
+      amount: Number(whisperZh2[4]),
+      currency: normalizeCurrency(whisperZh2[5]),
+      league: whisperZh2[3].trim(),
+      raw: msg,
+    }
+  }
 
   return null
 }

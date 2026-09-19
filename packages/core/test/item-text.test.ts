@@ -132,4 +132,32 @@ describe('item comparison for gear swaps', () => {
     expect(diff.added).toHaveLength(1)
     expect(diff.removed).toHaveLength(0)
   })
+
+  it('parses currency items and extracts stackSize in EN and ZH', () => {
+    const enCurrency = [
+      'Item Class: Stackable Currency',
+      'Rarity: Currency',
+      'Divine Orb',
+      '--------',
+      'Stack Size: 2/20',
+      '--------',
+      'Right click this item then left click a rare item to reroll the values of all its random explicit modifiers.',
+    ].join('\n')
+    const itemEn = parse('Item Class: Stackable Currency\nRarity: Currency\nDivine Orb\n--------\nStack Size: 2/20')
+    expect(itemEn.rarity).toBe('CURRENCY')
+    expect(itemEn.base).toBe('Divine Orb')
+    expect(itemEn.stackSize).toBe(2)
+
+    const zhCurrency = [
+      '物品类别: 可堆叠通货',
+      '稀有度: 通货',
+      '神圣石',
+      '--------',
+      '堆叠数量: 5/20',
+    ].join('\n')
+    const itemZh = parse(zhCurrency)
+    expect(itemZh.rarity).toBe('CURRENCY')
+    expect(itemZh.base).toBe('神圣石')
+    expect(itemZh.stackSize).toBe(5)
+  })
 })

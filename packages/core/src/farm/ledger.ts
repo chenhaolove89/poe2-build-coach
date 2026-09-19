@@ -18,6 +18,7 @@ export interface LedgerEntry {
   amount: number
   currency: string
   kind: 'income' | 'cost'
+  source?: 'drop' | 'trade' | 'manual'
 }
 
 export interface LedgerSummary {
@@ -29,6 +30,9 @@ export interface LedgerSummary {
   /** Net per wall-clock hour of the session. */
   netPerHour: number
   entries: number
+  dropIncome: number
+  tradeIncome: number
+  tradeCost: number
   /** Currencies other than {@link currency}, kept visible rather than converted. */
   others: { currency: string; count: number }[]
 }
@@ -47,10 +51,19 @@ export function summariseLedger(entries: readonly LedgerEntry[], windowMs: numbe
   const currency = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null
   let income = 0
   let cost = 0
+  let dropIncome = 0
+  let tradeIncome = 0
+  let tradeCost = 0
   for (const entry of entries) {
     if (entry.currency !== currency) continue
-    if (entry.kind === 'income') income += entry.amount
-    else cost += entry.amount
+    if (entry.kind === 'income') {
+      income += entry.amount
+      if (entry.source === 'trade') tradeIncome += entry.amount
+      else dropIncome += entry.amount
+    } else {
+      cost += entry.amount
+      if (entry.source === 'trade') tradeCost += entry.amount
+    }
   }
 
   const net = income - cost
@@ -62,6 +75,9 @@ export function summariseLedger(entries: readonly LedgerEntry[], windowMs: numbe
     net,
     netPerHour: hours > 0 ? net / hours : 0,
     entries: entries.length,
+    dropIncome,
+    tradeIncome,
+    tradeCost,
     others: [...counts.entries()]
       .filter(([c]) => c !== currency)
       .map(([c, count]) => ({ currency: c, count }))

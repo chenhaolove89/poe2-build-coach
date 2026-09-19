@@ -6,13 +6,15 @@ import {
   emptyFollow,
   ingestChunk,
   isScreenName,
+  normalizeCurrency,
   parseLogLine,
   parseLogLines,
   resumeEvents,
   summariseLedger,
   summariseSession,
+  tradeToLedgerEntry,
 } from '../src/index.js'
-import type { LedgerEntry, LogChunk, LogEvent } from '../src/index.js'
+import type { CompletedTrade, LedgerEntry, LogChunk, LogEvent } from '../src/index.js'
 
 /** Build a log line the way the client writes it, from a base time in seconds. */
 function line(base: number, seconds: number, message: string): string {
@@ -400,5 +402,166 @@ describe('log to summary, end to end', () => {
     expect(s.netMapMs).toBe(167_500)
     expect(s.loadingMs).toBe(6000)
     expect(s.otherMs).toBe(66_500)
+  })
+})
+
+describe('trade whisper and p2p trade parsing', () => {
+  it('normalizes common currency names', () => {
+    expect(normalizeCurrency('divine')).toBe('divine')
+    expect(normalizeCurrency('Divine Orb')).toBe('divine')
+    expect(normalizeCurrency('神圣石')).toBe('divine')
+    expect(normalizeCurrency('神聖石')).toBe('divine')
+    expect(normalizeCurrency('chaos')).toBe('chaos')
+    expect(normalizeCurrency('混沌石')).toBe('chaos')
+    expect(normalizeCurrency('exalted')).toBe('exalted')
+    expect(normalizeCurrency('崇高石')).toBe('exalted')
+    expect(normalizeCurrency('mirror')).toBe('mirror')
+    expect(normalizeCurrency('卡兰德的魔镜')).toBe('mirror')
+  })
+
+  it('parses English trade whispers (incoming and outgoing)', () => {
+    const incoming = line(
+      T0,
+      10,
+      '@From <PRO> Slayer: Hi, I would like to buy your Tabula Rasa Simple Robe listed for 5 divine in Standard (stash tab "~b/o 5 divine"; position: left 2, top 3)',
+    )
+    expect(parseLogLine(incoming)).toEqual({
+      kind: 'tradeWhisper',
+      at: T0 + 10_000,
+      direction: 'incoming',
+      character: 'Slayer',
+      item: 'Tabula Rasa Simple Robe',
+      amount: 5,
+      currency: 'divine',
+      league: 'Standard',
+      raw: expect.any(String),
+    })
+
+    const outgoing = line(
+      T0,
+      20,
+      '@To Merchant: Hi, I would like to buy your Headhunter Heavy Belt listed for 50 divine in Settlers',
+    )
+    expect(parseLogLine(outgoing)).toMatchObject({
+      kind: 'tradeWhisper',
+      direction: 'outgoing',
+      character: 'Merchant',
+      item: 'Headhunter Heavy Belt',
+      amount: 50,
+      currency: 'divine',
+      league: 'Settlers',
+    })
+  })
+
+  it('parses Chinese trade whispers (国服 & 台服)', () => {
+    const cn1 = line(
+      T0,
+      10,
+      '@来自 <NB> 狂战士: 你好，我想购买你的 破晓之剑 标价为 2.5 神圣石 于 裂隙赛季 (仓库页 "出售"; 位置: 靠左 1, 靠顶 1)',
+    )
+    expect(parseLogLine(cn1)).toEqual({
+      kind: 'tradeWhisper',
+      at: T0 + 10_000,
+      direction: 'incoming',
+      character: '狂战士',
+      item: '破晓之剑',
+      amount: 2.5,
+      currency: 'divine',
+      league: '裂隙赛季',
+      raw: expect.any(String),
+    })
+
+    const cn2 = line(
+      T0,
+      15,
+      '@向 老王: 你好，我想购买你在 奥杜尔秘符 标价为 10 混沌石 的 禁断之肉 (仓库页 "买卖")',
+    )
+    expect(parseLogLine(cn2)).toMatchObject({
+      kind: 'tradeWhisper',
+      direction: 'outgoing',
+      character: '老王',
+      item: '禁断之肉',
+      amount: 10,
+      currency: 'chaos',
+      league: '奥杜尔秘符',
+    })
+
+    const tw = line(
+      T0,
+      20,
+      '@來自 傲嬌法師: 你好，我想購買你的 烈炎之翼 標價為 1 神聖石 於 降臨 (倉庫頁 "賣"; 位置: 靠左 2, 靠頂 3)',
+    )
+    expect(parseLogLine(tw)).toMatchObject({
+      kind: 'tradeWhisper',
+      direction: 'incoming',
+      character: '傲嬌法師',
+      item: '烈炎之翼',
+      amount: 1,
+      currency: 'divine',
+      league: '降臨',
+    })
+  })
+
+  it('parses trade accepted and trade cancelled lines', () => {
+    expect(parseLogLine(line(T0, 30, 'Trade accepted.'))).toEqual({ kind: 'tradeAccepted', at: T0 + 30_000 })
+    expect(parseLogLine(line(T0, 31, ': Trade accepted.'))).toEqual({ kind: 'tradeAccepted', at: T0 + 31_000 })
+    expect(parseLogLine(line(T0, 32, 'Trade cancelled.'))).toEqual({ kind: 'tradeCancelled', at: T0 + 32_000 })
+  })
+
+  it('reconciles whisper with trade accepted in buildSession', () => {
+    const lines = [
+      line(T0, 0, 'Generating level 1 area "HideoutShoreline" with seed 1'),
+      line(T0, 0, '[SCENE] Set Source [藏身处：海岸]'),
+      line(T0, 10, '@来自 买家A: 你好，我想购买你的 崇高之愿 标价为 10 神圣石 于 奥杜尔秘符'),
+      line(T0, 45, 'Trade accepted.'),
+      line(T0, 60, '@向 卖家B: 你好，我想购买你的 门票 标价为 2 神圣石 于 奥杜尔秘符'),
+      line(T0, 80, 'Trade accepted.'),
+    ]
+    const session = buildSession(parseLogLines(lines), { startedAt: T0 })
+    expect(session.trades).toHaveLength(2)
+
+    expect(session.trades[0]).toMatchObject({
+      direction: 'incoming',
+      character: '买家A',
+      item: '崇高之愿',
+      amount: 10,
+      currency: 'divine',
+    })
+
+    expect(session.trades[1]).toMatchObject({
+      direction: 'outgoing',
+      character: '卖家B',
+      item: '门票',
+      amount: 2,
+      currency: 'divine',
+    })
+
+    // Convert to ledger entries
+    const entry0 = tradeToLedgerEntry(session.trades[0])
+    expect(entry0).toMatchObject({
+      kind: 'income',
+      amount: 10,
+      currency: 'divine',
+      source: 'trade',
+      label: '出售: 崇高之愿 (买家A)',
+    })
+
+    const entry1 = tradeToLedgerEntry(session.trades[1])
+    expect(entry1).toMatchObject({
+      kind: 'cost',
+      amount: 2,
+      currency: 'divine',
+      source: 'trade',
+      label: '购买: 门票 (卖家B)',
+    })
+
+    // Ledger summary handles source breakdown
+    const summary = summariseLedger([entry0, entry1], 3600_000)
+    expect(summary.income).toBe(10)
+    expect(summary.cost).toBe(2)
+    expect(summary.net).toBe(8)
+    expect(summary.tradeIncome).toBe(10)
+    expect(summary.tradeCost).toBe(2)
+    expect(summary.dropIncome).toBe(0)
   })
 })
