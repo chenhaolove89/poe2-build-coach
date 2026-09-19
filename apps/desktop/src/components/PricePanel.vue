@@ -141,7 +141,7 @@ async function onCheck() {
     return
   }
   if (needsSession.value) {
-    queryError.value = t('国服需要在设置里填入登录后的 POESESSID 才能查询。')
+    queryError.value = t('国服需要登录后才能查询，请在设置里点「关联登录」。')
     emit('openSettings')
     return
   }
@@ -208,7 +208,7 @@ const isUnique = computed(() => (item.value?.rarity ?? '').toUpperCase() === 'UN
     </div>
 
     <div v-else-if="needsSession" class="notice warn">
-      {{ t('国服交易站不对外开放匿名查询。请在「设置」里填入登录 poe.game.qq.com 后的 POESESSID 再查价;下面的词缀匹配不受影响。') }}
+      {{ t('国服交易站不对外开放匿名查询。请在「设置」里完成「关联登录」再查价；下面的词缀匹配不受影响。') }}
       <button class="mini" @click="emit('openSettings')">{{ t('去设置') }}</button>
     </div>
 

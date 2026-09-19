@@ -66,3 +66,27 @@ export async function readLogTail(path: string, bytes: number): Promise<LogChunk
   if (!isDesktopRuntime()) throw new LogUnsupported()
   return invoke<LogChunk>('read_log_tail', { path, bytes })
 }
+
+/**
+ * Read plain text from the system clipboard.
+ * Uses Rust native Win32 clipboard in desktop runtime (allowing background reads without focus),
+ * falling back to navigator.clipboard.readText() in browser environments.
+ */
+export async function readClipboardText(): Promise<string> {
+  if (isDesktopRuntime()) {
+    try {
+      const text = await invoke<string>('read_clipboard_text')
+      if (text) return text
+    } catch {
+      /* fallback below */
+    }
+  }
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+    try {
+      return await navigator.clipboard.readText()
+    } catch {
+      return ''
+    }
+  }
+  return ''
+}

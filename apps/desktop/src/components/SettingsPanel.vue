@@ -1,20 +1,22 @@
 <script setup lang="ts">
 /**
- * Realm and login settings.
+ * Realm selection, and the login the one gated realm needs.
  *
- * The display language is not offered here: it follows the realm, because a
- * realm's client only writes one script (see `Realm.reading`). One switch
- * instead of two also means the two can never disagree, which they silently
- * could before — matching used the realm's pack while the UI showed the other
- * script.
+ * There is deliberately nothing else. Everything the tool can decide on its own
+ * it does without a setting: the credential is cached when the player links
+ * their login, the display language follows the realm (a realm's client only
+ * writes one script — see `Realm.reading`), and the league list is fetched from
+ * a public endpoint. A settings page should only hold real choices.
+ *
+ * Manual cookie pasting survives as a collapsed fallback for when the login
+ * window cannot open — but it is the escape hatch, not the path.
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { REALMS, REALM_IDS, type RealmId } from '@poe2coach/core'
 import { t } from '../i18n'
-import { cnSession, realmId, selectRealm, setCnSession, zhVariant } from '../settings'
+import { cnSession, realmId, selectRealm, setCnSession } from '../settings'
 import { linkRealmSession, SessionLinkError, type LinkProgress } from '../sessionLink'
-import { probeStashAccess, stashVerdict, type ProbeReport, type ProbeStep } from '../stashProbe'
-import { fetchLeagues, isDesktopRuntime, savedLeague } from '../tradeClient'
+import { isDesktopRuntime } from '../tradeClient'
 
 const draft = ref(cnSession.value)
 const saved = ref(false)
@@ -27,74 +29,6 @@ const desktop = isDesktopRuntime()
 const active = computed(() => REALMS[realmId.value])
 /** The one realm whose trade site will not answer without a login. */
 const needsSession = computed(() => active.value.loginRequired)
-
-// ------------------------------------------------------------- 仓库接口诊断
-
-const probeLeague = ref(savedLeague() ?? '')
-const probeAccount = ref('')
-const probing = ref(false)
-const probeError = ref<string | null>(null)
-const report = ref<ProbeReport | null>(null)
-
-/**
- * Fill the league in rather than making the player type it.
- *
- * The league list is a public endpoint on all three realms, and the probe needs
- * a real league name in its query — a wrong one would come back as a search
- * failure and look like a credential problem.
- */
-onMounted(async () => {
-  if (probeLeague.value.trim() || !desktop) return
-  try {
-    probeLeague.value = (await fetchLeagues(active.value))[0] ?? ''
-  } catch {
-    /* no session yet — the field stays empty and the button stays disabled */
-  }
-})
-
-/**
- * Ask the realm, with the credential already stored, whether PoE2 gives out
- * stash contents. This is a question the docs do not answer: the API reference
- * marks the stash endpoints as PoE1 only, yet the routes are plainly still
- * there, so only a real session settles it.
- */
-async function runProbe() {
-  probing.value = true
-  probeError.value = null
-  report.value = null
-  try {
-    report.value = await probeStashAccess({
-      realm: active.value,
-      league: probeLeague.value.trim(),
-      account: probeAccount.value,
-    })
-  } catch (e) {
-    probeError.value = e instanceof Error ? e.message : String(e)
-  } finally {
-    probing.value = false
-  }
-}
-
-const steps = computed(() => report.value?.steps ?? [])
-const verdict = computed(() => (report.value ? stashVerdict(report.value.steps) : null))
-const VERDICT_TEXT: Record<string, string> = {
-  served: '拿到仓库结构了 —— PoE2 的仓库可以读,"今日净值差"这条路走得通。(items 为空只是那一页没东西,不是失败。)',
-  'no-data':
-    '身份自检通过(故意无效的联赛被 400 拒绝,说明账号名是对的),但正式读取全部 404 —— 这套 character-window 是 PoE1 的遗留系统,连这个账号的 PoE1 仓库都不返回,PoE2 仓库数据不在里面。国服的"快照差值"没有官方接口可走。',
-  'identity-rejected':
-    '403 权限被拒绝 —— 请求里的账号名和登录身份不是同一个。账号名正常会从页面头部自动抓取(它带着游戏里看不见的 #编号),抓不到才用手填的那个;把账号名清空、重新「关联登录」一次再试。',
-  refused: '被拒了(401)。对照搜索也 401 就是会话过期或没带上,重新关联登录;对照是 200 而只有仓库 401,那是接口本身关着。',
-  unknown: '没拿到明确答复。若全是 200 却带 HTML,那是凭证过期;重新关联一次再试。',
-}
-
-/**
- * Running this without a credential would be worse than not running it: every
- * step comes back 401, which reads like an answer ("the endpoint refuses PoE2")
- * when it is really just an empty request. So the button stays off until there
- * is something to send.
- */
-const needsCredential = computed(() => active.value.loginRequired && !cnSession.value)
-const probeReady = computed(() => desktop && !!probeLeague.value.trim() && !needsCredential.value)
 
 function chooseRealm(id: RealmId) {
   selectRealm(id)
@@ -132,7 +66,7 @@ async function startLink() {
     linkError.value =
       e instanceof SessionLinkError
         ? t(e.message)
-        : t('无法打开登录窗口,请改用手动粘贴。')
+        : t('无法打开登录窗口,请展开下面的手动粘贴。')
   } finally {
     linking.value = false
   }
@@ -152,9 +86,6 @@ const LINK_STATE_TEXT: Record<LinkProgress, string> = {
 
     <section class="block">
       <h3>{{ t('服务器') }}</h3>
-      <p class="hint">
-        {{ t('决定查价走哪个交易站。三个服的游戏文本语言不同，粘贴的装备要和所在服的模板匹配才能查出价格。界面语言跟着服务器自动切换，不用单独选。') }}
-      </p>
       <div class="realms">
         <button
           v-for="id in REALM_IDS"
@@ -164,152 +95,63 @@ const LINK_STATE_TEXT: Record<LinkProgress, string> = {
           @click="chooseRealm(id)"
         >
           <span class="realm-label">{{ t(REALMS[id].label) }}</span>
-          <span class="realm-op">{{ REALMS[id].operator }}</span>
-          <span class="realm-host">{{ REALMS[id].apiBase.replace('https://', '') }}</span>
+          <span class="realm-op">{{ t(REALMS[id].operator) }}</span>
           <span v-if="REALMS[id].loginRequired" class="realm-flag">{{ t('需登录') }}</span>
         </button>
       </div>
       <p class="note dim">
         <template v-if="needsSession">
-          {{ t('国服的交易站不对外开放匿名查询，实测未登录会返回 401。要在国服查价，需要填入你浏览器登录后的会话 Cookie（见下）。词缀匹配、联赛列表、物品解析都是本地或公开接口，不受影响。') }}
+          {{ t('查价走国服交易站，需要登录（见下）。界面语言随所选服务器自动切换。') }}
         </template>
         <template v-else>
-          {{ t('这个服可以直接查询，不需要登录。') }}
+          {{ t('这个服可以直接查询，不需要登录。界面语言随所选服务器自动切换。') }}
         </template>
       </p>
     </section>
 
     <section v-if="needsSession" class="block">
       <h3>{{ t('国服登录') }}</h3>
-      <p class="hint">
-        {{
-          t(
-            '国服交易站要求登录后才能查询。点下面的按钮会在一个独立窗口里打开腾讯官方的登录页,用 QQ / 微信登录后本工具自动取回会话 Cookie。',
-          )
-        }}
+      <p class="state" :class="cnSession ? 'ok' : 'warn'">
+        <template v-if="cnSession">
+          {{ t('已关联登录，可以查价。凭证只保存在本机，只用于向国服交易站做只读查询。') }}
+          <button class="mini-link" @click="clearSession">{{ t('清除') }}</button>
+        </template>
+        <template v-else>{{ t('尚未登录 —— 登录后才能查价。') }}</template>
       </p>
 
-      <div class="link-row">
-        <button class="primary wide" :disabled="!desktop || linking" @click="startLink">
-          {{ linking ? t('等待登录中…请在打开的窗口完成登录') : t('关联登录(推荐)') }}
-        </button>
-      </div>
-      <p v-if="!desktop" class="state warn">
-        {{ t('关联登录需要桌面版:它要用内嵌浏览器打开登录页。浏览器预览只能用下面的手动方式。') }}
+      <button class="primary wide" :disabled="!desktop || linking" @click="startLink">
+        {{ linking ? t(LINK_STATE_TEXT[linkProgress]) : t('关联登录') }}
+      </button>
+      <p v-if="!desktop && !linking" class="state warn">
+        {{ t('关联登录需要桌面版。也可以在浏览器登录 poe.game.qq.com 后手动粘贴 Cookie（见下）。') }}
       </p>
-      <p v-else-if="linking" class="state warn">{{ t(LINK_STATE_TEXT[linkProgress]) }}</p>
-
-      <p class="hint manual">
-        {{ t('也可以手动粘贴:在浏览器登录 poe.game.qq.com 后,按 F12 → Application/应用 → Cookies → 复制 POESESSID 的值。') }}
-      </p>
-      <div class="session">
-        <input
-          v-model="draft"
-          type="password"
-          spellcheck="false"
-          :placeholder="t('POESESSID 的值,或 POESESSID=… 整条')"
-          @keyup.enter="saveSession"
-        />
-        <button :disabled="!draft.trim()" @click="saveSession">
-          {{ saved ? t('已保存') : t('保存') }}
-        </button>
-        <button :disabled="!cnSession" @click="clearSession">{{ t('清除') }}</button>
-      </div>
       <p v-if="linkError" class="state err">{{ linkError }}</p>
 
-      <ul class="caveats">
-        <li>{{ t('打开的登录页是腾讯官方页面,账号密码只填在那一页,本工具不会接触、也无法接触。') }}</li>
-        <li>{{ t('本工具读到的只是登录后的会话 Cookie,等同于浏览器里的登录状态,请只在自己的机器上使用。') }}</li>
-        <li>{{ t('它只保存在本机,只会发给 poe.game.qq.com,不会发给其他两个服。') }}</li>
-        <li>{{ t('本工具只用它做只读查询,不会交易、不会上架、不会改任何账号数据。') }}</li>
-        <li>{{ t('会话会过期,过期后重新关联一次即可。') }}</li>
-      </ul>
-      <p v-if="cnSession" class="state ok">{{ t('已保存凭证，可以查询国服。') }}</p>
-      <p v-else class="state warn">{{ t('尚未填写，国服只能做本地词缀匹配，无法取回价格。') }}</p>
-    </section>
-
-    <section class="block">
-      <h3>{{ t('仓库接口诊断') }}</h3>
-      <p class="hint">
-        {{
-          t(
-            '「今日收益多少 D」这类数字,查价器不是从掉落算的,是定时快照你的仓库、定价、再相减。那需要读仓库,而官方文档把仓库接口标成只支持 PoE1。点下面的按钮会用你已保存的凭证实测一次,看 PoE2 到底给不给。',
-          )
-        }}
-      </p>
-      <div class="probe-row">
-        <label class="mini">
-          <span class="dim">{{ t('赛季') }}</span>
-          <input v-model="probeLeague" spellcheck="false" :placeholder="t('和查价页一致,如 奥杜尔秘符')" />
-        </label>
-        <label class="mini">
-          <span class="dim">{{ t('账号名') }}</span>
-          <input v-model="probeAccount" spellcheck="false" :placeholder="t('会自动从页面头部抓取,留空即可')" />
-        </label>
-        <button :disabled="!probeReady || probing" @click="runProbe">
-          {{ probing ? t('测试中…') : t('测试仓库接口') }}
-        </button>
-      </div>
-      <p v-if="!desktop" class="state warn">{{ t('需要桌面版:浏览器会被跨域策略拦掉。') }}</p>
-      <p v-else-if="needsCredential" class="state warn">
-        {{ t('先在上面「关联登录」或粘贴 POESESSID —— 没有凭证跑这个测试,每一步都会返回 401,那个 401 说明不了任何事。') }}
-      </p>
-      <p v-if="probeError" class="state err">{{ t(probeError) }}</p>
-
-      <div v-if="report" class="probe-steps">
-        <p class="state" :class="report.credential.attached ? 'dim' : 'err'">
-          <template v-if="report.credential.attached">
-            {{ t('本次请求带上了凭证(长度') }} {{ report.credential.length }}{{ t(')。') }}
-          </template>
-          <template v-else>{{ t('本次请求没有带上任何凭证 —— 下面全 401 是必然的。') }}</template>
+      <details class="manual">
+        <summary>{{ t('自动登录不行？手动粘贴 Cookie') }}</summary>
+        <p class="hint">
+          {{ t('在浏览器登录 poe.game.qq.com 后，按 F12 → 应用 → Cookies，复制 POESESSID 的值粘贴到这里。') }}
         </p>
-        <div v-for="s in steps" :key="s.label" class="probe-step">
-          <span class="code" :class="{ ok: s.status === 200, bad: s.status === 0 || s.status >= 400 }">
-            {{ s.status || '—' }}
-          </span>
-          <span class="what">
-            <b>{{ t(s.label) }}</b>
-            <span class="dim">{{ s.summary }}</span>
-            <span v-if="s.items != null" class="dim">
-              · items {{ s.items }}<template v-if="s.tabs != null">, tabs {{ s.tabs }}</template>
-            </span>
-            <span class="url dim">{{ s.url }}</span>
-            <span v-if="s.body" class="raw">{{ s.body }}</span>
-          </span>
+        <div class="session">
+          <input
+            v-model="draft"
+            type="password"
+            spellcheck="false"
+            :placeholder="t('POESESSID 的值,或 POESESSID=… 整条')"
+            @keyup.enter="saveSession"
+          />
+          <button :disabled="!draft.trim()" @click="saveSession">
+            {{ saved ? t('已保存') : t('保存') }}
+          </button>
         </div>
-        <p v-if="verdict" class="state" :class="verdict === 'served' ? 'ok' : 'warn'">
-          {{ t(VERDICT_TEXT[verdict]) }}
-        </p>
-      </div>
-      <p class="note dim">
-        {{ t('凭证只发给它所属的那个服,不会显示、不会记录、不会发给另外两个服。这个测试不写任何账号数据。') }}
-      </p>
-    </section>
-
-    <section class="block">
-      <h3>{{ t('当前生效') }}</h3>
-      <div class="kv">
-        <div class="kv-row"><span class="k">{{ t('交易站') }}</span><span class="v">{{ active.apiBase }}</span></div>
-        <div class="kv-row"><span class="k">{{ t('网页版') }}</span><span class="v">{{ active.siteBase }}</span></div>
-        <div class="kv-row">
-          <span class="k">{{ t('游戏文本语言') }}</span>
-          <span class="v">{{ active.lang === 'en' ? 'English' : active.lang === 'zh-Hans' ? '简体中文' : '繁體中文' }}</span>
-        </div>
-        <div class="kv-row">
-          <span class="k">{{ t('界面显示') }}</span>
-          <span class="v">{{ zhVariant === 'hans' ? '简体中文' : '繁體中文' }}</span>
-        </div>
-      </div>
-      <p class="note dim">
-        {{ t('界面语言由服务器决定：简体只在国服存在，国际服客户端自带的是繁体而不是简体，所以选了服务器就等于选了语言，两者不会不一致。') }}
-      </p>
+      </details>
     </section>
   </div>
 </template>
 
 <style scoped>
 .settings {
-  max-width: 720px;
+  max-width: 620px;
 }
 h2 {
   font-size: 16px;
@@ -326,7 +168,7 @@ h2 {
 h3 {
   font-size: 13px;
   color: #cfd4e4;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-weight: 600;
 }
 .hint {
@@ -346,7 +188,7 @@ h3 {
   flex-wrap: wrap;
 }
 .realm {
-  flex: 1 1 200px;
+  flex: 1 1 180px;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -378,11 +220,6 @@ h3 {
   font-size: 11px;
   color: #9aa3bd;
 }
-.realm-host {
-  font-size: 10px;
-  color: #6b7390;
-  font-family: 'Consolas', 'Menlo', monospace;
-}
 .realm-flag {
   margin-top: 3px;
   font-size: 10px;
@@ -391,36 +228,8 @@ h3 {
   border-radius: 8px;
   padding: 0 7px;
 }
-.link-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-}
 button.wide {
-  flex: 1;
-}
-.hint.manual {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px dashed #2c3244;
-}
-.session {
-  display: flex;
-  gap: 8px;
-}
-.session input {
-  flex: 1;
-  background: #0b0d12;
-  color: #cfd4e4;
-  border: 1px solid #2c3244;
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 12px;
-  font-family: 'Consolas', 'Menlo', monospace;
-}
-.session input:focus {
-  outline: none;
-  border-color: #e8b04b;
+  width: 100%;
 }
 button {
   background: #1a1f2c;
@@ -449,16 +258,22 @@ button.primary:hover:not(:disabled) {
   color: #14120a;
   filter: brightness(1.08);
 }
-.caveats {
-  margin: 10px 0 0;
-  padding-left: 18px;
+.mini-link {
+  background: none;
+  border: none;
+  padding: 0 0 0 6px;
   font-size: 11px;
   color: #8a93ad;
-  line-height: 1.8;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.mini-link:hover {
+  color: #e06060;
 }
 .state {
   font-size: 11px;
-  margin-top: 10px;
+  margin: 10px 0;
+  line-height: 1.7;
 }
 .state.ok {
   color: #7dd087;
@@ -469,97 +284,42 @@ button.primary:hover:not(:disabled) {
 .state.err {
   color: #e06060;
 }
-.kv-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
+.manual {
+  margin-top: 14px;
+  border-top: 1px dashed #2c3244;
+  padding-top: 10px;
+}
+.manual summary {
   font-size: 12px;
-  padding: 3px 0;
+  color: #8a93ad;
+  cursor: pointer;
+  user-select: none;
 }
-.kv-row .k {
-  color: #7a8299;
-  flex: 0 0 auto;
-}
-.kv-row .v {
+.manual summary:hover {
   color: #cfd4e4;
-  font-family: 'Consolas', 'Menlo', monospace;
-  font-size: 11px;
-  text-align: right;
-  word-break: break-all;
 }
-.dim {
-  color: #6b7390;
+.manual[open] summary {
+  margin-bottom: 10px;
 }
-.probe-row {
+.session {
   display: flex;
-  align-items: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
 }
-.mini {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 11px;
-}
-.mini input {
+.session input {
+  flex: 1;
   background: #0b0d12;
   color: #cfd4e4;
   border: 1px solid #2c3244;
   border-radius: 6px;
-  padding: 7px 9px;
+  padding: 8px 10px;
   font-size: 12px;
-  min-width: 180px;
+  font-family: 'Consolas', 'Menlo', monospace;
 }
-.mini input:focus {
+.session input:focus {
   outline: none;
   border-color: #e8b04b;
 }
-.probe-steps {
-  margin-top: 12px;
-  border-top: 1px dashed #2c3244;
-  padding-top: 10px;
-}
-.probe-step {
-  display: flex;
-  gap: 10px;
-  padding: 6px 0;
-  border-bottom: 1px solid #171b26;
-}
-.probe-step .code {
-  flex: 0 0 42px;
-  font-family: 'Consolas', 'Menlo', monospace;
-  font-size: 12px;
-  color: #9aa3bd;
-}
-.probe-step .code.ok {
-  color: #7dd087;
-}
-.probe-step .code.bad {
-  color: #e06060;
-}
-.probe-step .what {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  font-size: 12px;
-  color: #cfd4e4;
-}
-.probe-step .url {
-  font-family: 'Consolas', 'Menlo', monospace;
-  font-size: 10px;
-  word-break: break-all;
-}
-.probe-step .raw {
-  font-family: 'Consolas', 'Menlo', monospace;
-  font-size: 10px;
-  color: #7a8299;
-  background: #0b0d12;
-  border-radius: 4px;
-  padding: 4px 6px;
-  word-break: break-all;
-  max-height: 90px;
-  overflow: hidden;
+.dim {
+  color: #6b7390;
 }
 </style>

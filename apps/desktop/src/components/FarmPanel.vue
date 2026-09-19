@@ -14,6 +14,7 @@
 import { computed, onMounted, ref } from 'vue'
 import {
   buildSession,
+  normalizeCurrency,
   parseItemText,
   summariseLedger,
   summariseSession,
@@ -26,6 +27,7 @@ import { currencyName, dialect, t } from '../i18n'
 import { findClientLog, rememberLogPath } from '../farmClient'
 import {
   addLedgerEntry,
+  checkClipboardNow,
   farm,
   ledger,
   previewFarmSession,
@@ -161,6 +163,51 @@ async function onPrice() {
   }
 }
 
+async function quickReadClipboard() {
+  priceNote.value = null
+  const item = await checkClipboardNow()
+  if (!item) {
+    priceNote.value = t('剪贴板中未发现 PoE 物品文本，请在游戏内对物品按 Ctrl+C。')
+    return
+  }
+  if (item.rarity === 'CURRENCY') {
+    const currencyId = normalizeCurrency(item.base ?? '')
+    const count = item.stackSize ?? 1
+    addLedgerEntry({
+      label: item.base ?? t('通货'),
+      amount: count,
+      currency: currencyId,
+      kind: 'income',
+      source: 'drop',
+    })
+    priceNote.value = `${t('已直接记入掉落:')} ${item.base} ×${count}`
+  } else {
+    paste.value = item.rawText
+    await onPrice()
+  }
+}
+
+async function handlePendingClipboard(kind: 'income' | 'cost') {
+  const item = farm.pendingClipboardItem
+  if (!item) return
+  farm.pendingClipboardItem = null
+  if (item.rarity === 'CURRENCY') {
+    const currencyId = normalizeCurrency(item.base ?? '')
+    const count = item.stackSize ?? 1
+    addLedgerEntry({
+      label: item.base ?? t('通货'),
+      amount: count,
+      currency: currencyId,
+      kind,
+      source: 'drop',
+    })
+    priceNote.value = `${t('已记入:')} ${item.base} ×${count}`
+  } else {
+    paste.value = item.rawText
+    await onPrice()
+  }
+}
+
 // ------------------------------------------------------------- following it
 
 async function onFind() {
@@ -242,6 +289,10 @@ function demoLines(): string[] {
     if (index === 1) push(': 阿蛮 is now level 91', 40_000)
     scene(HIDEOUT, index === 1 ? 15_000 : 95_000)
     push(`[LOADING SCREEN] (${dialect(HIDEOUT, 'zh-Hans')}) Duration = 2 seconds`, 2_000)
+    if (index === 2) {
+      push('@来自 傲娇法师: 你好，我想购买你的 破晓之剑 标价为 5 神圣石 于 裂隙赛季', 10_000)
+      push('Trade accepted.', 15_000)
+    }
   }
   return out
 }
@@ -379,6 +430,15 @@ onMounted(async () => {
             </span>
           </div>
         </div>
+        <div v-if="ledgerSummary.currency" class="breakdown dim small">
+          <span>{{ t('掉落收入:') }} <b class="good">+{{ ledgerSummary.dropIncome }}</b></span>
+          <span class="sep">·</span>
+          <span>{{ t('装备卖出:') }} <b class="good">+{{ ledgerSummary.tradeIncome }}</b></span>
+          <template v-if="ledgerSummary.tradeCost > 0">
+            <span class="sep">·</span>
+            <span>{{ t('装备买入:') }} <b class="bad">−{{ ledgerSummary.tradeCost }}</b></span>
+          </template>
+        </div>
         <p class="unit dim">
           {{ t('单位:') }}{{ ledgerSummary.currency ? currencyLabel(ledgerSummary.currency) : t('暂无') }}
           <template v-if="ledgerSummary.others.length">
@@ -389,6 +449,30 @@ onMounted(async () => {
             {{ t('未换算(汇率会过期,不猜)') }}
           </template>
         </p>
+
+        <div class="farm-options">
+          <label class="check-label">
+            <input v-model="farm.autoClipboard" type="checkbox" :disabled="!desktop" />
+            <span>{{ t('自动监听剪贴板') }}</span>
+          </label>
+          <label class="check-label" :class="{ disabled: !farm.autoClipboard || !desktop }">
+            <input v-model="farm.autoBookCurrency" type="checkbox" :disabled="!farm.autoClipboard || !desktop" />
+            <span>{{ t('通货掉落按 Ctrl+C 直接入账') }}</span>
+          </label>
+          <span class="spacer" />
+          <button class="quick-clip-btn" :disabled="!desktop" :title="t('从剪贴板读取物品或通货')" @click="quickReadClipboard">
+            ⚡ {{ t('一键读剪贴板') }}
+          </button>
+        </div>
+
+        <div v-if="farm.pendingClipboardItem" class="clipboard-prompt">
+          <span class="dim">{{ t('剪贴板发现装备:') }}</span>
+          <b>{{ dialect(farm.pendingClipboardItem.name || farm.pendingClipboardItem.base || '') }}</b>
+          <span v-if="farm.pendingClipboardItem.stackSize" class="dim">×{{ farm.pendingClipboardItem.stackSize }}</span>
+          <button class="primary small" @click="handlePendingClipboard('income')">{{ t('一键查价并记收入') }}</button>
+          <button class="small" @click="handlePendingClipboard('cost')">{{ t('记成本') }}</button>
+          <button class="small dim" @click="farm.pendingClipboardItem = null">{{ t('忽略') }}</button>
+        </div>
 
         <div class="book">
           <textarea
@@ -415,6 +499,9 @@ onMounted(async () => {
 
         <div v-for="entry in [...ledger].reverse()" :key="entry.id" class="ledger-row">
           <span class="tag" :class="entry.kind">{{ entry.kind === 'income' ? t('收入') : t('成本') }}</span>
+          <span v-if="entry.source" class="source-tag" :class="entry.source">
+            {{ entry.source === 'trade' ? t('交易') : entry.source === 'drop' ? t('掉落') : t('手动') }}
+          </span>
           <span class="label">{{ dialect(entry.label) }}</span>
           <span class="amt" :class="entry.kind">
             {{ entry.kind === 'income' ? '+' : '−' }}{{ entry.amount }} {{ currencyName(entry.currency, labels) }}
@@ -425,6 +512,24 @@ onMounted(async () => {
         <p v-if="!ledger.length" class="dim small">
           {{ t('查价页面的限流和这里共用,一次查价两个请求,太频繁会被官方拦。') }}
         </p>
+      </section>
+
+      <section v-if="summary && farm.trades.length" class="card">
+        <h3>{{ t('点对点交易成交明细') }}<span class="dim"> · {{ t('Client.txt 密语与 Trade accepted 自动撮合') }} ({{ farm.trades.length }})</span></h3>
+        <div class="trade-list">
+          <div v-for="tr in [...farm.trades].reverse()" :key="tr.id" class="trade-item">
+            <span class="tag" :class="tr.direction === 'incoming' ? 'income' : 'cost'">
+              {{ tr.direction === 'incoming' ? t('售出') : t('购入') }}
+            </span>
+            <span class="label">{{ dialect(tr.item) }}</span>
+            <span class="dim small">({{ tr.direction === 'incoming' ? t('买家') : t('卖家') }}: {{ tr.character }})</span>
+            <span class="spacer" />
+            <span class="amt" :class="tr.direction === 'incoming' ? 'income' : 'cost'">
+              {{ tr.direction === 'incoming' ? '+' : '−' }}{{ tr.amount }} {{ currencyName(tr.currency, labels) }}
+            </span>
+            <span class="dim small">{{ clockOf(tr.at) }}</span>
+          </div>
+        </div>
       </section>
 
       <section v-if="summary && visits.length" class="card">
@@ -829,5 +934,116 @@ button.bad-btn {
 }
 .small {
   font-size: 11px;
+}
+.breakdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.breakdown .sep {
+  color: #3b4258;
+}
+.farm-options {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 10px 0;
+  padding: 8px 10px;
+  background: #0d1017;
+  border: 1px solid #1c2130;
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #cfd4e4;
+  cursor: pointer;
+  user-select: none;
+}
+.check-label.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.check-label input[type="checkbox"] {
+  accent-color: #e8b04b;
+  cursor: pointer;
+}
+.quick-clip-btn {
+  background: #242938;
+  border-color: #434c66;
+  color: #ffd979;
+  font-weight: 500;
+  padding: 4px 10px;
+}
+.quick-clip-btn:hover:not(:disabled) {
+  background: #2f364a;
+  border-color: #e8b04b;
+}
+.clipboard-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: #19202f;
+  border: 1px solid #364463;
+  border-radius: 6px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.clipboard-prompt b {
+  color: #e8b04b;
+}
+.source-tag {
+  font-size: 10px;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+.source-tag.trade {
+  background: #1b2e24;
+  color: #7dd087;
+  border: 1px solid #285438;
+}
+.source-tag.drop {
+  background: #2e2616;
+  color: #e8b04b;
+  border: 1px solid #544320;
+}
+.source-tag.manual {
+  background: #181d28;
+  color: #8a93ad;
+  border: 1px solid #283042;
+}
+.trade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.trade-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  padding: 4px 6px;
+  background: #0b0d12;
+  border: 1px solid #171b26;
+  border-radius: 4px;
+}
+.trade-item .label {
+  color: #cfd4e4;
+  font-weight: 500;
+}
+.trade-item .amt.income {
+  color: #7dd087;
+  font-weight: 600;
+}
+.trade-item .amt.cost {
+  color: #e06c6c;
+  font-weight: 600;
 }
 </style>
