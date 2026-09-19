@@ -35,6 +35,17 @@ export async function toggleTreeOverlay(): Promise<boolean> {
 }
 
 /**
+ * Show, hide, or create the in-game campaign checklist panel.
+ *
+ * The panel is its own always-on-top window that never takes focus, so clicking
+ * its buttons in-game does not pull the game out of the foreground.
+ */
+export async function toggleCampaignOverlay(): Promise<boolean> {
+  if (!isDesktopRuntime()) throw new OverlayUnsupported()
+  return invoke<boolean>('toggle_campaign_overlay')
+}
+
+/**
  * Lock the card out of the way, or unlock it so it can be dragged.
  *
  * Dragging needs the window to accept clicks, so the two are exclusive: the
