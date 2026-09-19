@@ -36,6 +36,8 @@ export { buildSession, summariseSession, visitMs, visitNetMs, tradeToLedgerEntry
 export type { AreaKind, AreaVisit, FarmSession, FarmSummary, CompletedTrade } from './farm/session.js'
 export { summariseLedger } from './farm/ledger.js'
 export type { LedgerEntry, LedgerSummary } from './farm/ledger.js'
+export { ledgerValueIn, cumulativeNetSeries, incomePerMap, unpricedTotals, REFERENCE_CURRENCY } from './farm/series.js'
+export type { RateTable, CurvePoint, MapIncome } from './farm/series.js'
 export { emptyFollow, ingestChunk, currentAreaOf, resumeEvents } from './farm/follow.js'
 export type { FollowState, LogChunk } from './farm/follow.js'
 export { campaignNameIndex, resolveCampaignZone, areaNameCandidates } from './campaign/names.js'
