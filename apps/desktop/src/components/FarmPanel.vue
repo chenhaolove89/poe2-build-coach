@@ -51,7 +51,6 @@ import {
 const VISIT_ROWS = 60
 
 const desktop = isDesktopRuntime()
-const finding = ref(false)
 
 const session = computed(() =>
   farm.startedAt == null ? null : buildSession(farm.follow.events, { startedAt: farm.startedAt }),
@@ -224,7 +223,6 @@ async function autoFind(): Promise<void> {
   if (!desktop || farm.following) return
   if (!farm.path.trim()) farm.path = savedLogPath()
   if (farm.path.trim()) return
-  finding.value = true
   try {
     const found = await findClientLog()
     if (found) {
@@ -232,24 +230,7 @@ async function autoFind(): Promise<void> {
       rememberLogPath(found)
     }
   } finally {
-    finding.value = false
-  }
-}
-
-async function onFind() {
-  finding.value = true
-  farm.error = null
-  try {
-    const found = await findClientLog()
-    if (found) {
-      farm.path = found
-      rememberLogPath(found)
-      farm.notice = t('已找到游戏日志。')
-    } else {
-      farm.notice = t('没找到日志。游戏没在运行时无法从进程反查,请手动粘贴 Client.txt 的完整路径(在游戏安装目录的 logs 文件夹里)。')
-    }
-  } finally {
-    finding.value = false
+    /* nothing to report here: 开始记录 re-runs this and speaks up on failure */
   }
 }
 
@@ -266,7 +247,7 @@ async function start() {
   if (!farm.path.trim()) await autoFind()
   const target = farm.path.trim()
   if (!target) {
-    farm.error = t('没找到游戏日志。游戏开着时点「自动查找」;或手动粘贴 Client.txt 的完整路径。')
+    farm.error = t('没找到游戏日志。游戏开着时再点一次「开始记录」会重新查找;或手动粘贴 Client.txt 的完整路径。')
     return
   }
   try {
@@ -378,9 +359,6 @@ watch(realmId, () => {
           :disabled="farm.following"
         />
       </label>
-      <button :disabled="!desktop || finding || farm.following" @click="onFind">
-        {{ finding ? t('查找中…') : t('自动查找') }}
-      </button>
       <span class="spacer" />
       <button v-if="!farm.following" class="primary" :disabled="!desktop" @click="start">
         {{ t('开始记录') }}
