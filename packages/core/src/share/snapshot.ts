@@ -23,6 +23,9 @@ import pako from 'pako'
 /** Marks a code as ours, so a PoB code pasted into the same box is not misread. */
 export const SHARE_PREFIX = 'P2C1.'
 
+/** Ceiling on a node id or hash, so a misread byte stream cannot produce absurd ones. */
+const MAX_NODE_ID = 100_000_000
+
 export interface ShareItem {
   /** The full item text as the client writes it, which is what re-parses later. */
   text: string
@@ -50,6 +53,7 @@ export interface ShareSnapshot {
   className: string | null
   ascendClassName: string | null
   treeVersion: string | null
+  /** Sorted, de-duplicated. Carried packed; see `packIds`. */
   passiveNodes: number[]
   /** Campaign quest points, which move the level's point ceiling. */
   questPoints: number | null
@@ -128,6 +132,61 @@ function base64UrlToBytes(text: string): Uint8Array | null {
   return new Uint8Array(out)
 }
 
+/**
+ * Node ids as a delta-varint stream, base64url'd.
+ *
+ * This is where almost all of a code's length used to go. Node ids are large and
+ * near-arbitrary (an Atlas hash is a six-digit number), so writing them as decimal
+ * text gives deflate nothing to work with — a full 573-node Atlas plan cost 3.4 KB
+ * of JSON and still deflated to 1.6 KB. The list is sorted, though, so the *gaps*
+ * between ids are small and repetitive: the same plan packs to 574 bytes, and
+ * deflates to 16. That one change takes a worst-case code from ~3,500 characters
+ * to ~730.
+ */
+export function packIds(ids: readonly number[]): string {
+  const sorted = [...new Set(ids)].filter((n) => Number.isInteger(n) && n > 0).sort((a, b) => a - b)
+  const bytes: number[] = []
+  let prev = 0
+  for (const id of sorted) {
+    let delta = id - prev
+    prev = id
+    while (delta >= 0x80) {
+      bytes.push((delta & 0x7f) | 0x80)
+      delta = Math.floor(delta / 0x80)
+    }
+    bytes.push(delta)
+  }
+  return bytesToBase64Url(new Uint8Array(bytes))
+}
+
+/** Inverse of `packIds`. A stream that runs off the rails yields what it read so far. */
+function unpackIds(text: string): number[] {
+  const bytes = base64UrlToBytes(text)
+  if (!bytes) return []
+  const out: number[] = []
+  let prev = 0
+  let value = 0
+  let shift = 0
+  for (const byte of bytes) {
+    // Multiplication rather than a shift: a varint may span more bits than a JS
+    // 32-bit bitwise op can hold, and a corrupt stream must not wrap around.
+    value += (byte & 0x7f) * 2 ** shift
+    if (byte & 0x80) {
+      shift += 7
+      if (shift > 28) return out
+      continue
+    }
+    prev += value
+    // Ids are node ids and hashes, all comfortably below this; anything past it came
+    // from bytes that were never a list, so the rest is noise and is not read.
+    if (prev > MAX_NODE_ID) return out
+    if (prev > 0) out.push(prev)
+    value = 0
+    shift = 0
+  }
+  return out
+}
+
 // ------------------------------------------------------------------------ encode
 
 /**
@@ -145,9 +204,9 @@ export function encodeShareSnapshot(snapshot: ShareSnapshot): string {
   if (snapshot.className) payload.className = snapshot.className
   if (snapshot.ascendClassName) payload.ascendClassName = snapshot.ascendClassName
   if (snapshot.treeVersion) payload.treeVersion = snapshot.treeVersion
-  if (snapshot.passiveNodes.length) payload.nodes = snapshot.passiveNodes
+  if (snapshot.passiveNodes.length) payload.nodes = packIds(snapshot.passiveNodes)
   if (snapshot.questPoints != null) payload.questPoints = snapshot.questPoints
-  if (snapshot.atlasNodes.length) payload.atlas = snapshot.atlasNodes
+  if (snapshot.atlasNodes.length) payload.atlas = packIds(snapshot.atlasNodes)
   if (snapshot.items.length) payload.items = snapshot.items
   if (snapshot.skills.length) payload.skills = snapshot.skills
 
@@ -166,8 +225,23 @@ function asNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
-/** Positive integers only: these are node ids and hashes, and 0 is not one. */
+/**
+ * A node id list, however the code wrote it.
+ *
+ * New codes carry a packed delta-varint string; a bare array of numbers is still
+ * read, both because a hand-written payload is a reasonable thing to test with and
+ * because it costs three lines to keep the old shape working.
+ */
 function asIdList(value: unknown): number[] {
+  if (typeof value === 'string') {
+    const ids = unpackIds(value)
+    // Any base64url text decodes to *some* id list -- there is no way to tell an
+    // intended list from arbitrary bytes, because a packed list is just bytes. What
+    // re-packing does catch is a code that was cut short or written non-minimally:
+    // our encoder only ever writes the canonical form, so a mismatch means the
+    // stream did not end where it should have.
+    return packIds(ids) === value ? ids : []
+  }
   if (!Array.isArray(value)) return []
   const seen = new Set<number>()
   for (const entry of value) {

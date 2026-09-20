@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import pako from 'pako'
+import { packIdsForTest as packIds } from './helpers/share-pack.js'
 import {
   SHARE_PREFIX,
   ShareCodeError,
@@ -38,10 +39,23 @@ describe('encodeShareSnapshot', () => {
   })
 
   it('keeps a full hand-off small enough to paste', () => {
-    // 573 atlas hashes plus a few items is the realistic worst case.
-    const atlas = Array.from({ length: 573 }, (_, i) => 50000 + i * 7)
+    // 573 Atlas hashes is the realistic worst case: the tree can be fully allocated.
+    const atlas = Array.from({ length: 573 }, (_, i) => 5077 + i * 97)
     const code = encodeShareSnapshot(snapshot({ realm: 'cn', league: '裂隙赛季', atlasNodes: atlas }))
-    expect(code.length).toBeLessThan(4000)
+    expect(code.length).toBeLessThan(900)
+  })
+
+  it('barely grows as the plan fills up, which is the point of packing the ids', () => {
+    // Ids are near-arbitrary six-digit numbers, so as decimal text they were the one
+    // field deflate could not touch — a full plan cost 3.4 KB of JSON. Sorted and
+    // delta-encoded, the gaps are small and repetitive and deflate erases them, so a
+    // full tree now costs about what a nearly empty one does. This bound is what
+    // keeps that true: if a later change goes back to writing ids as text, it fails.
+    const base = { realm: 'cn', league: '裂隙赛季', className: 'Ranger', level: 91 }
+    const atlas = Array.from({ length: 573 }, (_, i) => 5077 + i * 97)
+    const small = encodeShareSnapshot(snapshot({ ...base, atlasNodes: atlas.slice(0, 20) })).length
+    const full = encodeShareSnapshot(snapshot({ ...base, atlasNodes: atlas })).length
+    expect(full).toBeLessThan(small * 2)
   })
 
   it('never writes a credential field, even if one is smuggled in', () => {
@@ -112,12 +126,41 @@ describe('decodeShareSnapshot', () => {
 
   it('drops a wrong-typed field instead of losing the whole hand-off', () => {
     const decoded = decodeShareSnapshot(
-      handBuilt({ v: 1, realm: 'cn', level: 'ninety', nodes: [7, 'x', -1, 0, 8], atlas: 'nope' }),
+      handBuilt({ v: 1, realm: 'cn', level: 'ninety', nodes: [7, 'x', -1, 0, 8], atlas: 42 }),
     )
     expect(decoded.realm).toBe('cn')
     expect(decoded.level).toBeNull()
     expect(decoded.passiveNodes).toEqual([7, 8])
     expect(decoded.atlasNodes).toEqual([])
+  })
+
+  it('reads a node list from either shape the format has used', () => {
+    // New codes pack the list; the array form is still read, which is what keeps a
+    // hand-written payload a usable thing to test against.
+    const packed = decodeShareSnapshot(handBuilt({ v: 1, nodes: packIds([10, 20, 30]) }))
+    expect(packed.passiveNodes).toEqual([10, 20, 30])
+    expect(decodeShareSnapshot(handBuilt({ v: 1, nodes: [30, 10, 20, 10] })).passiveNodes).toEqual([10, 20, 30])
+  })
+
+  it('refuses a packed list whose bytes do not end on a varint boundary', () => {
+    const full = packIds([5000, 5100, 5200, 5300, 5400, 5500])
+    expect(decodeShareSnapshot(handBuilt({ v: 1, nodes: full })).passiveNodes).toEqual([
+      5000, 5100, 5200, 5300, 5400, 5500,
+    ])
+    // One character short leaves six bits that no canonical encoding would have
+    // written, so the re-pack check catches it.
+    expect(decodeShareSnapshot(handBuilt({ v: 1, nodes: full.slice(0, -1) })).passiveNodes).toEqual([])
+  })
+
+  it('cannot detect a truncation that lands on a byte boundary, and does not pretend to', () => {
+    // Worth stating plainly: a packed list is just bytes, so a cut that happens to
+    // land cleanly decodes to a shorter list that is itself perfectly valid. The
+    // guard against a truncated *code* is the deflate around the whole payload, not
+    // this check — which is why the outer failure is what the user is told about.
+    const full = packIds([5000, 5100, 5200, 5300, 5400, 5500])
+    expect(decodeShareSnapshot(handBuilt({ v: 1, nodes: full.slice(0, -2) })).passiveNodes).toEqual([
+      5000, 5100, 5200, 5300, 5400,
+    ])
   })
 
   it('tolerates whitespace a paste picked up, including newlines', () => {
