@@ -31,6 +31,7 @@ import {
 } from '@poe2coach/core'
 import { ATLAS, ATLAS_CAPTURED, ATLAS_INDEX, ATLAS_SOURCE, ALLOCATABLE_COUNT } from '../atlasData'
 import { AREAS, LAYOUT_LABEL } from '../mapData'
+import { allocated as planAllocated, clearAllocated } from '../atlasPlan'
 import { atlasFocus } from '../atlasFocus'
 import { requestMapFocus } from '../mapFocus'
 import { t } from '../i18n'
@@ -47,32 +48,9 @@ const KIND_LABEL: Record<string, string> = {
 }
 const KIND_RADIUS: Record<string, number> = { normal: 22, notable: 32, keystone: 42, root: 34, mastery: 16 }
 
-const ALLOC_KEY = 'poe2coach.atlas.allocated'
-
-function loadAllocated(): Set<number> {
-  try {
-    const raw = localStorage.getItem(ALLOC_KEY)
-    const list = raw ? (JSON.parse(raw) as number[]) : []
-    // A plan can only be shown if it is buildable; a stale or hand-edited one that
-    // is not gets dropped back to nothing rather than displayed as if it were real.
-    const set = new Set(list.filter((h) => ATLAS_INDEX.byHash.has(h)))
-    return set
-  } catch {
-    return new Set()
-  }
-}
-
-const allocated = ref<Set<number>>(loadAllocated())
-
-function saveAllocated() {
-  try {
-    localStorage.setItem(ALLOC_KEY, JSON.stringify([...allocated.value]))
-  } catch {
-    /* storage off — the plan just does not persist */
-  }
-}
-
-watch(allocated, saveAllocated, { deep: false })
+// The plan lives in `atlasPlan` because the share code reads and writes it too; this
+// page is one of its consumers. Writing the ref here writes the shared one.
+const allocated = planAllocated
 
 // ------------------------------------------------------------------ view transform
 
@@ -310,7 +288,7 @@ function clickNode(n: AtlasNode) {
 }
 
 function clearPlan() {
-  allocated.value = new Set()
+  clearAllocated()
   notice.value = null
 }
 

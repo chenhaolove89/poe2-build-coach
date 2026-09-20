@@ -3,6 +3,9 @@ import { computed, ref, watch } from 'vue'
 import {
   PobParseError,
   buildLevelingPlan,
+  REALM_IDS,
+  decodeShareSnapshot,
+  isShareCode,
   buildToShareCode,
   countPoints,
   isAscendancy,
@@ -12,7 +15,7 @@ import {
   resolveStartNode,
   validateTreeSelection,
 } from '@poe2coach/core'
-import type { BuildSnapshot, GameItem, TreeData } from '@poe2coach/core'
+import type { BuildSnapshot, GameItem, ParsedItem, ShareSnapshot, TreeData } from '@poe2coach/core'
 import TreePanel from './components/TreePanel.vue'
 import ResistancePanel from './components/ResistancePanel.vue'
 import GearPanel from './components/GearPanel.vue'
@@ -36,12 +39,15 @@ import {
 } from './treePresetStore'
 import type { StoredTreePreset } from './treePresetStore'
 import { treeEdges } from './treeArt'
-import { realm } from './settings'
+import { realm, realmId, selectRealm } from './settings'
+import { rememberLeague, savedLeague } from './tradeClient'
+import { allocated as atlasAllocated, setAllocated as setAtlasAllocated } from './atlasPlan'
+import SharePanel from './components/SharePanel.vue'
 import { initCampaignFollow } from './campaignFollow'
 import { FARMABLE_COUNT as MAP_COUNT } from './mapData'
 import { requestAtlasFocus } from './atlasFocus'
 import { requestMapFocus } from './mapFocus'
-import { ATLAS } from './atlasData'
+import { ATLAS, ATLAS_INDEX } from './atlasData'
 
 type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'atlas' | 'maps' | 'price' | 'farm' | 'settings'
 
@@ -138,7 +144,87 @@ const summary = computed(() => {
 
 const totalGems = computed(() => (build.value?.skills ?? []).reduce((s, g) => s + g.gems.length, 0))
 
+/**
+ * Everything a share code carries, read from live state.
+ *
+ * The session cookie is not here and cannot get here: `ShareSnapshot` has no field
+ * for it, so a code can never carry a login out of the app.
+ */
+const shareSnapshot = computed<ShareSnapshot>(() => ({
+  v: 1,
+  realm: realmId.value,
+  league: savedLeague(),
+  level: build.value?.level ?? null,
+  className: build.value?.className ?? null,
+  ascendClassName: build.value?.ascendClassName ?? null,
+  treeVersion: build.value?.treeVersion ?? null,
+  passiveNodes: build.value?.passiveNodes ?? [],
+  questPoints: questPoints.value,
+  atlasNodes: [...atlasAllocated.value],
+  items: (build.value?.items ?? []).map((i) => ({ text: i.text, slot: i.slot })),
+  skills: (build.value?.skills ?? []).map((g) => ({
+    label: g.label,
+    gems: g.gems.map((gem) => ({
+      name: gem.name,
+      level: gem.level ?? null,
+      quality: gem.quality ?? null,
+      enabled: gem.enabled !== false,
+    })),
+  })),
+}))
+
+/** Items travel as their raw text — the only form that re-parses on the far side. */
+function itemFromText(text: string, slot: string | null, id: number): ParsedItem {
+  const parsed = parseItemText(text)
+  return { id, rarity: parsed.rarity, name: parsed.name, base: parsed.base, itemClass: parsed.itemClass, slot, text }
+}
+
+/** Replace the whole setup with what a code carried. */
+function applyShare(snapshot: ShareSnapshot) {
+  error.value = null
+  currentPoints.value = null
+  if (snapshot.realm) {
+    const known = REALM_IDS.includes(snapshot.realm as (typeof REALM_IDS)[number])
+    if (known) selectRealm(snapshot.realm as (typeof REALM_IDS)[number])
+  }
+  if (snapshot.league) rememberLeague(snapshot.league)
+  if (snapshot.questPoints != null) questPoints.value = snapshot.questPoints
+  // Only hashes this tree actually has; a code from another patch must not put the
+  // planner into a state it cannot draw or validate.
+  setAtlasAllocated(snapshot.atlasNodes.filter((h) => ATLAS_INDEX.byHash.has(h)))
+  build.value = {
+    className: snapshot.className,
+    ascendClassName: snapshot.ascendClassName,
+    level: snapshot.level,
+    treeVersion: snapshot.treeVersion,
+    passiveNodes: snapshot.passiveNodes,
+    treeSpecUrls: [],
+    skills: snapshot.skills.map((g) => ({
+      label: g.label,
+      gems: g.gems.map((gem) => ({ name: gem.name, level: gem.level, quality: gem.quality, enabled: gem.enabled })),
+    })),
+    items: snapshot.items.map((item, i) => itemFromText(item.text, item.slot, i + 1)),
+  }
+  view.value = 'home'
+  saveMessage.value = t('已导入分享码。')
+}
+
 function onParse() {
+  // The same box takes both codes: ours announces itself with a prefix, so it is
+  // routed rather than failing as an unreadable PoB code.
+  if (isShareCode(codeInput.value)) {
+    try {
+      applyShare(decodeShareSnapshot(codeInput.value))
+      codeInput.value = ''
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e)
+    }
+    return
+  }
+  onParsePob()
+}
+
+function onParsePob() {
   error.value = null
   try {
     currentPoints.value = null
@@ -541,7 +627,12 @@ function setLevel(level: number | null) {
           <button @click="loadDemo">{{ t('加载示例') }}</button>
         </div>
         <p v-if="error" class="error">{{ error }}</p>
+        <p class="dim small hint">
+          {{ t('这个框两种码都收:PoB 分享码,或本工具自己的分享码(会一并还原设置、异界天赋与装备)。') }}
+        </p>
       </section>
+
+      <SharePanel :snapshot="shareSnapshot" @apply="applyShare" />
 
       <section v-if="hasBuild" class="card span-2">
         <h3>{{ t('概览') }}</h3>
