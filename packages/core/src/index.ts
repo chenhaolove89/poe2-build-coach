@@ -57,6 +57,7 @@ export {
 } from './atlas/tree.js'
 export type {
   AtlasTree,
+  AtlasEdge,
   AtlasNode,
   AtlasNodeKind,
   AtlasSubtree,

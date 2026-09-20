@@ -198,8 +198,11 @@ const areas = endgame.map((a) => {
 
   // Biome: the wiki lists every biome an area can roll; poe2way records the ones it was
   // seen with, duplicates included. Prefer the wiki, then de-duplicate poe2way's.
+  // A cell may also say "Mountain or Faridun City" (Ravine can roll either), which is
+  // two biomes, not one value -- leaving it whole made a filter chip no other area
+  // could ever match.
   let biomes = [];
-  if (w && w.biome) biomes = w.biome.split(',').map((s) => s.trim()).filter(Boolean);
+  if (w && w.biome) biomes = w.biome.split(/,| or /).map((s) => s.trim()).filter(Boolean);
   else if (way) biomes = [...new Set(way.biomes)];
 
   const layout =

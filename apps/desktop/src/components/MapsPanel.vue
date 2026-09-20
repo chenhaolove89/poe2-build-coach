@@ -13,7 +13,7 @@
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import topologyJson from '@poe2coach/data/map-topology.json'
-import type { MapArea, MapKind, MapLayout } from '@poe2coach/core'
+import { atlasBiomeKey, type MapArea, type MapKind, type MapLayout } from '@poe2coach/core'
 import {
   AREAS,
   AREA_CAPTURED,
@@ -23,6 +23,7 @@ import {
   LAYOUT_LABEL,
   LAYOUT_ORDER,
 } from '../mapData'
+import { mapFocus } from '../mapFocus'
 import { bilingual, dialect, t, zhName } from '../i18n'
 import MapTopology from './MapTopology.vue'
 
@@ -109,12 +110,20 @@ function noteFor(a: MapArea): string {
 const query = ref('')
 const kindFilter = ref<'all' | MapKind>('map')
 const layoutFilter = ref<'all' | MapLayout>('all')
+/**
+ * A map-table biome, or an atlas keyword like `City`. The atlas page addresses the
+ * three cities together ("City Areas"), so a `City` filter has to match all three
+ * while an exact name still matches only itself.
+ */
+const biomeFilter = ref<string>('all')
 const favOnly = ref(false)
 
 function matches(m: MapArea): boolean {
   if (favOnly.value && !isFav(m)) return false
   if (kindFilter.value !== 'all' && m.kind !== kindFilter.value) return false
   if (layoutFilter.value !== 'all' && m.layout !== layoutFilter.value) return false
+  if (biomeFilter.value !== 'all' && !m.biomes.some((b) => b === biomeFilter.value || atlasBiomeKey(b) === biomeFilter.value))
+    return false
   const q = query.value.trim().toLowerCase()
   if (!q) return true
   // Matched against the variant on screen, so a 繁體 reader can type 繁體. The area
@@ -148,7 +157,39 @@ function toggleGroup(key: string) {
 }
 
 const isFiltering = computed(
-  () => favOnly.value || layoutFilter.value !== 'all' || kindFilter.value !== 'map' || query.value.trim().length > 0,
+  () =>
+    favOnly.value ||
+    layoutFilter.value !== 'all' ||
+    biomeFilter.value !== 'all' ||
+    kindFilter.value !== 'map' ||
+    query.value.trim().length > 0,
+)
+
+/**
+ * The biomes the table actually uses, counted within the kind on screen.
+ *
+ * Counting every row instead would put "Mountain 15" on the chip while the list
+ * showed 14, because a tower or a hideout also rolls Mountain — a chip whose number
+ * does not match what clicking it shows is worse than no number.
+ */
+const biomeOptions = computed(() => {
+  const counts = new Map<string, number>()
+  for (const a of AREAS) {
+    if (kindFilter.value !== 'all' && a.kind !== kindFilter.value) continue
+    for (const b of a.biomes) counts.set(b, (counts.get(b) ?? 0) + 1)
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+})
+
+// A request from the atlas page ("show me the Mountain maps") lands here.
+watch(
+  mapFocus,
+  (biome) => {
+    if (!biome) return
+    biomeFilter.value = biome
+    mapFocus.value = null
+  },
+  { immediate: true },
 )
 
 const kindCounts = computed(() => {
@@ -260,6 +301,20 @@ const ratedCount = computed(() => AREAS.filter((a) => a.kind === 'map' && a.navi
           @click="kindFilter = k"
         >
           {{ t(KIND_LABEL[k]) }} {{ kindCounts.get(k) ?? 0 }}
+        </button>
+      </div>
+      <div class="filters">
+        <button class="filter" :class="{ active: biomeFilter === 'all' }" @click="biomeFilter = 'all'">
+          {{ t('全部生态') }}
+        </button>
+        <button
+          v-for="[b, n] in biomeOptions"
+          :key="b"
+          class="filter"
+          :class="{ active: biomeFilter === b }"
+          @click="biomeFilter = biomeFilter === b ? 'all' : b"
+        >
+          {{ biomeZh(b) }} {{ n }}
         </button>
       </div>
       <div class="filters">

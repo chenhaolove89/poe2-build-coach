@@ -30,8 +30,12 @@ import {
   type AtlasNode,
 } from '@poe2coach/core'
 import { ATLAS, ATLAS_CAPTURED, ATLAS_INDEX, ATLAS_SOURCE, ALLOCATABLE_COUNT } from '../atlasData'
+import { AREAS, LAYOUT_LABEL } from '../mapData'
 import { atlasFocus } from '../atlasFocus'
+import { requestMapFocus } from '../mapFocus'
 import { t } from '../i18n'
+
+const emit = defineEmits<{ openMaps: [biome: string] }>()
 
 /** Point into which no point can go; drawn but never selectable. */
 const KIND_LABEL: Record<string, string> = {
@@ -213,6 +217,26 @@ const biomeNodeCount = computed(() =>
   biomeFocus.value ? ATLAS.nodes.filter((n) => n.biomes.includes(biomeFocus.value!)).length : 0,
 )
 
+/**
+ * The areas that biome covers, from the map table — the other half of the join.
+ *
+ * Matched through `atlasBiomeKey`, so the tree's single "City" resolves to all three
+ * city biomes the table names separately. Sorted by the community's navigation
+ * rating, which is the one ranking both sources agree on.
+ */
+const biomeAreas = computed(() => {
+  if (!biomeFocus.value) return []
+  return AREAS.filter((a) => a.kind === 'map' && a.biomes.some((b) => atlasBiomeKey(b) === biomeFocus.value))
+    .slice()
+    .sort((a, b) => (b.navigation ?? 0) - (a.navigation ?? 0) || a.name.localeCompare(b.name))
+})
+
+function showOnMapPage() {
+  if (!biomeFocus.value) return
+  requestMapFocus(biomeFocus.value)
+  emit('openMaps', biomeFocus.value)
+}
+
 const searchHitCount = computed(() => matches.value.size)
 
 // ------------------------------------------------------------------ edges
@@ -228,53 +252,25 @@ interface EdgeShape {
 const nodesByHash = ATLAS_INDEX.byHash
 
 /**
- * Edges as arcs when both ends sit on the same group and orbit — that is how the
- * game curves a ring of nodes — and as straight lines otherwise. The export also
- * carries per-connection spline radii; those refine cross-group curves, which the
- * straight fallback draws adequately, so v1 leaves them out rather than pretending
- * to a precision it does not have.
+ * Edge paths come straight from the baked data: the build script decided per link
+ * whether it is an arc and at what radius, so there is no orbit maths here. Arcs are
+ * what make a ring of nodes read as a ring rather than as a fan of chords.
  */
 const edges = computed<EdgeShape[]>(() =>
-  ATLAS.edges.map(([a, b]) => {
-    const na = nodesByHash.get(a)
-    const nb = nodesByHash.get(b)
-    if (!na || !nb) return null
-    const sameRing = na.group === nb.group && na.orbit === nb.orbit && na.orbit > 0
-    const d = sameRing
-      ? `M ${na.x} ${na.y} A ${radiusOf(na)} ${radiusOf(na)} 0 0 ${na.orbitIndex <= nb.orbitIndex ? 1 : 0} ${nb.x} ${nb.y}`
-      : `M ${na.x} ${na.y} L ${nb.x} ${nb.y}`
-    return {
-      key: `${a}-${b}`,
-      d,
-      subtree: na.subtree,
-      on: allocated.value.has(a) && allocated.value.has(b),
-    }
-  }).filter((e): e is EdgeShape => e != null),
+  ATLAS.edges
+    .map((edge) => {
+      const [a, b, r, sweep] = edge
+      const na = nodesByHash.get(a)
+      const nb = nodesByHash.get(b)
+      if (!na || !nb) return null
+      const d =
+        r != null
+          ? `M ${na.x} ${na.y} A ${r} ${r} 0 0 ${sweep} ${nb.x} ${nb.y}`
+          : `M ${na.x} ${na.y} L ${nb.x} ${nb.y}`
+      return { key: `${a}-${b}`, d, subtree: na.subtree, on: allocated.value.has(a) && allocated.value.has(b) }
+    })
+    .filter((e): e is EdgeShape => e != null),
 )
-
-/** The ring a node sits on, for the arc radius of a same-ring edge. */
-function radiusOf(n: AtlasNode): number {
-  const dx = n.x - groupCentre(n).x
-  const dy = n.y - groupCentre(n).y
-  return Math.max(1, Math.round(Math.hypot(dx, dy)))
-}
-
-const groupCentres = new Map<number, { x: number; y: number }>()
-for (const n of ATLAS.nodes) {
-  if (n.orbit === 0) groupCentres.set(n.group, { x: n.x, y: n.y })
-}
-/** Fallback: the mean of a group's nodes, when no node sits at its centre. */
-function groupCentre(n: AtlasNode): { x: number; y: number } {
-  const direct = groupCentres.get(n.group)
-  if (direct) return direct
-  const members = ATLAS.nodes.filter((m) => m.group === n.group)
-  const c = {
-    x: members.reduce((s, m) => s + m.x, 0) / members.length,
-    y: members.reduce((s, m) => s + m.y, 0) / members.length,
-  }
-  groupCentres.set(n.group, c)
-  return c
-}
 
 // ------------------------------------------------------------------ interaction
 
@@ -433,6 +429,12 @@ onBeforeUnmount(() => {
       <span v-if="biomeFocus" class="dim small">
         {{ biomeNodeCount }} {{ t('个节点只对') }} {{ biomeFocus }} {{ t('区域生效。') }}
       </span>
+      <button v-if="biomeFocus && biomeAreas.length" class="filter jump" @click="showOnMapPage">
+        {{ biomeAreas.length }} {{ t('个该生态的地区 → 在地图页看') }}
+      </button>
+      <span v-if="biomeFocus && !biomeAreas.length" class="dim small">
+        {{ t('(地图表里没有该生态的地区。)') }}
+      </span>
     </div>
 
     <p v-if="query.trim()" class="dim small hit-line">
@@ -546,6 +548,21 @@ onBeforeUnmount(() => {
             <span class="prog-num dim">{{ p.allocated }}/{{ p.total }}</span>
             <span class="prog-note dim">{{ t('显著') }} {{ p.notablesTaken }}/{{ p.notablesTotal }}</span>
           </button>
+        </div>
+
+        <div v-if="biomeFocus && biomeAreas.length" class="card block">
+          <h3>
+            {{ biomeFocus }}
+            <span class="dim small">{{ biomeAreas.length }} {{ t('个地区') }}</span>
+          </h3>
+          <p class="dim small">{{ t('地图表里属于这个生态的地区,按社区跑图评分排。') }}</p>
+          <div class="area-list">
+            <button v-for="a in biomeAreas" :key="a.code ?? a.name" class="area-row" @click="showOnMapPage">
+              <span class="area-name">{{ a.name }}</span>
+              <span class="dim small">{{ a.layout === 'unknown' ? '—' : t(LAYOUT_LABEL[a.layout]) }}</span>
+              <span class="dim small">{{ a.navigation == null ? '' : '★'.repeat(a.navigation) }}</span>
+            </button>
+          </div>
         </div>
 
         <div class="card block">
@@ -673,6 +690,42 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 5px 8px;
   padding: 8px 14px;
+}
+.filter.jump {
+  color: #7aa5d9;
+  border-color: #2c4258;
+}
+.filter.jump:hover {
+  color: #e8b04b;
+  border-color: #e8b04b;
+}
+.area-list {
+  overflow-y: auto;
+  max-height: 180px;
+}
+.area-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #141826;
+  color: #cfd4e4;
+  font-size: 12px;
+  padding: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+.area-row:hover {
+  background: #141826;
+}
+.area-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .hit-line,
 .notice {

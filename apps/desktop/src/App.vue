@@ -40,6 +40,7 @@ import { realm } from './settings'
 import { initCampaignFollow } from './campaignFollow'
 import { FARMABLE_COUNT as MAP_COUNT } from './mapData'
 import { requestAtlasFocus } from './atlasFocus'
+import { requestMapFocus } from './mapFocus'
 import { ATLAS } from './atlasData'
 
 type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'atlas' | 'maps' | 'price' | 'farm' | 'settings'
@@ -69,6 +70,12 @@ function openAtlas(biome: string) {
 }
 
 const ATLAS_NODES = ATLAS.nodes.length
+
+/** The atlas page asks for a biome; the map page picks the request up itself. */
+function openMaps(biome: string) {
+  requestMapFocus(biome)
+  view.value = 'maps'
+}
 
 const tree: TreeData = loadTree()
 const view = ref<View>('home')
@@ -677,7 +684,7 @@ function setLevel(level: number | null) {
     </main>
 
     <main v-else-if="view === 'atlas'" class="full">
-      <AtlasPanel />
+      <AtlasPanel @open-maps="openMaps" />
     </main>
 
     <main v-else-if="view === 'maps'" class="centered">

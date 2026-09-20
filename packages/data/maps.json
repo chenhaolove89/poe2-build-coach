@@ -1211,7 +1211,8 @@
    "kind": "map",
    "layout": "linear",
    "biomes": [
-    "Mountain or Faridun City"
+    "Mountain",
+    "Faridun City"
    ],
    "boss": "Tetzcatl, the Blazing Guardian",
    "note": "Very nice linear layout",

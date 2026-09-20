@@ -59,6 +59,13 @@ export interface AtlasBounds {
   maxY: number
 }
 
+/**
+ * One link. `[from, to]` is a straight line; `[from, to, radius, sweep]` is the arc
+ * the game curves it into, with `radius` in world units and `sweep` as the SVG arc
+ * flag. Baking the choice here keeps the renderer free of orbit arithmetic.
+ */
+export type AtlasEdge = [number, number] | [number, number, number, number]
+
 export interface AtlasTree {
   source: string
   captured: string
@@ -67,7 +74,7 @@ export interface AtlasTree {
   biomeKeywords: string[]
   subtrees: AtlasSubtree[]
   nodes: AtlasNode[]
-  edges: [number, number][]
+  edges: AtlasEdge[]
 }
 
 export interface AtlasIndex {

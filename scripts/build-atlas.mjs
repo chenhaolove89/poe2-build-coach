@@ -147,6 +147,9 @@ for (const group of groups) {
       orbitIndex: slot.position_clockwise ?? 0,
       connections: slot.connections ?? [],
       root: rootSet.has(slot.hash),
+      // Parallel to `connections`: an orbit index whose sign picks the sweep
+      // direction, or INT_MAX for a straight line. Consumed below, not emitted.
+      splines: slot.splines ?? [],
     })
   }
   groupIndex++
@@ -155,17 +158,41 @@ for (const group of groups) {
 const byHash = new Map(nodes.map((n) => [n.hash, n]))
 
 // Edges, deduplicated: the game lists each connection from both ends.
+//
+// Most are drawn as arcs, because that is what makes a ring of nodes read as a ring.
+// Two cases, matching how the tree is laid out: two nodes on the same ring curve
+// along that ring centred on their group, and anything else uses the radius the
+// export records for that connection (`splines`, parallel to `connections`) — a
+// signed orbit index whose sign is the sweep direction, with INT_MAX meaning the
+// game wants a straight line.
+const STRAIGHT = 2147483647
 const edgeKeys = new Set()
 const edges = []
 for (const node of nodes) {
-  for (const to of node.connections) {
-    if (!byHash.has(to)) continue
+  for (const [i, to] of node.connections.entries()) {
+    const other = byHash.get(to)
+    if (!other) continue
     const key = node.hash < to ? `${node.hash}-${to}` : `${to}-${node.hash}`
     if (edgeKeys.has(key)) continue
     edgeKeys.add(key)
-    edges.push([node.hash, to])
+
+    let arc = null
+    if (node.group === other.group && node.orbit === other.orbit && node.orbit > 0) {
+      const per = skillsPerOrbit[node.orbit] || 1
+      const delta = (((other.orbitIndex - node.orbitIndex) % per) + per) % per
+      arc = { r: orbitRadii[node.orbit], sweep: delta <= per / 2 ? 1 : 0 }
+    } else {
+      const spline = node.splines[i] ?? STRAIGHT
+      if (spline !== 0 && Math.abs(spline) < orbitRadii.length) {
+        arc = { r: orbitRadii[Math.abs(spline)], sweep: spline < 0 ? 1 : 0 }
+      }
+    }
+    edges.push(arc ? [node.hash, to, arc.r, arc.sweep] : [node.hash, to])
   }
 }
+
+// `splines` was scaffolding for the edge pass; it does not belong in the data file.
+for (const node of nodes) delete node.splines
 
 const subtrees = []
 for (const id of Object.keys(SUBTREE_LABEL)) {
@@ -207,7 +234,7 @@ writeFileSync(OUT, JSON.stringify(out))
 const kinds = {}
 for (const n of nodes) kinds[n.kind] = (kinds[n.kind] || 0) + 1
 console.log(`wrote ${OUT}`)
-console.log(`  nodes ${nodes.length} | edges ${edges.length} | groups ${groups.length}`)
+console.log(`  nodes ${nodes.length} | edges ${edges.length} (${edges.filter((e) => e.length === 4).length} arc) | groups ${groups.length}`)
 console.log(`  kinds: ${JSON.stringify(kinds)}`)
 console.log(`  subtrees: ${subtrees.map((s) => `${s.id} ${s.count}`).join(' | ')}`)
 console.log(`  bounds: ${JSON.stringify(out.bounds)}`)
@@ -221,6 +248,8 @@ if (missingRoot.length) console.log(`  WARNING: subtrees without a root: ${missi
 
 // Every edge endpoint must be a real node; a dangling id means the export and the
 // group data disagree and the renderer would drop a link silently.
+const badArc = edges.filter((e) => e.length === 4 && !(e[2] > 0))
+if (badArc.length) console.log(`  WARNING: ${badArc.length} arcs with a non-positive radius`)
 const dangling = edges.filter(([a, b]) => !byHash.has(a) || !byHash.has(b))
 if (dangling.length) console.log(`  WARNING: ${dangling.length} dangling edges`)
 
