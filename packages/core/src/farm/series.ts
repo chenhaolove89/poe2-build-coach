@@ -113,6 +113,8 @@ export interface MapIncome {
   net: number
   /** How many ledger entries landed in the window. */
   entryCount: number
+  /** Entries in the window that no rate could price, so their value is missing here. */
+  unpricedCount: number
 }
 
 /**
@@ -124,6 +126,9 @@ export interface MapIncome {
  * farmer wants — so the last map runs to the session's end. Entries before the
  * first map (early costs, usually) belong to no run and are left out here; the
  * curve still counts them.
+ *
+ * The result is one row per map *visit*, in visit order, so two runs of the same
+ * map are two rows. Aggregating them is `summariseRunsByMap`'s job.
  */
 export function incomePerMap(
   visits: readonly AreaVisit[],
@@ -135,13 +140,22 @@ export function incomePerMap(
     const upper = maps[i + 1]?.startAt ?? Number.POSITIVE_INFINITY
     let net = 0
     let entryCount = 0
+    let unpricedCount = 0
     for (const entry of entries) {
       if (entry.at < visit.startAt || entry.at >= upper) continue
-      const value = ledgerValueIn(entry, rates)
-      if (value == null) continue
-      net += value
       entryCount++
+      const value = ledgerValueIn(entry, rates)
+      if (value == null) unpricedCount++
+      else net += value
     }
-    return { name: visit.name, code: visit.code, startAt: visit.startAt, endAt: visit.endAt, net, entryCount }
+    return {
+      name: visit.name,
+      code: visit.code,
+      startAt: visit.startAt,
+      endAt: visit.endAt,
+      net,
+      entryCount,
+      unpricedCount,
+    }
   })
 }

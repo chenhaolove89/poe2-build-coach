@@ -27,6 +27,7 @@ import { currencyName, dialect, t } from '../i18n'
 import { findClientLog, rememberLogPath, savedLogPath } from '../farmClient'
 import { realmId } from '../settings'
 import FarmCharts from './FarmCharts.vue'
+import FarmMapStats from './FarmMapStats.vue'
 import {
   addLedgerEntry,
   checkClipboardNow,
@@ -294,7 +295,7 @@ function demoLines(): string[] {
   push(`[LOADING SCREEN] (${dialect(HIDEOUT, 'zh-Hans')}) Duration = 3.5 seconds`)
   const maps: [string, string][] = [
     ['MapDeforestation', '毁坏的林场'],
-    ['MapSand', '沙地'],
+    ['MapSandspit', '沙嘴'],
     ['MapOasis', '绿洲'],
   ]
   for (const [index, [code, name]] of maps.entries()) {
@@ -478,6 +479,13 @@ watch(realmId, () => {
           :entries="ledger"
           :visits="session?.visits ?? []"
           :start-at="farm.startedAt ?? 0"
+          :now="farm.now"
+          :labels="labels"
+        />
+
+        <FarmMapStats
+          :entries="ledger"
+          :visits="session?.visits ?? []"
           :now="farm.now"
           :labels="labels"
         />

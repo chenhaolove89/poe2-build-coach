@@ -1,29 +1,35 @@
 <script setup lang="ts">
+/**
+ * 地图页 —— the endgame area table.
+ *
+ * The table is keyed by the game's area *code* (`MapDeforestation`), not by name,
+ * for two reasons that both bite in practice: names repeat (seven areas are called
+ * "Precursor Tower") and the code cannot be derived from the name (`MapSavanna` is
+ * "Savannah"). That code is also what the client log writes, so it is the key the
+ * 刷图 page joins on — a map starred here is the same map measured there.
+ *
+ * Favourites and notes are stored under the code, falling back to the name so a
+ * favourite set saved before this table existed still lights up.
+ */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import mapsJson from '@poe2coach/data/maps.json'
 import topologyJson from '@poe2coach/data/map-topology.json'
+import type { MapArea, MapKind, MapLayout } from '@poe2coach/core'
+import {
+  AREAS,
+  AREA_CAPTURED,
+  AREA_SOURCE,
+  KIND_LABEL,
+  KIND_ORDER,
+  LAYOUT_LABEL,
+  LAYOUT_ORDER,
+} from '../mapData'
 import { bilingual, dialect, t, zhName } from '../i18n'
 import MapTopology from './MapTopology.vue'
 
-interface MapEntry {
-  name: string
-  navigation: number | null
-  backtracking: number | null
-  layout: 'linear' | 'open' | 'maze' | 'special'
-  biomes: string[]
-  recommended: string[]
-  boss: string | null
-}
+const emit = defineEmits<{ openAtlas: [biome: string] }>()
 
-const DATA = mapsJson as unknown as { source: string; maps: MapEntry[] }
 const TOPOLOGY = (topologyJson as unknown as { maps: Record<string, string[]> }).maps
 
-const LAYOUT_LABEL: Record<string, string> = {
-  linear: '直线型',
-  open: '开放型',
-  maze: '迷宫型',
-  special: '特殊区域',
-}
 const BIOME_LABEL: Record<string, string> = {
   Desert: '沙漠',
   'Ezomyte City': '埃佐米特城',
@@ -31,11 +37,11 @@ const BIOME_LABEL: Record<string, string> = {
   Forest: '森林',
   Grass: '草原',
   Mountain: '山地',
+  Ocean: '海洋',
   Swamp: '沼泽',
   'Vaal City': '瓦尔城',
   Water: '水域',
 }
-const MECH_LABEL: Record<string, string> = { Breach: '裂隙' }
 
 // ------------------------------------------------------------------ favorites & notes
 
@@ -44,6 +50,11 @@ const NOTES_KEY = 'poe2coach.maps.notes'
 
 const favorites = ref<Set<string>>(loadSet(FAV_KEY))
 const notes = ref<Record<string, string>>(loadNotes())
+
+/** Stable storage key: the code when there is one, the name otherwise. */
+function areaKey(a: MapArea): string {
+  return a.code ?? a.name
+}
 
 function loadSet(key: string): Set<string> {
   try {
@@ -71,51 +82,63 @@ function loadNotes(): Record<string, string> {
   }
 }
 
-function toggleFav(name: string) {
+/** A favourite saved under the bare name (before the table had codes) still counts. */
+function isFav(a: MapArea): boolean {
+  return favorites.value.has(areaKey(a)) || favorites.value.has(a.name)
+}
+
+function toggleFav(a: MapArea) {
   const next = new Set(favorites.value)
-  if (next.has(name)) next.delete(name)
-  else next.add(name)
+  const key = areaKey(a)
+  if (next.has(key) || next.has(a.name)) {
+    next.delete(key)
+    next.delete(a.name)
+  } else {
+    next.add(key)
+  }
   favorites.value = next
   saveSet(FAV_KEY, next)
+}
+
+function noteFor(a: MapArea): string {
+  return notes.value[areaKey(a)] ?? notes.value[a.name] ?? ''
 }
 
 // ------------------------------------------------------------------ search & filters
 
 const query = ref('')
-const layoutFilter = ref<'all' | 'linear' | 'open' | 'maze' | 'special'>('all')
+const kindFilter = ref<'all' | MapKind>('map')
+const layoutFilter = ref<'all' | MapLayout>('all')
 const favOnly = ref(false)
 
-function matches(m: MapEntry): boolean {
-  if (favOnly.value && !favorites.value.has(m.name)) return false
+function matches(m: MapArea): boolean {
+  if (favOnly.value && !isFav(m)) return false
+  if (kindFilter.value !== 'all' && m.kind !== kindFilter.value) return false
   if (layoutFilter.value !== 'all' && m.layout !== layoutFilter.value) return false
   const q = query.value.trim().toLowerCase()
   if (!q) return true
-  // Matched against the variant on screen, so a 繁體 reader can type 繁體.
+  // Matched against the variant on screen, so a 繁體 reader can type 繁體. The area
+  // code is searchable too — it is what the log and the 刷图 page speak in.
   return (
     m.name.toLowerCase().includes(q) ||
+    (m.code ?? '').toLowerCase().includes(q) ||
     (zhName(m.name) ?? '').includes(q) ||
     (m.boss ?? '').toLowerCase().includes(q) ||
     (zhName(m.boss) ?? '').includes(q)
   )
 }
 
-const isFiltering = computed(() => favOnly.value || layoutFilter.value !== 'all' || query.value.trim().length > 0)
+const filtered = computed(() => AREAS.filter(matches))
 
-interface MapGroup {
-  key: 'linear' | 'open' | 'maze' | 'special'
-  label: string
-  maps: MapEntry[]
-}
-
-const GROUPS: MapGroup[] = (['linear', 'open', 'maze', 'special'] as const).map((key) => ({
-  key,
-  label: LAYOUT_LABEL[key],
-  maps: DATA.maps.filter((m) => m.layout === key),
-}))
-
-const openGroups = ref<Set<string>>(
-  new Set(GROUPS.filter((g) => g.key === 'linear' || g.key === 'open').map((g) => g.key)),
+const groups = computed(() =>
+  LAYOUT_ORDER.map((key) => ({
+    key,
+    label: LAYOUT_LABEL[key],
+    areas: filtered.value.filter((a) => a.layout === key),
+  })).filter((g) => g.areas.length > 0),
 )
+
+const openGroups = ref<Set<string>>(new Set(['linear', 'open']))
 
 function toggleGroup(key: string) {
   const next = new Set(openGroups.value)
@@ -124,13 +147,19 @@ function toggleGroup(key: string) {
   openGroups.value = next
 }
 
-function visibleMaps(g: MapGroup): MapEntry[] {
-  return g.maps.filter(matches)
-}
+const isFiltering = computed(
+  () => favOnly.value || layoutFilter.value !== 'all' || kindFilter.value !== 'map' || query.value.trim().length > 0,
+)
+
+const kindCounts = computed(() => {
+  const counts = new Map<MapKind, number>()
+  for (const a of AREAS) counts.set(a.kind, (counts.get(a.kind) ?? 0) + 1)
+  return counts
+})
 
 // ------------------------------------------------------------------ detail overlay
 
-const detail = ref<MapEntry | null>(null)
+const detail = ref<MapArea | null>(null)
 const variant = ref(0)
 const noteDraft = ref('')
 
@@ -138,10 +167,10 @@ const noteDraft = ref('')
 const variants = computed(() => (detail.value ? (TOPOLOGY[detail.value.name.toLowerCase()] ?? []) : []))
 const currentSvg = computed(() => variants.value[variant.value] ?? null)
 
-function openDetail(m: MapEntry) {
+function openDetail(m: MapArea) {
   detail.value = m
   variant.value = 0
-  noteDraft.value = notes.value[m.name] ?? ''
+  noteDraft.value = noteFor(m)
 }
 
 function closeDetail() {
@@ -151,8 +180,9 @@ function closeDetail() {
 function saveNote() {
   if (!detail.value) return
   const next = { ...notes.value }
-  if (noteDraft.value.trim()) next[detail.value.name] = noteDraft.value
-  else delete next[detail.value.name]
+  const key = areaKey(detail.value)
+  if (noteDraft.value.trim()) next[key] = noteDraft.value
+  else delete next[key]
   notes.value = next
   try {
     localStorage.setItem(NOTES_KEY, JSON.stringify(next))
@@ -184,85 +214,105 @@ function biomeZh(b: string): string {
   return BIOME_LABEL[b] ? t(BIOME_LABEL[b]) : dialect(b)
 }
 
-function mechLabel(r: string): string {
-  return MECH_LABEL[r] ? t(MECH_LABEL[r]) : dialect(r)
-}
-
 const topoCount = computed(() => Object.keys(TOPOLOGY).length)
 const favCount = computed(() => favorites.value.size)
+const mapCount = computed(() => AREAS.filter((a) => a.kind === 'map').length)
+const ratedCount = computed(() => AREAS.filter((a) => a.kind === 'map' && a.navigation != null).length)
 </script>
 
 <template>
   <div class="maps-wrap">
     <div class="summary card">
       <div class="sum-row">
-        <span class="sum-item"><b class="gold">{{ DATA.maps.length }}</b> {{ t('个地区') }}</span>
-        <span class="sum-item"><b class="blue">{{ topoCount }}</b> {{ t('张拓扑图') }}</span>
+        <span class="sum-item"><b class="gold">{{ mapCount }}</b> {{ t('张可刷图') }}</span>
+        <span class="sum-item"><b class="blue">{{ AREAS.length }}</b> {{ t('个地区') }}</span>
+        <span class="sum-item"><b class="green">{{ topoCount }}</b> {{ t('张拓扑图') }}</span>
         <span class="sum-item">
-          <b class="green">{{ DATA.maps.filter((m) => m.layout === 'linear').length }}</b> {{ t('直线') }}
-          · <b class="blue2">{{ DATA.maps.filter((m) => m.layout === 'open').length }}</b> {{ t('开放') }}
-          · <b class="orange">{{ DATA.maps.filter((m) => m.layout === 'maze').length }}</b> {{ t('迷宫') }}
+          <b class="blue2">{{ ratedCount }}</b> {{ t('张有社区评分') }}
         </span>
         <span class="sum-item">⭐ <b class="gold">{{ favCount }}</b> {{ t('张收藏') }}</span>
       </div>
       <p class="dim small">
-        {{ t('跑图/回头路为 POE2WAY 社区评分(4 最好):直线型=沿主线推进,开放型=大面积开阔,迷宫型=岔路多易迷路。') }}
-        {{ t('点⭐收藏常刷的图;点行看大图与笔记。') }}
+        {{ t('跑图/回头路为 POE2WAY 社区评分(4 最好):直线型=沿主线推进,开放型=大面积开阔,环形回绕=一圈走完不折返。') }}
+        {{ t('点⭐收藏常刷的图;点行看大图与笔记。收藏按区域码记录,和刷图页的统计对得上。') }}
       </p>
     </div>
 
     <div class="toolbar card">
-      <input v-model="query" class="search" :placeholder="t('搜索地图或 Boss…')" spellcheck="false" />
+      <input v-model="query" class="search" :placeholder="t('搜索地图名 / Boss / 区域码…')" spellcheck="false" />
       <label class="hd dim">
         <input v-model="favOnly" type="checkbox" />
         {{ t('只看收藏') }}
       </label>
       <div class="filters">
         <button
-          v-for="opt in [['all', '全部'], ['linear', '直线型'], ['open', '开放型'], ['maze', '迷宫型'], ['special', '特殊']]"
-          :key="opt[0]"
           class="filter"
-          :class="{ active: layoutFilter === opt[0] }"
-          @click="layoutFilter = opt[0] as typeof layoutFilter"
+          :class="{ active: kindFilter === 'all' }"
+          @click="kindFilter = 'all'"
         >
-          {{ t(opt[1]) }}
+          {{ t('全部') }} {{ AREAS.length }}
+        </button>
+        <button
+          v-for="k in KIND_ORDER"
+          :key="k"
+          class="filter"
+          :class="{ active: kindFilter === k }"
+          @click="kindFilter = k"
+        >
+          {{ t(KIND_LABEL[k]) }} {{ kindCounts.get(k) ?? 0 }}
+        </button>
+      </div>
+      <div class="filters">
+        <button class="filter" :class="{ active: layoutFilter === 'all' }" @click="layoutFilter = 'all'">
+          {{ t('全部布局') }}
+        </button>
+        <button
+          v-for="l in LAYOUT_ORDER"
+          :key="l"
+          class="filter"
+          :class="{ active: layoutFilter === l }"
+          @click="layoutFilter = l"
+        >
+          {{ t(LAYOUT_LABEL[l]) }}
         </button>
       </div>
     </div>
 
     <div
-      v-for="g in GROUPS"
+      v-for="g in groups"
       :key="g.key"
-      v-show="!isFiltering || visibleMaps(g).length"
+      v-show="!isFiltering || g.areas.length"
       class="group card"
       :class="{ open: openGroups.has(g.key) || isFiltering }"
     >
       <button class="group-head" @click="toggleGroup(g.key)">
         <span class="tri">{{ openGroups.has(g.key) || isFiltering ? '▾' : '▸' }}</span>
         <span class="group-name">{{ t(g.label) }}</span>
-        <span class="dim count">
-          {{ visibleMaps(g).length }} / {{ g.maps.length }}
-        </span>
+        <span class="dim count">{{ g.areas.length }}</span>
       </button>
+      <p v-if="g.key === 'unknown' && (openGroups.has(g.key) || isFiltering)" class="dim small group-note">
+        {{ t('社区还没有这些图布局的描述,这里如实留白 —— 不猜。以进图实际走法为准,顺手可记在笔记里。') }}
+      </p>
       <p v-if="g.key === 'special' && (openGroups.has(g.key) || isFiltering)" class="dim small group-note">
-        {{ t('这些地区布局没有统一规律(结构特殊或随变体差异大), 以拓扑图和实际进图为准。') }}
+        {{ t('传奇图/堡垒/首领场地/塔/藏身处等,不是普通可刷图,按需查看。') }}
       </p>
       <div v-show="openGroups.has(g.key) || isFiltering" class="rows">
         <div
-          v-for="m in visibleMaps(g)"
-          :key="m.name"
+          v-for="m in g.areas"
+          :key="areaKey(m)"
           class="row-card"
-          :class="{ fav: favorites.has(m.name) }"
+          :class="{ fav: isFav(m) }"
           @click="openDetail(m)"
         >
-          <button class="star" :class="{ on: favorites.has(m.name) }" :title="t('收藏')" @click.stop="toggleFav(m.name)">
-            {{ favorites.has(m.name) ? '★' : '☆' }}
+          <button class="star" :class="{ on: isFav(m) }" :title="t('收藏')" @click.stop="toggleFav(m)">
+            {{ isFav(m) ? '★' : '☆' }}
           </button>
           <div class="row-main">
             <div class="row-line">
               <span class="map-name">{{ bilingual(m.name) }}</span>
-              <span v-if="favorites.has(m.name)" class="chip fav-chip">⭐</span>
-              <span v-for="(mech, mi) in m.recommended.map(mechLabel)" :key="mi" class="chip mech-chip">{{ mech }}</span>
+              <span v-if="isFav(m)" class="chip fav-chip">⭐</span>
+              <span v-if="m.kind !== 'map'" class="chip kind-chip">{{ t(KIND_LABEL[m.kind]) }}</span>
+              <span class="chip code-chip">{{ m.code ?? t('未收录') }}</span>
             </div>
             <div class="row-line dim">
               <span class="score">{{ t('跑图') }} {{ navLabel(m.navigation) }}</span>
@@ -270,7 +320,7 @@ const favCount = computed(() => favorites.value.size)
               <span>{{ m.biomes.map(biomeZh).join(' / ') || '—' }}</span>
             </div>
             <div v-if="m.boss" class="row-boss">Boss:{{ bilingual(m.boss) }}</div>
-            <div v-if="notes[m.name]" class="row-note dim">📝 {{ notes[m.name] }}</div>
+            <div v-if="noteFor(m)" class="row-note dim">📝 {{ noteFor(m) }}</div>
           </div>
           <div v-if="TOPOLOGY[m.name.toLowerCase()]" class="thumb">
             <MapTopology :svg="TOPOLOGY[m.name.toLowerCase()][0]" :compact="true" />
@@ -278,24 +328,49 @@ const favCount = computed(() => favorites.value.size)
         </div>
       </div>
     </div>
-    <div v-if="!GROUPS.some((g) => visibleMaps(g).length)" class="dim empty">{{ t('没有匹配的地图。') }}</div>
-    <div class="source dim">{{ t('数据来源:POE2WAY(poe2way.com/atlas),评分为社区参考;拓扑图为社区手绘示意图。') }}</div>
+    <div v-if="!groups.length" class="dim empty">{{ t('没有匹配的地区。') }}</div>
+    <div class="source dim">
+      {{
+        t(
+          '数据来源:PoB2 WorldAreas.lua(区域码与 Boss) + poe2wiki 地图表(生态与布局描述) + POE2WAY(社区评分,拓扑为社区手绘示意图)。',
+        )
+      }}
+      <span class="raw-source" :title="AREA_SOURCE">{{ t('采集于') }} {{ AREA_CAPTURED }}</span>
+    </div>
 
     <div v-if="detail" class="overlay" @click.self="closeDetail">
       <div class="detail">
         <div class="detail-head">
           <div>
             <h2>
-              <button class="star big" :class="{ on: favorites.has(detail.name) }" :title="t('收藏')" @click="toggleFav(detail.name)">
-                {{ favorites.has(detail.name) ? '★' : '☆' }}
+              <button class="star big" :class="{ on: isFav(detail) }" :title="t('收藏')" @click="toggleFav(detail)">
+                {{ isFav(detail) ? '★' : '☆' }}
               </button>
               {{ bilingual(detail.name) }}
             </h2>
             <p class="dim sub">
-              {{ t(LAYOUT_LABEL[detail.layout]) }} · {{ t('生态') }} {{ detail.biomes.map(biomeZh).join(' / ') || '—' }}
+              {{ t(KIND_LABEL[detail.kind]) }} · {{ t(LAYOUT_LABEL[detail.layout]) }} · {{ t('生态') }}
+              {{ detail.biomes.map(biomeZh).join(' / ') || '—' }}
+            </p>
+            <p class="dim sub code-line">
+              {{ t('区域码') }} <code>{{ detail.code ?? t('未收录') }}</code>
+              <span class="dim"> {{ t('（刷图页按它归账）') }}</span>
             </p>
           </div>
           <button class="close" :title="t('关闭(Esc)')" @click="closeDetail">✕</button>
+        </div>
+
+        <div v-if="detail.biomes.length" class="detail-atlas">
+          <span class="dim small">{{ t('异界天赋里有一批节点只对特定生态生效:') }}</span>
+          <button
+            v-for="b in detail.biomes"
+            :key="b"
+            class="atlas-link"
+            :title="t('在异界页按这个生态筛选节点')"
+            @click="emit('openAtlas', b)"
+          >
+            {{ biomeZh(b) }} → {{ t('看异界节点') }}
+          </button>
         </div>
 
         <div class="detail-scores">
@@ -308,14 +383,18 @@ const favCount = computed(() => favorites.value.size)
             <b>{{ navLabel(detail.backtracking) }}</b>
           </div>
           <div class="dscore">
-            <span class="dim">{{ t('推荐机制') }}</span>
-            <b>{{ detail.recommended.map(mechLabel).join(' / ') || '—' }}</b>
+            <span class="dim">{{ t('布局') }}</span>
+            <b>{{ t(LAYOUT_LABEL[detail.layout]) }}</b>
           </div>
         </div>
 
         <div v-if="detail.boss" class="detail-boss">
           <span class="dim">Boss</span> {{ bilingual(detail.boss) }}
         </div>
+
+        <p v-if="detail.note" class="detail-note-prose">
+          <span class="dim">{{ t('社区描述') }}</span> {{ detail.note }}
+        </p>
 
         <template v-if="currentSvg">
           <div class="topo-tabs">
@@ -540,9 +619,13 @@ const favCount = computed(() => favorites.value.size)
   color: #9aa3bd;
   white-space: nowrap;
 }
-.mech-chip {
-  color: #6fa8dc;
-  border-color: #2c4258;
+.kind-chip {
+  color: #c98fd0;
+  border-color: #4a3050;
+}
+.code-chip {
+  color: #6b7390;
+  font-family: ui-monospace, Consolas, monospace;
 }
 .fav-chip {
   border: none;
@@ -567,6 +650,11 @@ const favCount = computed(() => favorites.value.size)
 }
 .source {
   font-size: 11px;
+  line-height: 1.6;
+}
+.raw-source {
+  margin-left: 6px;
+  color: #4a5270;
 }
 .overlay {
   position: fixed;
@@ -607,6 +695,14 @@ const favCount = computed(() => favorites.value.size)
   font-size: 12px;
   margin-top: 2px;
 }
+.code-line code {
+  color: #9fb4d8;
+  background: #141a26;
+  border: 1px solid #232939;
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 11px;
+}
 .close {
   background: transparent;
   border: 1px solid #2c3244;
@@ -626,6 +722,28 @@ const favCount = computed(() => favorites.value.size)
   margin: 14px 0 6px;
   flex-wrap: wrap;
 }
+.detail-atlas {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #1a1f2c;
+}
+.atlas-link {
+  background: #1a1f2c;
+  border: 1px solid #2c3244;
+  color: #7aa5d9;
+  border-radius: 10px;
+  padding: 3px 9px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.atlas-link:hover {
+  color: #e8b04b;
+  border-color: #e8b04b;
+}
 .dscore {
   display: flex;
   flex-direction: column;
@@ -635,6 +753,12 @@ const favCount = computed(() => favorites.value.size)
 .detail-boss {
   font-size: 13px;
   color: #d9a441;
+  margin-bottom: 12px;
+}
+.detail-note-prose {
+  font-size: 12px;
+  color: #c9c0a0;
+  line-height: 1.6;
   margin-bottom: 12px;
 }
 .topo-tabs {
@@ -660,18 +784,6 @@ const favCount = computed(() => favorites.value.size)
 .tab-note {
   font-size: 11px;
   margin-left: auto;
-}
-.topo {
-  background: #080a0f;
-  border: 1px solid #1d2331;
-  border-radius: 8px;
-  padding: 10px;
-  height: 340px;
-}
-.topo :deep(svg) {
-  width: 100%;
-  height: 100%;
-  display: block;
 }
 .topo-note,
 .topo-missing {

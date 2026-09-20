@@ -19,6 +19,7 @@ import GearPanel from './components/GearPanel.vue'
 import LevelingPage from './components/LevelingPage.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import MapsPanel from './components/MapsPanel.vue'
+import AtlasPanel from './components/AtlasPanel.vue'
 import PricePanel from './components/PricePanel.vue'
 import FarmPanel from './components/FarmPanel.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
@@ -37,11 +38,11 @@ import type { StoredTreePreset } from './treePresetStore'
 import { treeEdges } from './treeArt'
 import { realm } from './settings'
 import { initCampaignFollow } from './campaignFollow'
-import mapsJson from '@poe2coach/data/maps.json'
+import { FARMABLE_COUNT as MAP_COUNT } from './mapData'
+import { requestAtlasFocus } from './atlasFocus'
+import { ATLAS } from './atlasData'
 
-const MAP_COUNT = (mapsJson as unknown as { maps: unknown[] }).maps.length
-
-type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'maps' | 'price' | 'farm' | 'settings'
+type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'atlas' | 'maps' | 'price' | 'farm' | 'settings'
 
 const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'home', label: '主页' },
@@ -52,12 +53,22 @@ const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
   { key: 'skills', label: '技能', requiresBuild: true },
   { key: 'leveling', label: '升级', requiresBuild: true },
   { key: 'price', label: '查价' },
+  // The endgame tree. Build-independent, like the map table it informs.
+  { key: 'atlas', label: '异界' },
   { key: 'maps', label: '地图' },
   // Also build-independent: a farming session is about the clock and the book,
   // not about which build is loaded.
   { key: 'farm', label: '刷图' },
   { key: 'settings', label: '设置' },
 ]
+
+/** The map page asks for a biome; the atlas page picks the request up itself. */
+function openAtlas(biome: string) {
+  requestAtlasFocus({ biome })
+  view.value = 'atlas'
+}
+
+const ATLAS_NODES = ATLAS.nodes.length
 
 const tree: TreeData = loadTree()
 const view = ref<View>('home')
@@ -572,6 +583,12 @@ function setLevel(level: number | null) {
         <p class="go">{{ t('进入') }} →</p>
       </button>
 
+      <button class="card feature" @click="view = 'atlas'">
+        <h3>🌌 {{ t('异界') }}</h3>
+        <p class="desc">{{ t(`${ATLAS_NODES} 个天赋节点 · 6 棵机制子树 · 按生态找节点`) }}</p>
+        <p class="go">{{ t('进入') }} →</p>
+      </button>
+
       <button class="card feature" @click="view = 'maps'">
         <h3>🗺 {{ t('地图') }}</h3>
         <p class="desc">{{ t(`${MAP_COUNT} 个异界地区 · 跑图评分/布局/Boss 一览`) }}</p>
@@ -659,8 +676,12 @@ function setLevel(level: number | null) {
       />
     </main>
 
+    <main v-else-if="view === 'atlas'" class="full">
+      <AtlasPanel />
+    </main>
+
     <main v-else-if="view === 'maps'" class="centered">
-      <MapsPanel />
+      <MapsPanel @open-atlas="openAtlas" />
     </main>
 
     <main v-else-if="view === 'price'" class="centered">

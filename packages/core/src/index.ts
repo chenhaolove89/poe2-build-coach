@@ -38,6 +38,33 @@ export { summariseLedger } from './farm/ledger.js'
 export type { LedgerEntry, LedgerSummary } from './farm/ledger.js'
 export { ledgerValueIn, cumulativeNetSeries, incomePerMap, unpricedTotals, REFERENCE_CURRENCY } from './farm/series.js'
 export type { RateTable, CurvePoint, MapIncome } from './farm/series.js'
+export { summariseRunsByMap } from './farm/perMap.js'
+export type { MapRunSummary } from './farm/perMap.js'
+export { buildAreaIndex, findAreaByCode, isMapCode, farmableAreas, MAP_KINDS, MAP_LAYOUTS } from './maps/areas.js'
+export type { MapArea, AreaIndex, MapKind, MapLayout } from './maps/areas.js'
+export {
+  atlasStatText,
+  buildAtlasIndex,
+  isAllocatable,
+  canAllocate,
+  pathTo,
+  validateAllocation,
+  unallocate,
+  subtreeProgress,
+  allocatedEffects,
+  atlasBiomeKey,
+  atlasNodesForBiome,
+} from './atlas/tree.js'
+export type {
+  AtlasTree,
+  AtlasNode,
+  AtlasNodeKind,
+  AtlasSubtree,
+  AtlasBounds,
+  AtlasIndex,
+  AllocationCheck,
+  SubtreeProgress,
+} from './atlas/tree.js'
 export { emptyFollow, ingestChunk, currentAreaOf, resumeEvents } from './farm/follow.js'
 export type { FollowState, LogChunk } from './farm/follow.js'
 export { campaignNameIndex, resolveCampaignZone, areaNameCandidates } from './campaign/names.js'

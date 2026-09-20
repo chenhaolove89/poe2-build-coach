@@ -89,6 +89,7 @@ function corpus() {
   const files = [
     'packages/data/name-zh.json',
     'packages/data/maps.json',
+    'packages/data/atlas.json',
     'packages/data/stat-translations.json',
     'packages/data/mod-translations.json',
     'packages/data/affix-priorities.json',
