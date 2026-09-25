@@ -20,7 +20,8 @@ import type { ShareSnapshot } from '@poe2coach/core'
 import { isDesktopRuntime } from './tradeClient'
 
 /** The share server (API + /s/ pages). Filled in at deployment; see docs/share-server.md. */
-export const SHARE_SERVER_PROD = ''
+/** The share server (API + /s/ pages). Live on cinaka.com behind nginx; the /poe2 path is the app's basePath. */
+export const SHARE_SERVER_PROD = 'https://cinaka.com/poe2'
 
 const DEV_API_KEY = 'poe2coach.shareApiBase'
 

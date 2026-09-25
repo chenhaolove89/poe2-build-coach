@@ -4,6 +4,10 @@
 
 服务端是一个独立的 Next.js 应用（`server`），**一个部署同时提供 API 与 `/s/:id` 落地页**——落地页是服务端组件，直接查库渲染，没有客户端取数。存储走**可切换驱动**（`src/lib/store.ts` 接口 + `src/lib/drivers/` 实现），内置 `sqlite`（Node 自带 `node:sqlite`，零原生依赖）；统一接入宿主机已有的数据库时，加一个驱动文件 + 一行注册即可，API 与页面零改动。
 
+## 现状（2026-09-25）
+
+**已上线**：`https://cinaka.com/poe2/`（甲骨文 ARM 机器,nginx 反代 127.0.0.1:3000 + Certbot TLS,`SHARE_DB=mysql`——与 kids-english-server 同一个 MySQL 8,库名 `poe2coach_share`,凭证在服务器 `/opt/poe2coach-share/db.env`(0600)）。`desktop/src/shareLink.ts` 已回填 `SHARE_SERVER_PROD`,Tauri 白名单已加 `https://cinaka.com/*`。升级 = 服务器上重跑 from-git.sh 流程(见下)。
+
 ## HTTP 合同
 
 所有 `/api/*` 响应带 `Access-Control-Allow-Origin: *` 与 OPTIONS 预检（桌面端走 Tauri 原生 HTTP 不需要 CORS，浏览器开发预览与测试需要）；错误统一 `{ok:false, error}`。

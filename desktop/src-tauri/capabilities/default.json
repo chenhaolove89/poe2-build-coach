@@ -11,7 +11,8 @@
         { "url": "https://www.pathofexile.com/*" },
         { "url": "https://poe.ninja/*" },
         { "url": "https://poe.game.qq.com/*" },
-        { "url": "https://pathofexile.tw/*" }
+        { "url": "https://pathofexile.tw/*" },
+        { "url": "https://cinaka.com/*" }
       ]
     }
   ]
