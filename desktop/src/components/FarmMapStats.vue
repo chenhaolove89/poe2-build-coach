@@ -13,34 +13,25 @@
  * rather than dropped, and income the rates could not price is counted instead
  * of being read as zero.
  */
-import { computed, onMounted, ref, watch } from 'vue'
-import {
-  REFERENCE_CURRENCY,
-  summariseRunsByMap,
-  type AreaVisit,
-  type LedgerEntry,
-  type MapRunSummary,
-  type RateTable,
-} from '@poe2coach/core'
-import { AREA_INDEX, LAYOUT_LABEL } from '../mapData'
+import { computed, ref } from 'vue'
+import { REFERENCE_CURRENCY, type MapRunSummary } from '@poe2coach/core'
+import { LAYOUT_LABEL } from '../mapData'
 import { currencyName, t } from '../i18n'
-import { fetchLeagues, isDesktopRuntime, rememberLeague, savedLeague } from '../tradeClient'
-import { ensureRates } from '../farmRates'
+import { measuredRatesNote, measuredRows } from '../farmMeasured'
+import { requestMapDetail } from '../mapFocus'
 
 const props = defineProps<{
-  entries: LedgerEntry[]
-  visits: AreaVisit[]
-  now: number
   labels: Record<string, string>
 }>()
+
+const emit = defineEmits<{ openMap: [code: string] }>()
 
 type SortKey = 'net' | 'perRun' | 'perHour' | 'runs'
 
 const sortKey = ref<SortKey>('net')
-const rates = ref<RateTable>({})
-const ratesNote = ref<string | null>(null)
 
-const rows = computed(() => summariseRunsByMap(props.visits, props.entries, rates.value, AREA_INDEX, props.now))
+/** The shared singleton computes these from the live session; the page sorts. */
+const rows = measuredRows
 
 const sorted = computed(() => {
   const list = [...rows.value]
@@ -60,31 +51,6 @@ const sorted = computed(() => {
 const unknownCount = computed(() => rows.value.filter((r) => !r.known).length)
 const unpricedCount = computed(() => rows.value.reduce((sum, r) => sum + r.unpriced, 0))
 const totalRuns = computed(() => rows.value.reduce((sum, r) => sum + r.runs, 0))
-
-async function loadRates(): Promise<void> {
-  if (!isDesktopRuntime() || props.entries.length === 0) return
-  const currencies = [...new Set(props.entries.map((e) => e.currency))]
-  const wanted = currencies.filter((c) => c !== REFERENCE_CURRENCY && !rates.value[c])
-  if (wanted.length === 0) return
-  try {
-    let league = savedLeague()
-    if (!league) {
-      league = (await fetchLeagues())[0] ?? ''
-      if (league) rememberLeague(league)
-    }
-    if (!league) {
-      ratesNote.value = t('无法确定赛季,汇率没得查,只计神圣。')
-      return
-    }
-    const result = await ensureRates(wanted, league)
-    rates.value = { ...rates.value, ...result.rates }
-  } catch (e) {
-    ratesNote.value = e instanceof Error ? e.message : String(e)
-  }
-}
-
-watch(() => props.entries.length, loadRates)
-onMounted(loadRates)
 
 // ------------------------------------------------------------------ display
 
@@ -168,7 +134,13 @@ const SORTS: { key: SortKey; label: string }[] = [
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in sorted" :key="r.code ?? r.clientName">
+          <tr
+            v-for="r in sorted"
+            :key="r.code ?? r.clientName"
+            :class="{ routable: r.code }"
+            :title="r.code ? t('点开在地图页看这张图的布局与笔记') : undefined"
+            @click="r.code && emit('openMap', r.code)"
+          >
             <td class="name-col">
               <span class="map-name">{{ r.name }}</span>
               <span v-if="clientAlias(r)" class="alias dim">{{ clientAlias(r) }}</span>
@@ -194,7 +166,7 @@ const SORTS: { key: SortKey; label: string }[] = [
           {{ unknownCount }}{{ t('个地区不在地图表里(标「表外」),已照常统计,可在「地图」页核对。') }}
         </template>
       </p>
-      <p v-if="ratesNote" class="dim small note">{{ ratesNote }}</p>
+      <p v-if="measuredRatesNote" class="dim small note">{{ measuredRatesNote }}</p>
       <p class="dim small note">
         {{ t('「次数」是样本量:只刷过一次的图,收益说明不了什么。「等级」混着不同等级时,均值为混合样本。') }}
       </p>
@@ -255,6 +227,13 @@ const SORTS: { key: SortKey; label: string }[] = [
 }
 .tbl th.name-col {
   text-align: left;
+}
+/* Rows whose area code is in the map table open that map's detail on click. */
+.tbl tr.routable {
+  cursor: pointer;
+}
+.tbl tr.routable:hover td {
+  background: rgba(126, 224, 163, 0.06);
 }
 .tbl td {
   padding: 6px 8px;

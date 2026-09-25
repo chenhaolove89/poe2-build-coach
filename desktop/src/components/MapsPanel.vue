@@ -24,7 +24,8 @@ import {
   LAYOUT_ORDER,
   biomeLabel,
 } from '../mapData'
-import { mapFocus } from '../mapFocus'
+import { mapDetailRequest, mapFocus } from '../mapFocus'
+import { measuredBadgeFor, measuredDetailLine } from '../farmMeasured'
 import { bilingual, dialect, t, zhName } from '../i18n'
 import MapTopology from './MapTopology.vue'
 
@@ -231,6 +232,20 @@ watch(detail, (value) => {
 
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
+// A measurement row on the farm page asked for this map's detail. immediate,
+// because the request is usually set while the map page is not mounted yet —
+// and this sits below the detail refs, which the callback writes through.
+watch(
+  mapDetailRequest,
+  (code) => {
+    if (!code) return
+    mapDetailRequest.value = null
+    const area = AREAS.find((a) => a.code === code)
+    if (area) openDetail(area)
+  },
+  { immediate: true },
+)
+
 // ------------------------------------------------------------------ display helpers
 
 function navLabel(n: number | null): string {
@@ -361,6 +376,13 @@ const ratedCount = computed(() => AREAS.filter((a) => a.kind === 'map' && a.navi
             <div class="row-line dim">
               <span class="score">{{ t('跑图') }} {{ navLabel(m.navigation) }}</span>
               <span class="score">{{ t('回头') }} {{ navLabel(m.backtracking) }}</span>
+              <span
+                v-if="measuredBadgeFor(m.code)"
+                class="score meas"
+                :title="t('本场实测:只有记账过的收益才会出现在这里。')"
+              >
+                {{ measuredBadgeFor(m.code) }}
+              </span>
               <span>{{ m.biomes.map(biomeZh).join(' / ') || '—' }}</span>
             </div>
             <div v-if="m.boss" class="row-boss">Boss:{{ bilingual(m.boss) }}</div>
@@ -430,6 +452,10 @@ const ratedCount = computed(() => AREAS.filter((a) => a.kind === 'map' && a.navi
             <span class="dim">{{ t('布局') }}</span>
             <b>{{ t(LAYOUT_LABEL[detail.layout]) }}</b>
           </div>
+        </div>
+
+        <div v-if="measuredDetailLine(detail.code)" class="detail-meas">
+          {{ measuredDetailLine(detail.code) }}
         </div>
 
         <div v-if="detail.boss" class="detail-boss">
@@ -644,6 +670,10 @@ const ratedCount = computed(() => AREAS.filter((a) => a.kind === 'map' && a.navi
   color: #9aa3bd;
   white-space: nowrap;
 }
+/* The session's own measurement — green like the money it came from. */
+.score.meas {
+  color: #7ee0a3;
+}
 .row-boss {
   font-size: 11px;
   color: #d9a441;
@@ -793,6 +823,15 @@ const ratedCount = computed(() => AREAS.filter((a) => a.kind === 'map' && a.navi
   flex-direction: column;
   gap: 2px;
   font-size: 12px;
+}
+.detail-meas {
+  font-size: 12px;
+  color: #7ee0a3;
+  background: rgba(126, 224, 163, 0.07);
+  border: 1px solid rgba(126, 224, 163, 0.25);
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin-bottom: 12px;
 }
 .detail-boss {
   font-size: 13px;

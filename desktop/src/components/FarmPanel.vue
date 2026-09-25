@@ -51,6 +51,9 @@ import {
 /** Visits shown in the list; a long session runs into the hundreds. */
 const VISIT_ROWS = 60
 
+/** A per-map row names a map; the app hands it to the map page's detail. */
+const emit = defineEmits<{ openMap: [code: string] }>()
+
 const desktop = isDesktopRuntime()
 /** Discovery came up empty: the manual-paste fallback is the one thing left. */
 const pathNeeded = ref(false)
@@ -483,12 +486,7 @@ watch(realmId, () => {
           :labels="labels"
         />
 
-        <FarmMapStats
-          :entries="ledger"
-          :visits="session?.visits ?? []"
-          :now="farm.now"
-          :labels="labels"
-        />
+        <FarmMapStats :labels="labels" @open-map="(code) => emit('openMap', code)" />
 
         <div class="farm-options">
           <label class="check-label">

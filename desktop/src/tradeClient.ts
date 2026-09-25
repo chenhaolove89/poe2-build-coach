@@ -316,3 +316,17 @@ export function rememberLeague(league: string, id: RealmId = realmId.value): voi
     /* storage disabled — the pick just will not persist */
   }
 }
+
+/**
+ * The league to query: the remembered one, else the first live one (remembered
+ * on success). Every caller that needs "a league, any league" — rate lookups,
+ * price checks at page load — wants exactly this fallback chain.
+ */
+export async function resolveLeague(): Promise<string> {
+  const saved = savedLeague()
+  if (saved) return saved
+  const list = await fetchLeagues()
+  const first = list[0] ?? ''
+  if (first) rememberLeague(first)
+  return first
+}

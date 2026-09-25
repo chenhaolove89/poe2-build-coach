@@ -34,6 +34,7 @@ import { AREAS, LAYOUT_LABEL, biomeLabel } from '../mapData'
 import { allocated as planAllocated, clearAllocated } from '../atlasPlan'
 import { atlasFocus } from '../atlasFocus'
 import { requestMapFocus } from '../mapFocus'
+import { measuredBadgeFor } from '../farmMeasured'
 import { ICON_URLS, ICON_RECTS, SPRITES, FRAMES, SHEET_SIZES } from '@poe2coach/data/atlas-art/icons'
 import { t, zhName } from '../i18n'
 import { nameZh } from '../nameZh'
@@ -806,6 +807,13 @@ onBeforeUnmount(() => {
               <span class="area-name">{{ a.name }}</span>
               <span class="dim small">{{ a.layout === 'unknown' ? '—' : t(LAYOUT_LABEL[a.layout]) }}</span>
               <span class="dim small">{{ a.navigation == null ? '' : '★'.repeat(a.navigation) }}</span>
+              <span
+                v-if="measuredBadgeFor(a.code)"
+                class="meas"
+                :title="t('本场实测:只有记账过的收益才会出现在这里。')"
+              >
+                {{ measuredBadgeFor(a.code) }}
+              </span>
             </button>
           </div>
         </div>
@@ -951,6 +959,7 @@ onBeforeUnmount(() => {
 .area-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   width: 100%;
   background: none;
@@ -970,6 +979,14 @@ onBeforeUnmount(() => {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The session's own measurement, same green the map page uses. The sidebar is
+   narrow, so the badge takes a line of its own rather than squeezing the name. */
+.area-row .meas {
+  flex-basis: 100%;
+  text-align: right;
+  color: #7ee0a3;
   white-space: nowrap;
 }
 .hit-line,

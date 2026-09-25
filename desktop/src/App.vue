@@ -49,7 +49,7 @@ import StrategyCard from './components/StrategyCard.vue'
 import { initCampaignFollow } from './campaignFollow'
 import { AREAS, FARMABLE_COUNT as MAP_COUNT } from './mapData'
 import { requestAtlasFocus } from './atlasFocus'
-import { requestMapFocus } from './mapFocus'
+import { requestMapFocus, requestMapDetail } from './mapFocus'
 import { ATLAS, ATLAS_INDEX } from './atlasData'
 import { isShareUrl, resolveShareLink } from './shareLink'
 
@@ -90,6 +90,12 @@ const ATLAS_NODES = ATLAS.nodes.length
 /** The atlas page asks for a biome; the map page picks the request up itself. */
 function openMaps(biome: string) {
   requestMapFocus(biome)
+  view.value = 'maps'
+}
+
+/** The farm page names a map; the map page opens its detail. */
+function openMapDetail(code: string) {
+  requestMapDetail(code)
   view.value = 'maps'
 }
 
@@ -831,7 +837,7 @@ function setLevel(level: number | null) {
     </main>
 
     <main v-else-if="view === 'farm'" class="full">
-      <FarmPanel />
+      <FarmPanel @open-map="openMapDetail" />
     </main>
 
     <main v-else-if="view === 'settings'" class="centered">
