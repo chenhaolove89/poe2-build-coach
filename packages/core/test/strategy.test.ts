@@ -11,6 +11,7 @@ function node(partial: Partial<AtlasNode> & { hash: number; name: string }): Atl
     kind: 'normal',
     subtree: 'main',
     stats: [],
+    icon: null,
     biomes: [],
     flavour: '',
     x: 0,

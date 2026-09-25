@@ -128,6 +128,16 @@ for (const group of groups) {
       id: p.id,
       name: p.name || '',
       kind: kindOf(p),
+      /**
+       * The game's own icon path for this node (e.g.
+       * Art/2DArt/SkillIcons/passives/AtlasTrees/ExpeditionNotable5.dds). Every
+       * node in the export carries one, but no complete converted icon set is
+       * publicly available yet (repoe-fork's Art dump has converted exactly one),
+       * so the renderer still self-draws; this field is kept so an icon pack --
+       * extracted from a client, or a completed upstream conversion -- can be
+       * dropped in and lit up without touching the data pipeline again.
+       */
+      icon: p.icon ?? null,
       subtree: p.atlas_subtree?.id ?? 'main',
       /** Raw effect text; core's atlasStatText strips the [Id|Label] markup. */
       stats,

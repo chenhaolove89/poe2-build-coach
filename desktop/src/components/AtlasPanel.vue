@@ -378,15 +378,37 @@ const focusNodes = computed(() => {
     .sort((a, b) => Number(allocated.value.has(b.hash)) - Number(allocated.value.has(a.hash)) || a.name.localeCompare(b.name))
 })
 
+function subtreeColor(n: AtlasNode): string {
+  return ATLAS.subtrees.find((s) => s.id === n.subtree)?.color ?? '#8a93ad'
+}
+
+/** 未点是暗槽+机制色描边;已点填进机制色,描边转亮——"空槽变实"的层级语言。 */
 function nodeFill(n: AtlasNode): string {
-  const color = ATLAS.subtrees.find((s) => s.id === n.subtree)?.color ?? '#8a93ad'
-  if (allocated.value.has(n.hash)) return color
-  return color
+  if (n.kind === 'normal' || n.kind === 'mastery') return subtreeColor(n)
+  if (allocated.value.has(n.hash)) return subtreeColor(n)
+  return '#0e1119'
+}
+
+function nodeStroke(n: AtlasNode): string {
+  if (allocated.value.has(n.hash)) return '#f4e6c0'
+  if (n.kind === 'normal') return 'rgba(0,0,0,0.55)'
+  return subtreeColor(n)
 }
 
 function nodeOpacity(n: AtlasNode): number {
   if (dimmed(n)) return 0.12
-  return allocated.value.has(n.hash) ? 1 : 0.42
+  if (n.kind === 'normal' || n.kind === 'mastery') return allocated.value.has(n.hash) ? 1 : 0.42
+  return allocated.value.has(n.hash) ? 0.92 : 1
+}
+
+/** 尖顶六边形:关键点的形状语言(游戏同款),和普通圆点一眼区分。 */
+function hexPoints(cx: number, cy: number, r: number): string {
+  const pts: string[] = []
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 180) * (60 * i - 90)
+    pts.push(`${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`)
+  }
+  return pts.join(' ')
 }
 
 const canTake = (n: AtlasNode) => canAllocate(ATLAS_INDEX, allocated.value, n.hash)
@@ -519,22 +541,54 @@ onBeforeUnmount(() => {
               @mouseleave="hovered = null"
               @click.stop="clickNode(n)"
             >
+              <!--
+                形状按节点类型分层:关键点六边形(游戏同款语言)、显著点圆框、起点双环、
+                普通点实心。未点是"空槽"(暗底+机制色描边),已点填进机制色并亮描边,
+                加上 hit 区让鼠标至少有 18px 的目标。
+              -->
+              <polygon
+                v-if="n.kind === 'keystone'"
+                :points="hexPoints(n.x, n.y, nodeRadius(n) * 1.2)"
+                :fill="nodeFill(n)"
+                :fill-opacity="nodeOpacity(n)"
+                :stroke="nodeStroke(n)"
+                vector-effect="non-scaling-stroke"
+                :stroke-width="allocated.has(n.hash) ? 2.8 : 2"
+                :class="{ fresh: justAdded.has(n.hash) }"
+              />
+              <g v-else-if="n.kind === 'root'">
+                <circle
+                  :cx="n.x"
+                  :cy="n.y"
+                  :r="nodeRadius(n)"
+                  :fill="nodeFill(n)"
+                  :fill-opacity="nodeOpacity(n)"
+                  :stroke="nodeStroke(n)"
+                  vector-effect="non-scaling-stroke"
+                  :stroke-width="2.5"
+                  :class="{ fresh: justAdded.has(n.hash) }"
+                />
+                <circle
+                  :cx="n.x"
+                  :cy="n.y"
+                  :r="nodeRadius(n) * 0.32"
+                  :fill="allocated.has(n.hash) ? '#f4e6c0' : subtreeColor(n)"
+                  fill-opacity="0.9"
+                />
+              </g>
               <circle
+                v-else
                 :cx="n.x"
                 :cy="n.y"
                 :r="nodeRadius(n)"
                 :fill="nodeFill(n)"
                 :fill-opacity="nodeOpacity(n)"
-                :stroke="allocated.has(n.hash) ? '#f4e6c0' : 'rgba(0,0,0,0.55)'"
+                :stroke="nodeStroke(n)"
                 vector-effect="non-scaling-stroke"
                 :stroke-width="allocated.has(n.hash) ? 2.5 : 1.2"
                 :stroke-dasharray="n.kind === 'mastery' ? '4 4' : undefined"
                 :class="{ fresh: justAdded.has(n.hash) }"
               />
-              <!--
-                点击热区:总览缩放下真实节点只有 3~6px,鼠标几乎点不中。这里垫一个
-                屏幕上至少 ~18px 的透明圆来接收点击(它也让 hover 提示更容易唤出)。
-              -->
               <circle :cx="n.x" :cy="n.y" :r="hitRadius(n)" fill="transparent" stroke="none" />
               <circle
                 v-if="allocated.has(n.hash)"
@@ -839,7 +893,7 @@ circle.fresh {
     stroke-width: 1.2;
   }
 }
-.node.hit circle:first-child {
+.node.hit > :first-child {
   stroke: #f4e6c0;
 }
 .label {

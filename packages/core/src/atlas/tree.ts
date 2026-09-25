@@ -26,6 +26,14 @@ export interface AtlasNode {
   /** Raw effect lines, still carrying the source's `[Id|Label]` markup. */
   stats: string[]
   /**
+   * The game's own icon path for this node (e.g.
+   * `Art/2DArt/SkillIcons/passives/AtlasTrees/ExpeditionNotable5.dds`). The export
+   * has one for every node; no complete converted icon set is publicly available
+   * yet, so the renderer still self-draws, but any future icon pack maps by this
+   * path without touching the data pipeline again.
+   */
+  icon: string | null
+  /**
    * Biomes the effect is restricted to, as the tree itself names them ("Mountain",
    * "City"). This is the join back to the map table: a node that says "in Mountain
    * Areas" is what you take for the Mountain maps you are farming, in the game's own
