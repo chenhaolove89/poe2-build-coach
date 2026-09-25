@@ -34,7 +34,7 @@ import { AREAS, LAYOUT_LABEL, biomeLabel } from '../mapData'
 import { allocated as planAllocated, clearAllocated } from '../atlasPlan'
 import { atlasFocus } from '../atlasFocus'
 import { requestMapFocus } from '../mapFocus'
-import { ICON_URLS, ICON_RECTS } from '@poe2coach/data/atlas-art/icons'
+import { ICON_URLS, ICON_RECTS, SPRITES, FRAMES, SHEET_SIZES } from '@poe2coach/data/atlas-art/icons'
 import { t, zhName } from '../i18n'
 import { nameZh } from '../nameZh'
 
@@ -402,15 +402,6 @@ function nodeOpacity(n: AtlasNode): number {
   return allocated.value.has(n.hash) ? 0.92 : 1
 }
 
-/** 尖顶六边形:关键点的形状语言(游戏同款),和普通圆点一眼区分。 */
-function hexPoints(cx: number, cy: number, r: number): string {
-  const pts: string[] = []
-  for (let i = 0; i < 6; i++) {
-    const a = (Math.PI / 180) * (60 * i - 90)
-    pts.push(`${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`)
-  }
-  return pts.join(' ')
-}
 
 /**
  * 节点的游戏图标。icon 字段是游戏内路径(AtlasTrees/ExpeditionNotable5.dds),按
@@ -431,6 +422,74 @@ function iconHalf(n: AtlasNode): { w: number; h: number } | null {
   if (!r) return null
   const [, , , w, h, scale] = r
   return { w: w / scale, h: h / scale }
+}
+
+type ArtRect = { si: number; x: number; y: number; w: number; h: number; scale: number }
+
+function iconRectAll(n: AtlasNode): ArtRect | null {
+  const base = n.icon?.replace(/^.*\//, '').replace(/\.dds$/i, '').toLowerCase()
+  const r = base ? ICON_RECTS[base] : null
+  return r ? { si: r[0], x: r[1], y: r[2], w: r[3], h: r[4], scale: r[5] } : null
+}
+
+function iconSprite(n: AtlasNode): string {
+  return SPRITES[iconRectAll(n)!.si]
+}
+
+function iconSheetIndex(n: AtlasNode): number {
+  return iconRectAll(n)?.si ?? 0
+}
+
+function iconViewBox(n: AtlasNode): string {
+  const r = iconRectAll(n)!
+  return `${r.x} ${r.y} ${r.w} ${r.h}`
+}
+
+function sheetW(si: number): number {
+  return SHEET_SIZES[si][0]
+}
+
+function sheetH(si: number): number {
+  return SHEET_SIZES[si][1]
+}
+
+/** 框:关键点/显著点各有 normal(未点)与 active(已点)两态游戏美术。 */
+function frameRect(n: AtlasNode): [number, number, number, number, number, number] {
+  const name = (n.kind === 'keystone' ? 'keystoneframe' : 'notableframe') + (allocated.value.has(n.hash) ? 'active' : 'normal')
+  return FRAMES[name]
+}
+
+function frameHalf(n: AtlasNode): { w: number; h: number } {
+  const [, , , w, h, scale] = frameRect(n)
+  return { w: w / scale, h: h / scale }
+}
+
+function frameViewBox(n: AtlasNode): string {
+  const [, x, y, w, h] = frameRect(n)
+  return `${x} ${y} ${w} ${h}`
+}
+
+/** 机制子树的起点美术(游戏里那颗"入口"图标);主树起点没有专属美术。 */
+function startingRect(n: AtlasNode): [number, number, number, number, number, number] | null {
+  const key = 'startingpoint' + n.subtree.toLowerCase() + 'active'
+  return FRAMES[key] ?? null
+}
+
+function startingSprite(n: AtlasNode): string {
+  return SPRITES[startingRect(n)![0]]
+}
+
+function startingFor(n: AtlasNode): boolean {
+  return startingRect(n) !== null
+}
+
+function startingSheetIndex(n: AtlasNode): number {
+  return startingRect(n)?.[0] ?? 0
+}
+
+function startingViewBox(n: AtlasNode): string {
+  const r = startingRect(n)!
+  return `${r[1]} ${r[2]} ${r[3]} ${r[4]}`
 }
 
 const canTake = (n: AtlasNode) => canAllocate(ATLAS_INDEX, allocated.value, n.hash)
@@ -564,39 +623,88 @@ onBeforeUnmount(() => {
               @click.stop="clickNode(n)"
             >
               <!--
-                形状按节点类型分层:关键点六边形(游戏同款语言)、显著点圆框、起点双环、
-                普通点实心。未点是"空槽"(暗底+机制色描边),已点填进机制色并亮描边,
-                加上 hit 区让鼠标至少有 18px 的目标。
+                游戏原生美术组合:显著/关键点 = 图标(精灵裁切) + 游戏框(未点 normal
+                态/已点 active 态)盖顶,框罩住图标边缘;起点 = 子树起点美术;普通点
+                保持实心小点(游戏总览同款);精通位 = 虚线圈 + 精通图标。命中区 >=18px。
               -->
-              <polygon
-                v-if="n.kind === 'keystone'"
-                :points="hexPoints(n.x, n.y, nodeRadius(n) * 1.2)"
-                :fill="nodeFill(n)"
-                :fill-opacity="nodeOpacity(n)"
-                :stroke="nodeStroke(n)"
-                vector-effect="non-scaling-stroke"
-                :stroke-width="allocated.has(n.hash) ? 2.8 : 2"
-                :class="{ fresh: justAdded.has(n.hash) }"
-              />
-              <g v-else-if="n.kind === 'root'">
-                <circle
-                  :cx="n.x"
-                  :cy="n.y"
-                  :r="nodeRadius(n)"
-                  :fill="nodeFill(n)"
-                  :fill-opacity="nodeOpacity(n)"
-                  :stroke="nodeStroke(n)"
-                  vector-effect="non-scaling-stroke"
-                  :stroke-width="2.5"
+              <g v-if="n.kind === 'keystone' || n.kind === 'notable'" :opacity="dimmed(n) ? 0.12 : 1">
+                <svg
+                  v-if="iconFor(n) && iconHalf(n)"
+                  :x="n.x - iconHalf(n)!.w / 2"
+                  :y="n.y - iconHalf(n)!.h / 2"
+                  :width="iconHalf(n)!.w"
+                  :height="iconHalf(n)!.h"
+                  :viewBox="iconViewBox(n)"
+                  preserveAspectRatio="xMidYMid meet"
+                  style="overflow: hidden"
+                >
+                  <image
+                    :href="iconSprite(n)"
+                    :x="0"
+                    :y="0"
+                    :width="sheetW(iconSheetIndex(n))"
+                    :height="sheetH(iconSheetIndex(n))"
+                    :style="allocated.has(n.hash) ? undefined : { filter: 'brightness(1.9)' }"
+                  />
+                </svg>
+                <svg
+                  :x="n.x - frameHalf(n)!.w / 2"
+                  :y="n.y - frameHalf(n)!.h / 2"
+                  :width="frameHalf(n)!.w"
+                  :height="frameHalf(n)!.h"
+                  :viewBox="frameViewBox(n)"
+                  preserveAspectRatio="xMidYMid meet"
+                  style="overflow: hidden; pointer-events: none"
                   :class="{ fresh: justAdded.has(n.hash) }"
-                />
-                <circle
-                  :cx="n.x"
-                  :cy="n.y"
-                  :r="nodeRadius(n) * 0.32"
-                  :fill="allocated.has(n.hash) ? '#f4e6c0' : subtreeColor(n)"
-                  fill-opacity="0.9"
-                />
+                >
+                  <image
+                    :href="SPRITES[frameRect(n)[0]]"
+                    :x="0"
+                    :y="0"
+                    :width="sheetW(frameRect(n)[0])"
+                    :height="sheetH(frameRect(n)[0])"
+                  />
+                </svg>
+              </g>
+              <g v-else-if="n.kind === 'root'">
+                <svg
+                  v-if="startingFor(n)"
+                  :x="n.x - nodeRadius(n)"
+                  :y="n.y - nodeRadius(n)"
+                  :width="nodeRadius(n) * 2"
+                  :height="nodeRadius(n) * 2"
+                  :viewBox="startingViewBox(n)"
+                  preserveAspectRatio="xMidYMid meet"
+                  style="overflow: hidden"
+                >
+                  <image
+                    :href="startingSprite(n)"
+                    :x="0"
+                    :y="0"
+                    :width="sheetW(startingSheetIndex(n))"
+                    :height="sheetH(startingSheetIndex(n))"
+                    :opacity="allocated.has(n.hash) ? 1 : 0.55"
+                  />
+                </svg>
+                <g v-else>
+                  <circle
+                    :cx="n.x"
+                    :cy="n.y"
+                    :r="nodeRadius(n)"
+                    :fill="nodeFill(n)"
+                    :fill-opacity="nodeOpacity(n)"
+                    :stroke="nodeStroke(n)"
+                    vector-effect="non-scaling-stroke"
+                    stroke-width="2.5"
+                  />
+                  <circle
+                    :cx="n.x"
+                    :cy="n.y"
+                    :r="nodeRadius(n) * 0.32"
+                    :fill="allocated.has(n.hash) ? '#f4e6c0' : subtreeColor(n)"
+                    fill-opacity="0.9"
+                  />
+                </g>
               </g>
               <circle
                 v-else
@@ -612,14 +720,13 @@ onBeforeUnmount(() => {
                 :class="{ fresh: justAdded.has(n.hash) }"
               />
               <image
-                v-if="iconFor(n)"
+                v-if="n.kind === 'mastery' && iconFor(n)"
                 :x="n.x - (iconHalf(n)?.w ?? 0) / 2"
                 :y="n.y - (iconHalf(n)?.h ?? 0) / 2"
                 :width="iconHalf(n)?.w ?? 0"
                 :height="iconHalf(n)?.h ?? 0"
                 :href="iconFor(n)!"
-                :opacity="nodeOpacity(n)"
-                :style="allocated.has(n.hash) ? undefined : { filter: 'brightness(1.9)' }"
+                :opacity="dimmed(n) ? 0.12 : 1"
                 pointer-events="none"
               />
               <circle :cx="n.x" :cy="n.y" :r="hitRadius(n)" fill="transparent" stroke="none" />

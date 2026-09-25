@@ -1250,5 +1250,87 @@
    32,
    2
   ]
+ },
+ "frames": {
+  "keystoneframeactive": [
+   0,
+   143,
+   2,
+   109,
+   111,
+   2
+  ],
+  "keystoneframenormal": [
+   0,
+   256,
+   2,
+   109,
+   111,
+   2
+  ],
+  "notableframeactive": [
+   0,
+   369,
+   2,
+   75,
+   75,
+   2
+  ],
+  "notableframenormal": [
+   0,
+   2,
+   143,
+   75,
+   75,
+   2
+  ],
+  "startingpointbreachactive": [
+   5,
+   818,
+   818,
+   60,
+   61,
+   2
+  ],
+  "startingpointexpeditionactive": [
+   5,
+   882,
+   818,
+   60,
+   61,
+   2
+  ],
+  "startingpointdeliriumactive": [
+   5,
+   946,
+   818,
+   60,
+   61,
+   2
+  ],
+  "startingpointritualactive": [
+   5,
+   2,
+   886,
+   60,
+   61,
+   2
+  ],
+  "startingpointabyssactive": [
+   5,
+   66,
+   886,
+   60,
+   61,
+   2
+  ],
+  "startingpointincursionactive": [
+   5,
+   130,
+   886,
+   60,
+   61,
+   2
+  ]
  }
 }
