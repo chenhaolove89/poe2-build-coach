@@ -67,8 +67,8 @@ index.latest = latest
 writeFileSync(INDEX_FILE, JSON.stringify(index, null, 2) + '\n')
 console.log('updated index.json:', JSON.stringify(index.versions), 'latest =', latest)
 
-if (!existsSync(`${ROOT}apps/desktop/src/treeData.ts`)) throw new Error('treeData.ts missing')
+if (!existsSync(`${ROOT}desktop/src/treeData.ts`)) throw new Error('treeData.ts missing')
 console.log(
-  '\nNOTE: register the new version in apps/desktop/src/treeData.ts (TREES map) so the\n' +
+  '\nNOTE: register the new version in desktop/src/treeData.ts (TREES map) so the\n' +
     'desktop app can load it; builds without treeVersion fall back to the latest entry.',
 )

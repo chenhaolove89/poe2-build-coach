@@ -37,8 +37,9 @@
 ```
 packages/core    纯 TS 业务核心(零环境依赖):PoB 码编解码/解析、天赋树几何、物品解析、查价查询构造、日志时间轴、简繁转换
 packages/data    版本锁定的游戏数据包(tree.json 来自 PoB2 MIT;三服词缀模板、通货名、简繁对照表由 scripts 生成)
-apps/desktop     Tauri 2 + Vue 3 桌面端
-apps/website     GitHub Pages 下载页(纯静态)
+desktop     Tauri 2 + Vue 3 桌面端
+web     GitHub Pages 下载页(纯静态)
+server     Next.js 分享服务(链接分享的 API 与落地页,部署见 docs/share-server.md)
 ```
 
 核心纪律:**业务逻辑只进 core,两端复用**;未来网页版就是 core + Vue 视图。
@@ -56,7 +57,7 @@ npm run build           # core 类型检查 + 前端构建
 
 ```bash
 # 安装 Rust:https://rustup.rs (需要 MSVC Build Tools)
-cd apps/desktop
+cd desktop
 npm run tauri dev       # 开发运行
 npm run tauri build     # 产出安装包(src-tauri/target/release/bundle/)
 ```
@@ -75,7 +76,7 @@ CI 里不要用这个脚本(那里没有桌面、也没有实例要关);release 
 
 ## 发布流程
 
-1. **下载页**:推送到 `main` 后 GitHub Actions 自动把 `apps/website` 部署到 Pages(仓库 Settings → Pages → Source 选 GitHub Actions)。
+1. **下载页**:推送到 `main` 后 GitHub Actions 自动把 `web` 部署到 Pages(仓库 Settings → Pages → Source 选 GitHub Actions)。
 2. **安装包**:打 tag 推送即自动构建并上传到 Release:
 
 ```bash
@@ -87,7 +88,7 @@ git tag v0.1.0 && git push origin v0.1.0
 ## 数据来源与更新
 
 - 天赋树:`packages/data/trees/0_5/tree.json`,取自 [PathOfBuilding-PoE2](https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2)(MIT License)。
-- 版本升级(如 12 月 1.0):下载新版 `TreeData/<ver>/tree.json` 放入 `packages/data/trees/<ver>/`,`apps/desktop/src/treeData.ts` 指向新版本即可。
+- 版本升级(如 12 月 1.0):下载新版 `TreeData/<ver>/tree.json` 放入 `packages/data/trees/<ver>/`,`desktop/src/treeData.ts` 指向新版本即可。
 
 ### 天赋树美术
 

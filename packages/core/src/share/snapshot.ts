@@ -92,6 +92,22 @@ export function isShareCode(code: string): boolean {
   return code.trim().startsWith(SHARE_PREFIX)
 }
 
+/**
+ * Find one of our codes inside a longer paste.
+ *
+ * The copy button hands out the strategy card and the code as one text block, so
+ * what comes back is often that whole block rather than a bare code. The prefix is
+ * distinctive enough to pull the token back out: a whitespace-permissive character
+ * run starting at `P2C1.` keeps the line breaks a wrapped copy picked up (the
+ * decoder strips whitespace itself) and still stops at the first character that
+ * cannot be part of the body, so trailing prose is left behind. Null when the text
+ * holds no code at all, which the caller reports rather than routing to PoB.
+ */
+export function extractShareCode(text: string): string | null {
+  const match = text.match(/P2C1\.[A-Za-z0-9\-_\s]+/)
+  return match ? match[0].trim() : null
+}
+
 // -------------------------------------------------------------- base64url bytes
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'

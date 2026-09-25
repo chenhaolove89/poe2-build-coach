@@ -22,6 +22,7 @@ import {
   KIND_ORDER,
   LAYOUT_LABEL,
   LAYOUT_ORDER,
+  biomeLabel,
 } from '../mapData'
 import { mapFocus } from '../mapFocus'
 import { bilingual, dialect, t, zhName } from '../i18n'
@@ -30,19 +31,6 @@ import MapTopology from './MapTopology.vue'
 const emit = defineEmits<{ openAtlas: [biome: string] }>()
 
 const TOPOLOGY = (topologyJson as unknown as { maps: Record<string, string[]> }).maps
-
-const BIOME_LABEL: Record<string, string> = {
-  Desert: '沙漠',
-  'Ezomyte City': '埃佐米特城',
-  'Faridun City': '法里顿城',
-  Forest: '森林',
-  Grass: '草原',
-  Mountain: '山地',
-  Ocean: '海洋',
-  Swamp: '沼泽',
-  'Vaal City': '瓦尔城',
-  Water: '水域',
-}
 
 // ------------------------------------------------------------------ favorites & notes
 
@@ -252,7 +240,8 @@ function navLabel(n: number | null): string {
 }
 
 function biomeZh(b: string): string {
-  return BIOME_LABEL[b] ? t(BIOME_LABEL[b]) : dialect(b)
+  const zh = biomeLabel(b)
+  return zh ? t(zh) : dialect(b)
 }
 
 const topoCount = computed(() => Object.keys(TOPOLOGY).length)

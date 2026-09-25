@@ -1,0 +1,19 @@
+[Unit]
+Description=PoE2 Build Coach share server (Next.js standalone)
+After=network.target
+
+[Service]
+Type=simple
+# 随 tar 包一起解到 /opt/poe2coach-share/share-server/
+WorkingDirectory=/opt/poe2coach-share/share-server
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+Environment=SHARE_DB=sqlite
+Environment=SHARE_DB_PATH=/opt/poe2coach-share/data/share.db
+# Node 路径按服务器实际安装位置调整（nvm 装的话通常是 /home/<user>/.nvm/...）
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

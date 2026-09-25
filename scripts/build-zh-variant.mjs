@@ -107,7 +107,7 @@ function corpus() {
   }
 
   const sources = [
-    ...sourceFiles('apps/desktop/src'),
+    ...sourceFiles('desktop/src'),
     ...sourceFiles('packages/core/src'),
   ]
   for (const file of sources) chunks.push(readFileSync(file, 'utf-8'))

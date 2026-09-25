@@ -56,4 +56,34 @@ export const KIND_LABEL: Record<MapKind, string> = {
   event: '事件',
 }
 
+/**
+ * The biome words both ends of the tree↔map join use, in authored Simplified.
+ *
+ * The map table names the three cities separately; the atlas tree addresses them
+ * together as "City" and also has a "Non-City" bucket the table never writes. Both
+ * vocabularies sit in one record so the map page's filter, the atlas page's biome
+ * row and the strategy card all render the same word for the same thing. Passed
+ * through t() at render, like every other label here.
+ */
+export const BIOME_LABEL: Record<string, string> = {
+  Desert: '沙漠',
+  'Ezomyte City': '埃佐米特城',
+  'Faridun City': '法里顿城',
+  Forest: '森林',
+  Grass: '草原',
+  Mountain: '山地',
+  Ocean: '海洋',
+  Swamp: '沼泽',
+  'Vaal City': '瓦尔城',
+  Water: '水域',
+  // The tree's own two buckets, which no table row carries.
+  City: '城市',
+  'Non-City': '非城市区域',
+}
+
+/** The authored Chinese for a biome word, or null when neither vocabulary knows it. */
+export function biomeLabel(biome: string): string | null {
+  return BIOME_LABEL[biome] ?? null
+}
+
 export const KIND_ORDER: MapKind[] = ['map', 'unique', 'citadel', 'boss', 'tower', 'hideout', 'event']

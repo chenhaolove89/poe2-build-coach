@@ -1,0 +1,22 @@
+{
+  "name": "@poe2coach/server",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PoE2 Build Coach 分享服务:链接分享的 API 与落地页。合同与部署见 docs/share-server.md。",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.6.0"
+  }
+}

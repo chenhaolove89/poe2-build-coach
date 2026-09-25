@@ -7,6 +7,7 @@ import {
   decodeShareSnapshot,
   emptySnapshot,
   encodeShareSnapshot,
+  extractShareCode,
   isShareCode,
   type ShareSnapshot,
 } from '../src/share/snapshot.js'
@@ -176,5 +177,31 @@ describe('isShareCode', () => {
     expect(isShareCode(`  ${SHARE_PREFIX}abc`)).toBe(true)
     expect(isShareCode('eNqFVEtv2zAM')).toBe(false)
     expect(isShareCode('')).toBe(false)
+  })
+})
+
+describe('extractShareCode', () => {
+  it('passes a bare code through, line breaks included', () => {
+    const code = encodeShareSnapshot(snapshot({ realm: 'cn', level: 90 }))
+    expect(extractShareCode(code)).toBe(code)
+    expect(extractShareCode(`  ${code}  `)).toBe(code)
+  })
+
+  it('pulls the code out of the strategy-card block the copy button produces', () => {
+    const code = encodeShareSnapshot(snapshot({ realm: 'cn', level: 90 }))
+    const blob = `【刷图策略】主刷 裂隙\n机制: 裂隙 8/33\n——把下面的码粘进 PoE2 Build Coach\n${code}`
+    expect(extractShareCode(blob)).toBe(code)
+  })
+
+  it('keeps the line breaks a wrapped copy picked up, which the decoder strips', () => {
+    const code = encodeShareSnapshot(snapshot({ realm: 'cn', level: 90 }))
+    const wrapped = code.slice(0, 20) + '\n' + code.slice(20)
+    const extracted = extractShareCode(`说明文字\n${wrapped}\n(完)`)!
+    expect(decodeShareSnapshot(extracted).level).toBe(90)
+  })
+
+  it('returns null when the text holds no code, so a caller can route elsewhere', () => {
+    expect(extractShareCode('eNqFVEtv2zAM/isqAAAA//8=')).toBeNull()
+    expect(extractShareCode('')).toBeNull()
   })
 })

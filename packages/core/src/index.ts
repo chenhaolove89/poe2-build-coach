@@ -7,6 +7,7 @@ export {
   ShareCodeError,
   emptySnapshot,
   isShareCode,
+  extractShareCode,
   encodeShareSnapshot,
   decodeShareSnapshot,
 } from './share/snapshot.js'
@@ -75,6 +76,8 @@ export type {
   AllocationCheck,
   SubtreeProgress,
 } from './atlas/tree.js'
+export { strategyBrief } from './atlas/strategy.js'
+export type { StrategyBrief, StrategyMechanic, StrategyBiome, StrategyArea, StrategyKeystone, StrategyOptions } from './atlas/strategy.js'
 export { emptyFollow, ingestChunk, currentAreaOf, resumeEvents } from './farm/follow.js'
 export type { FollowState, LogChunk } from './farm/follow.js'
 export { campaignNameIndex, resolveCampaignZone, areaNameCandidates } from './campaign/names.js'

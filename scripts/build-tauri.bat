@@ -14,7 +14,7 @@ REM non-ASCII comments are mis-decoded and the garbage gets run as commands.
 setlocal
 
 set "APP=poe2-build-coach.exe"
-set "BIN=%~dp0..\apps\desktop\src-tauri\target\release\%APP%"
+set "BIN=%~dp0..\desktop\src-tauri\target\release\%APP%"
 
 REM taskkill exits 128 when nothing matched, which is not an error here, so its
 REM exit code is deliberately ignored. There is no tasklist/find probe either:
@@ -50,7 +50,7 @@ if errorlevel 1 exit /b 1
 
 set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
 
-cd /d "%~dp0..\apps\desktop"
+cd /d "%~dp0..\desktop"
 REM npm is a .cmd, so it needs call or this script never gets control back.
 call npm run tauri build
 if errorlevel 1 goto :failed

@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "desktop",
+    "web",
+    "server"
   ],
   "scripts": {
     "test": "vitest run --root packages/core",

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# 部署脚本骨架 —— 拿到甲骨文服务器的连接信息后，把下面三个值填上即可直接跑。
+#
+#   HOST   服务器地址（甲骨文公网 IP 或域名）
+#   USER   SSH 用户（Oracle Ubuntu 镜像默认 ubuntu，Oracle Linux 默认 opc）
+#   KEY    私钥路径（本机已有 C:\Users\陈浩\.ssh\id_ed25519 / id_rsa，或用户另带）
+#
+# 前置（服务器一次性，脚本第 5 步自动做，需 sudo 免密或手跑）：
+#   - Node 22+（node:sqlite 需要；没有就 apt/nvm 装，或改用 Docker）
+#   - 目录 /opt/poe2coach-share
+#   - systemd 单元 poe2coach-share.service（随包附带，脚本会装）
+#   - 反向代理把公网 80/443 的某个路径或子域转发到 127.0.0.1:3000
+#
+# 用法:
+#   node server/deploy/pack.mjs        # 本地打包
+#   bash server/deploy/deploy.sh       # 上传 + 安装 + 重启
+set -euo pipefail
+
+HOST="填我"
+USER="ubuntu"
+KEY="$HOME/.ssh/id_ed25519"
+REMOTE_DIR="/opt/poe2coach-share"
+SERVICE="poe2coach-share"
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+TARBALL="$HERE/dist/share-server.tar.gz"
+[ -f "$TARBALL" ] || { echo "先跑: node server/deploy/pack.mjs"; exit 1; }
+
+echo "== 1/5 上传 =="
+scp -i "$KEY" "$TARBALL" "$USER@$HOST:/tmp/"
+
+echo "== 2/5 服务器上解包 =="
+ssh -i "$KEY" "$USER@$HOST" "sudo mkdir -p $REMOTE_DIR && sudo rm -rf $REMOTE_DIR/share-server && sudo tar -xzf /tmp/share-server.tar.gz -C $REMOTE_DIR && sudo chown -R $USER:$USER $REMOTE_DIR"
+
+echo "== 3/5 服务器 Node 版本检查（node:sqlite 需要 22+）=="
+ssh -i "$KEY" "$USER@$HOST" "node --version || echo 'NO NODE —— 先安装 Node 22+ 再重跑'"
+
+echo "== 4/5 安装 systemd 单元 =="
+ssh -i "$KEY" "$USER@$HOST" "sudo cp $REMOTE_DIR/share-server/poe2coach-share.service /etc/systemd/system/ 2>/dev/null && sudo systemctl daemon-reload || echo '(单元已存在或手动处理)'"
+
+echo "== 5/5 重启并验收 =="
+ssh -i "$KEY" "$USER@$HOST" "sudo systemctl enable --now $SERVICE && sudo systemctl restart $SERVICE && sleep 2 && curl -s http://127.0.0.1:3000/api/healthz"
+
+echo
+echo "完成。回填 desktop/src/shareLink.ts 的 SHARE_SERVER_PROD = http://<HOST>:3000（或反代域名），重打包桌面端。"

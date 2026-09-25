@@ -302,10 +302,13 @@ export function unallocate(index: AtlasIndex, allocated: ReadonlySet<number>, ha
  *
  * The map table names the three cities separately (Ezomyte City, Faridun City, Vaal
  * City) because they are distinct on the Atlas; the tree addresses them together as
- * "City Areas", since one node covers all of them. Everything else matches by name.
+ * "City Areas", since one node covers all of them. "Non-City" also ends in "City"
+ * but is the tree's own bucket for everything else, so it must pass through — the
+ * complement join in the strategy brief depends on it. Everything else matches by
+ * name.
  */
 export function atlasBiomeKey(mapBiome: string): string {
-  return /City$/.test(mapBiome) ? 'City' : mapBiome
+  return mapBiome !== 'Non-City' && /City$/.test(mapBiome) ? 'City' : mapBiome
 }
 
 /** Atlas nodes whose effect is restricted to a map-table biome. */

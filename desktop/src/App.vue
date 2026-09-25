@@ -5,6 +5,7 @@ import {
   buildLevelingPlan,
   REALM_IDS,
   decodeShareSnapshot,
+  extractShareCode,
   isShareCode,
   buildToShareCode,
   countPoints,
@@ -13,6 +14,7 @@ import {
   parsePobCode,
   QUEST_POINT_TOTAL,
   resolveStartNode,
+  strategyBrief,
   validateTreeSelection,
 } from '@poe2coach/core'
 import type { BuildSnapshot, GameItem, ParsedItem, ShareSnapshot, TreeData } from '@poe2coach/core'
@@ -43,11 +45,13 @@ import { realm, realmId, selectRealm } from './settings'
 import { rememberLeague, savedLeague } from './tradeClient'
 import { allocated as atlasAllocated, setAllocated as setAtlasAllocated } from './atlasPlan'
 import SharePanel from './components/SharePanel.vue'
+import StrategyCard from './components/StrategyCard.vue'
 import { initCampaignFollow } from './campaignFollow'
-import { FARMABLE_COUNT as MAP_COUNT } from './mapData'
+import { AREAS, FARMABLE_COUNT as MAP_COUNT } from './mapData'
 import { requestAtlasFocus } from './atlasFocus'
 import { requestMapFocus } from './mapFocus'
 import { ATLAS, ATLAS_INDEX } from './atlasData'
+import { isShareUrl, resolveShareLink } from './shareLink'
 
 type View = 'home' | 'tree' | 'gear' | 'skills' | 'leveling' | 'atlas' | 'maps' | 'price' | 'farm' | 'settings'
 
@@ -72,6 +76,12 @@ const NAV: { key: View; label: string; requiresBuild?: boolean }[] = [
 /** The map page asks for a biome; the atlas page picks the request up itself. */
 function openAtlas(biome: string) {
   requestAtlasFocus({ biome })
+  view.value = 'atlas'
+}
+
+/** The strategy card names a mechanic; the atlas page opens with that subtree lit. */
+function openAtlasMechanic(id: string) {
+  requestAtlasFocus({ subtree: id })
   view.value = 'atlas'
 }
 
@@ -114,6 +124,13 @@ const progressSet = computed(() => {
 })
 
 const hasBuild = computed(() => !!build.value)
+
+/**
+ * The strategy the current Atlas plan implies — what the share code will read as,
+ * and what an import just restored. One derivation feeds the home card and the
+ * share panel, so the two never tell different stories.
+ */
+const strategy = computed(() => strategyBrief(ATLAS, ATLAS_INDEX, atlasAllocated.value, AREAS))
 
 /** "中文 English" with the language setting applied; see i18n.ts. */
 function bi(en: string | null | undefined, fallback = ''): string {
@@ -209,12 +226,27 @@ function applyShare(snapshot: ShareSnapshot) {
   saveMessage.value = t('已导入分享码。')
 }
 
-function onParse() {
-  // The same box takes both codes: ours announces itself with a prefix, so it is
-  // routed rather than failing as an unreadable PoB code.
-  if (isShareCode(codeInput.value)) {
+async function onParse() {
+  // The same box takes every shape we hand out: our code (announced by its
+  // prefix), the whole strategy-card block (the code is pulled out of the prose),
+  // a share link (resolved against the share server), and finally a PoB code.
+  // Each branch hands the next one only what it could not read itself.
+  const pasted = codeInput.value
+  const code = isShareCode(pasted) ? pasted : extractShareCode(pasted)
+  if (code) {
     try {
-      applyShare(decodeShareSnapshot(codeInput.value))
+      applyShare(decodeShareSnapshot(code))
+      codeInput.value = ''
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e)
+    }
+    return
+  }
+  if (isShareUrl(pasted)) {
+    error.value = null
+    try {
+      const resolved = await resolveShareLink(pasted)
+      applyShare(decodeShareSnapshot(resolved))
       codeInput.value = ''
     } catch (e) {
       error.value = e instanceof Error ? e.message : String(e)
@@ -455,6 +487,9 @@ function currentCode(): string | null {
   return build.value ? buildToShareCode(build.value) : null
 }
 
+/** The same code surfaced for the share panel's PoB export — the official-format twin. */
+const currentPobCode = computed(currentCode)
+
 function saveTree() {
   const b = build.value
   if (!b) return
@@ -632,7 +667,16 @@ function setLevel(level: number | null) {
         </p>
       </section>
 
-      <SharePanel :snapshot="shareSnapshot" @apply="applyShare" />
+      <StrategyCard
+        v-if="strategy.allocatedCount > 0"
+        class="span-2"
+        :brief="strategy"
+        interactive
+        @focus-mechanic="openAtlasMechanic"
+        @focus-biome="openMaps"
+      />
+
+      <SharePanel :snapshot="shareSnapshot" :brief="strategy" :pob-code="currentPobCode" @apply="applyShare" />
 
       <section v-if="hasBuild" class="card span-2">
         <h3>{{ t('概览') }}</h3>

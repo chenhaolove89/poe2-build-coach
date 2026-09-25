@@ -30,11 +30,12 @@ import {
   type AtlasNode,
 } from '@poe2coach/core'
 import { ATLAS, ATLAS_CAPTURED, ATLAS_INDEX, ATLAS_SOURCE, ALLOCATABLE_COUNT } from '../atlasData'
-import { AREAS, LAYOUT_LABEL } from '../mapData'
+import { AREAS, LAYOUT_LABEL, biomeLabel } from '../mapData'
 import { allocated as planAllocated, clearAllocated } from '../atlasPlan'
 import { atlasFocus } from '../atlasFocus'
 import { requestMapFocus } from '../mapFocus'
-import { t } from '../i18n'
+import { t, zhName } from '../i18n'
+import { nameZh } from '../nameZh'
 
 const emit = defineEmits<{ openMaps: [biome: string] }>()
 
@@ -47,6 +48,20 @@ const KIND_LABEL: Record<string, string> = {
   mastery: '精通位',
 }
 const KIND_RADIUS: Record<string, number> = { normal: 22, notable: 32, keystone: 42, root: 34, mastery: 16 }
+
+/**
+ * A biome word as the reader sees it — the authored Chinese when the word belongs
+ * to either vocabulary, the tree's own English otherwise.
+ */
+function biomeZh(b: string): string {
+  const zh = biomeLabel(b)
+  return zh ? t(zh) : b
+}
+
+/** Chinese first, English in the tooltip — the dictionary covers every atlas node. */
+function nodeName(n: AtlasNode): string {
+  return zhName(n.name) ?? n.name
+}
 
 // The plan lives in `atlasPlan` because the share code reads and writes it too; this
 // page is one of its consumers. Writing the ref here writes the shared one.
@@ -172,14 +187,15 @@ const matches = computed(() => {
   const q = query.value.trim().toLowerCase()
   if (!q) return new Set<number>()
   return new Set(
-    ATLAS.nodes
-      .filter(
-        (n) =>
-          n.name.toLowerCase().includes(q) ||
-          n.stats.some((s) => atlasStatText(s).toLowerCase().includes(q)) ||
-          n.id.toLowerCase().includes(q),
-      )
-      .map((n) => n.hash),
+    ATLAS.nodes.filter((n) => {
+      if (n.name.toLowerCase().includes(q)) return true
+      if (n.id.toLowerCase().includes(q)) return true
+      // The dictionary's Chinese for the node name, so a reader can search in the
+      // language the rest of the page is written in.
+      const zh = nameZh(n.name)
+      if (zh && zh.toLowerCase().includes(q)) return true
+      return n.stats.some((s) => atlasStatText(s).toLowerCase().includes(q))
+    }).map((n) => n.hash),
   )
 })
 
@@ -402,10 +418,10 @@ onBeforeUnmount(() => {
         :class="{ active: biomeFocus === b }"
         @click="biomeFocus = biomeFocus === b ? null : b"
       >
-        {{ b }}
+        {{ biomeZh(b) }}
       </button>
       <span v-if="biomeFocus" class="dim small">
-        {{ biomeNodeCount }} {{ t('个节点只对') }} {{ biomeFocus }} {{ t('区域生效。') }}
+        {{ biomeNodeCount }} {{ t('个节点只对') }} {{ biomeZh(biomeFocus) }} {{ t('区域生效。') }}
       </span>
       <button v-if="biomeFocus && biomeAreas.length" class="filter jump" @click="showOnMapPage">
         {{ biomeAreas.length }} {{ t('个该生态的地区 → 在地图页看') }}
@@ -482,7 +498,7 @@ onBeforeUnmount(() => {
                 :style="{ fontSize: `${labelSize}px` }"
                 text-anchor="middle"
               >
-                {{ n.name }}
+                {{ zhName(n.name) ?? n.name }}
               </text>
             </g>
           </g>
@@ -490,13 +506,13 @@ onBeforeUnmount(() => {
 
         <div v-if="hovered" class="tip" :style="{ left: `${pointer.x + 16}px`, top: `${pointer.y + 14}px` }">
           <div class="tip-head">
-            <b>{{ hovered.name }}</b>
+            <b>{{ nodeName(hovered) }}</b>
             <span class="tip-kind">{{ t(KIND_LABEL[hovered.kind] ?? hovered.kind) }}</span>
           </div>
           <div class="tip-sub dim">
             {{ t(ATLAS.subtrees.find((s) => s.id === hovered!.subtree)?.label ?? hovered.subtree) }}
             · {{ hovered.id }}
-            <template v-if="hovered.biomes.length"> · {{ hovered.biomes.join('/') }}</template>
+            <template v-if="hovered.biomes.length"> · {{ hovered.biomes.map(biomeZh).join('/') }}</template>
           </div>
           <ul v-if="hoveredEffects.length" class="tip-stats">
             <li v-for="(line, i) in hoveredEffects" :key="i">{{ line }}</li>
@@ -530,7 +546,7 @@ onBeforeUnmount(() => {
 
         <div v-if="biomeFocus && biomeAreas.length" class="card block">
           <h3>
-            {{ biomeFocus }}
+            {{ biomeZh(biomeFocus) }}
             <span class="dim small">{{ biomeAreas.length }} {{ t('个地区') }}</span>
           </h3>
           <p class="dim small">{{ t('地图表里属于这个生态的地区,按社区跑图评分排。') }}</p>
@@ -560,7 +576,7 @@ onBeforeUnmount(() => {
               @mouseleave="hovered = null"
             >
               <span class="dot" :style="{ background: ATLAS.subtrees.find((s) => s.id === n.subtree)?.color }" />
-              <span class="node-name">{{ n.name }}</span>
+              <span class="node-name">{{ zhName(n.name) ?? n.name }}</span>
               <span v-if="allocated.has(n.hash)" class="tick">✓</span>
             </button>
             <p v-if="focusNodes.length === 0" class="dim small">{{ t('没有匹配的节点。') }}</p>
