@@ -36,1195 +36,1219 @@
  "rects": {
   "art/2dart/uiimages/ingame/atlasscreen/atlaspassivemasteryiconhighlight": [
    0,
-   4,
-   4,
-   274,
-   274
+   2,
+   2,
+   137,
+   137,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/atlaspassiveskillscreenkeystoneframeactive": [
    0,
-   286,
-   4,
-   218,
-   222
+   143,
+   2,
+   109,
+   111,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/atlaspassiveskillscreenkeystoneframenormal": [
    0,
-   512,
-   4,
-   218,
-   222
+   256,
+   2,
+   109,
+   111,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/atlaspassiveskillscreennotableframeactive": [
    0,
-   738,
-   4,
-   150,
-   150
+   369,
+   2,
+   75,
+   75,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/atlaspassiveskillscreennotableframenormal": [
    0,
-   4,
-   286,
-   150,
-   150
+   2,
+   143,
+   75,
+   75,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/atlaspassivepointbackground": [
    0,
-   162,
-   286,
-   498,
-   126
+   81,
+   143,
+   249,
+   63,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/passiveskillscreenpassiveframeactive": [
    0,
-   668,
-   286,
-   82,
-   82
+   334,
+   143,
+   41,
+   41,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/passiveskillscreenpassiveframenormal": [
    0,
-   758,
-   286,
-   82,
-   82
+   379,
+   143,
+   41,
+   41,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/precursortheme/atlasmaintreebg": [
    1,
    0,
    0,
-   3840,
-   3840
+   1920,
+   1920,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/generalsubtreebg": [
    2,
-   8,
-   8,
-   1572,
-   1596
+   2,
+   2,
+   393,
+   399,
+   4
   ],
   "art/2dart/uiimages/ingame/atlasscreen/precursortheme/breachsubtreebg": [
    2,
-   798,
-   4,
-   600,
-   600
+   399,
+   2,
+   300,
+   300,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/precursortheme/expeditionsubtreebg": [
    2,
-   1406,
-   4,
-   600,
-   600
+   703,
+   2,
+   300,
+   300,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/precursortheme/deliriumsubtreebg": [
    2,
-   4,
-   810,
-   600,
-   600
+   2,
+   405,
+   300,
+   300,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/precursortheme/ritualsubtreebg": [
    2,
-   612,
-   810,
-   600,
-   600
+   306,
+   405,
+   300,
+   300,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/precursortheme/abysssubtreebg": [
    2,
-   1220,
-   810,
-   600,
-   600
+   610,
+   405,
+   300,
+   300,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/precursortheme/incursionsubtreebg": [
    2,
-   4,
-   1418,
-   600,
-   600
+   2,
+   709,
+   300,
+   300,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/precursortheme/atlasbgtile": [
    3,
    0,
    0,
-   1200,
-   1200
+   600,
+   600,
+   2
   ],
   "__background": [
    3,
    null,
    null,
    null,
-   null
+   null,
+   1
   ],
   "art/2dart/passivetree/atlaspassiveskillscreencurvesnormalbluetogether": [
    4,
-   4,
-   4,
-   1436,
-   1436
+   2,
+   2,
+   718,
+   718,
+   2
   ],
   "art/2dart/passivetree/atlaspassiveskillscreencurvesactivebluetogether": [
    4,
-   1448,
-   4,
-   1436,
-   1436
+   724,
+   2,
+   718,
+   718,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlasmasterygeneric": [
    5,
-   4,
-   4,
-   256,
-   256
+   2,
+   2,
+   128,
+   128,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlasmasteryessence": [
    5,
-   268,
-   4,
-   256,
-   256
+   134,
+   2,
+   128,
+   128,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlasmasterybiome": [
    5,
-   532,
-   4,
-   256,
-   256
+   266,
+   2,
+   128,
+   128,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlasmasterystonecircles": [
    5,
-   796,
-   4,
-   256,
-   256
+   398,
+   2,
+   128,
+   128,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlasmasteryrogueexile": [
    5,
-   1060,
-   4,
-   256,
-   256
+   530,
+   2,
+   128,
+   128,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlasmasterystrongbox": [
    5,
-   1324,
-   4,
-   256,
-   256
+   662,
+   2,
+   128,
+   128,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlasmasteryazmerispirits": [
    5,
-   1588,
-   4,
-   256,
-   256
+   794,
+   2,
+   128,
+   128,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlasmasteryshrine": [
    5,
-   4,
-   268,
-   256,
-   256
+   2,
+   134,
+   128,
+   128,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/expeditionnotable5": [
    5,
-   268,
-   268,
-   176,
-   176
+   134,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/expeditionnotable3": [
    5,
-   452,
-   268,
-   176,
-   176
+   226,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/strongboxnotable1": [
    5,
-   636,
-   268,
-   176,
-   176
+   318,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssnotable1": [
    5,
-   820,
-   268,
-   176,
-   176
+   410,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/disablingmasteralva": [
    5,
-   1004,
-   268,
-   176,
-   176
+   502,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/anarchynotable3": [
    5,
-   1188,
-   268,
-   176,
-   176
+   594,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/raremonstersnode": [
    5,
-   1372,
-   268,
-   176,
-   176
+   686,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/alvanotable4": [
    5,
-   1556,
-   268,
-   176,
-   176
+   778,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnotable3": [
    5,
-   1740,
-   268,
-   176,
-   176
+   870,
+   134,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/strongboxnotable3": [
    5,
-   4,
-   532,
-   176,
-   176
+   2,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/exceptionalitemsboots": [
    5,
-   188,
-   532,
-   176,
-   176
+   94,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssnotable4": [
    5,
-   372,
-   532,
-   176,
-   176
+   186,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abysscrack": [
    5,
-   556,
-   532,
-   176,
-   176
+   278,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/shrines": [
    5,
-   740,
-   532,
-   176,
-   176
+   370,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/exceptionalitemsgloves": [
    5,
-   924,
-   532,
-   176,
-   176
+   462,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/alvanotable3": [
    5,
-   1108,
-   532,
-   176,
-   176
+   554,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/alvanotable1": [
    5,
-   1292,
-   532,
-   176,
-   176
+   646,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/bossnotabledropmoreitems": [
    5,
-   1476,
-   532,
-   176,
-   176
+   738,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssnotable3": [
    5,
-   1660,
-   532,
-   176,
-   176
+   830,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnotable4": [
    5,
-   1844,
-   532,
-   176,
-   176
+   922,
+   266,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/kiracnotable4": [
    5,
-   4,
-   716,
-   176,
-   176
+   2,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/watchstonenotable1": [
    5,
-   188,
-   716,
-   176,
-   176
+   94,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/harvestnotable4": [
    5,
-   372,
-   716,
-   176,
-   176
+   186,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnotable6": [
    5,
-   556,
-   716,
-   176,
-   176
+   278,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/expeditionnotable2": [
    5,
-   740,
-   716,
-   176,
-   176
+   370,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/expeditionnotable1": [
    5,
-   924,
-   716,
-   176,
-   176
+   462,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/exceptionalitemsbodyarmour": [
    5,
-   1108,
-   716,
-   176,
-   176
+   554,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/alvanotable2": [
    5,
-   1292,
-   716,
-   176,
-   176
+   646,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualnotable2": [
    5,
-   1476,
-   716,
-   176,
-   176
+   738,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/raremonstersnotable": [
    5,
-   1660,
-   716,
-   176,
-   176
+   830,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/essencenotable3": [
    5,
-   1844,
-   716,
-   176,
-   176
+   922,
+   358,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualnotable4": [
    5,
-   4,
-   900,
-   176,
-   176
+   2,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/anarchynotable1": [
    5,
-   188,
-   900,
-   176,
-   176
+   94,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnotable5": [
    5,
-   372,
-   900,
-   176,
-   176
+   186,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/gemling/4k/gemlinglevelallskillgems": [
    5,
-   556,
-   900,
-   176,
-   176
+   278,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/bossnotablespawnbeyondmonsters": [
    5,
-   740,
-   900,
-   176,
-   176
+   370,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/stonecircles": [
    5,
-   924,
-   900,
-   176,
-   176
+   462,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnotable3": [
    5,
-   1108,
-   900,
-   176,
-   176
+   554,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/wheelofdisablingbreach": [
    5,
-   1292,
-   900,
-   176,
-   176
+   646,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssmonstersspawn": [
    5,
-   1476,
-   900,
-   176,
-   176
+   738,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnotable7": [
    5,
-   1660,
-   900,
-   176,
-   176
+   830,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssnotable5": [
    5,
-   1844,
-   900,
-   176,
-   176
+   922,
+   450,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualnotable1": [
    5,
-   4,
-   1084,
-   176,
-   176
+   2,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnotable7": [
    5,
-   188,
-   1084,
-   176,
-   176
+   94,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/bossnotablegrantmoreexperience": [
    5,
-   372,
-   1084,
-   176,
-   176
+   186,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnotable2": [
    5,
-   556,
-   1084,
-   176,
-   176
+   278,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/vividprimalwildwisps": [
    5,
-   740,
-   1084,
-   176,
-   176
+   370,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/bossnotabledroprareritems": [
    5,
-   924,
-   1084,
-   176,
-   176
+   462,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualnotable3": [
    5,
-   1108,
-   1084,
-   176,
-   176
+   554,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssnotable": [
    5,
-   1292,
-   1084,
-   176,
-   176
+   646,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnotable8": [
    5,
-   1476,
-   1084,
-   176,
-   176
+   738,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/exceptionalitemshelmets": [
    5,
-   1660,
-   1084,
-   176,
-   176
+   830,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnotable6": [
    5,
-   1844,
-   1084,
-   176,
-   176
+   922,
+   542,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssnotable6": [
    5,
-   4,
-   1268,
-   176,
-   176
+   2,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/wheelofdisablingritual": [
    5,
-   188,
-   1268,
-   176,
-   176
+   94,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/exceptionalitemsweaponsshields": [
    5,
-   372,
-   1268,
-   176,
-   176
+   186,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/expeditionnotable4": [
    5,
-   556,
-   1268,
-   176,
-   176
+   278,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/extremearchaeology": [
    5,
-   740,
-   1268,
-   176,
-   176
+   370,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnotable1": [
    5,
-   924,
-   1268,
-   176,
-   176
+   462,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssto4": [
    5,
-   1108,
-   1268,
-   176,
-   176
+   554,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnotable4": [
    5,
-   1292,
-   1268,
-   176,
-   176
+   646,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritual": [
    5,
-   1476,
-   1268,
-   176,
-   176
+   738,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnotable1": [
    5,
-   1660,
-   1268,
-   176,
-   176
+   830,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualnotable": [
    5,
-   1844,
-   1268,
-   176,
-   176
+   922,
+   634,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnotable2": [
    5,
-   4,
-   1452,
-   176,
-   176
+   2,
+   726,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnotable8": [
    5,
-   188,
-   1452,
-   176,
-   176
+   94,
+   726,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnotable5": [
    5,
-   372,
-   1452,
-   176,
-   176
+   186,
+   726,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/abyssnotable2": [
    5,
-   556,
-   1452,
-   176,
-   176
+   278,
+   726,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/bossnotabledropmorewaystone": [
    5,
-   740,
-   1452,
-   176,
-   176
+   370,
+   726,
+   88,
+   88,
+   2
   ],
   "art/2dart/skillicons/passives/masteryblank": [
    5,
-   924,
-   1452,
-   172,
-   172
+   462,
+   726,
+   86,
+   86,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/forestbiome": [
    5,
-   1104,
-   1452,
-   128,
-   128
+   552,
+   726,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/streamofconsciousnesskeystone": [
    5,
-   1240,
-   1452,
-   128,
-   128
+   620,
+   726,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachbossclaspedhands": [
    5,
-   1376,
-   1452,
-   128,
-   128
+   688,
+   726,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/citybiome": [
    5,
-   1512,
-   1452,
-   128,
-   128
+   756,
+   726,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/waterbiome": [
    5,
-   1648,
-   1452,
-   128,
-   128
+   824,
+   726,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/swampbiome": [
    5,
-   1784,
-   1452,
-   128,
-   128
+   892,
+   726,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/blood2": [
    5,
-   4,
-   1636,
-   128,
-   128
+   2,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/desertbiome": [
    5,
-   140,
-   1636,
-   128,
-   128
+   70,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/gemling/gemlingskillsadditionalsupport": [
    5,
-   276,
-   1636,
-   128,
-   128
+   138,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/expeditionspawnmissinglife": [
    5,
-   412,
-   1636,
-   128,
-   128
+   206,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/rarebreachmonsterblessing": [
    5,
-   548,
-   1636,
-   128,
-   128
+   274,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/mountainbiome": [
    5,
-   684,
-   1636,
-   128,
-   128
+   342,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualreducedcostdeferrewards": [
    5,
-   820,
-   1636,
-   128,
-   128
+   410,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/grassbiome": [
    5,
-   956,
-   1636,
-   128,
-   128
+   478,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/expeditiondannig": [
    5,
-   1092,
-   1636,
-   128,
-   128
+   546,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualreducererollcost": [
    5,
-   1228,
-   1636,
-   128,
-   128
+   614,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/mapsadditionalbreaches": [
    5,
-   1364,
-   1636,
-   128,
-   128
+   682,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualchancebloodfilledvessel": [
    5,
-   1500,
-   1636,
-   128,
-   128
+   750,
+   818,
+   64,
+   64,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/startingpointbreachactive": [
    5,
-   1636,
-   1636,
-   120,
-   122
+   818,
+   818,
+   60,
+   61,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/startingpointexpeditionactive": [
    5,
-   1764,
-   1636,
-   120,
-   122
+   882,
+   818,
+   60,
+   61,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/startingpointdeliriumactive": [
    5,
-   1892,
-   1636,
-   120,
-   122
+   946,
+   818,
+   60,
+   61,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/startingpointritualactive": [
    5,
-   4,
-   1772,
-   120,
-   122
+   2,
+   886,
+   60,
+   61,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/startingpointabyssactive": [
    5,
-   132,
-   1772,
-   120,
-   122
+   66,
+   886,
+   60,
+   61,
+   2
   ],
   "art/2dart/uiimages/ingame/atlasscreen/startingpointincursionactive": [
    5,
-   260,
-   1772,
-   120,
-   122
+   130,
+   886,
+   60,
+   61,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/deliriumnode1": [
    5,
-   388,
-   1772,
-   88,
-   88
+   194,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/swampbiomenode": [
    5,
-   484,
-   1772,
-   88,
-   88
+   242,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/shrinesnode": [
    5,
-   580,
-   1772,
-   88,
-   88
+   290,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnode2": [
    5,
-   676,
-   1772,
-   88,
-   88
+   338,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/stonecirclesnode": [
    5,
-   772,
-   1772,
-   88,
-   88
+   386,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/itemquantityandrarity": [
    5,
-   868,
-   1772,
-   88,
-   88
+   434,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/bossmapdrops": [
    5,
-   964,
-   1772,
-   88,
-   88
+   482,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/atlassabyssalnode": [
    5,
-   1060,
-   1772,
-   88,
-   88
+   530,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/essencenode1": [
    5,
-   1156,
-   1772,
-   88,
-   88
+   578,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/breachnodechaos": [
    5,
-   1252,
-   1772,
-   88,
-   88
+   626,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/azmerispiritsnode": [
    5,
-   1348,
-   1772,
-   88,
-   88
+   674,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/expeditionnode1": [
    5,
-   1444,
-   1772,
-   88,
-   88
+   722,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/ritualnode1": [
    5,
-   1540,
-   1772,
-   88,
-   88
+   770,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/hybridshrineazmerispirit": [
    5,
-   1636,
-   1772,
-   88,
-   88
+   818,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/forestbiomenode": [
    5,
-   1732,
-   1772,
-   88,
-   88
+   866,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/alvanode2": [
    5,
-   1828,
-   1772,
-   88,
-   88
+   914,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/hybridstrongboxazmerispirit": [
    5,
-   1924,
-   1772,
-   88,
-   88
+   962,
+   886,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/citybiomenode": [
    5,
-   4,
-   1902,
-   88,
-   88
+   2,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/desertbiomenode": [
    5,
-   100,
-   1902,
-   88,
-   88
+   50,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/modifiertier": [
    5,
-   196,
-   1902,
-   88,
-   88
+   98,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/alvanode": [
    5,
-   292,
-   1902,
-   88,
-   88
+   146,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/grassbiomenode": [
    5,
-   388,
-   1902,
-   88,
-   88
+   194,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/waterbiomenode": [
    5,
-   484,
-   1902,
-   88,
-   88
+   242,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/hybridessencerogueexile": [
    5,
-   580,
-   1902,
-   88,
-   88
+   290,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/hybridstrongboxshrines": [
    5,
-   676,
-   1902,
-   88,
-   88
+   338,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/strongboxnode1": [
    5,
-   772,
-   1902,
-   88,
-   88
+   386,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/mountainbiomenode": [
    5,
-   868,
-   1902,
-   88,
-   88
+   434,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/hybridessencestonecircle": [
    5,
-   964,
-   1902,
-   88,
-   88
+   482,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/atlastrees/hybridrogueexilestonecircle": [
    5,
-   1060,
-   1902,
-   88,
-   88
+   530,
+   951,
+   44,
+   44,
+   2
   ],
   "art/2dart/skillicons/passives/lightningdamagenode": [
    5,
-   1156,
-   1902,
-   64,
-   64
+   578,
+   951,
+   32,
+   32,
+   2
   ]
- },
- "icons": {
-  "alvanode": "icons/alvanode.webp",
-  "alvanode2": "icons/alvanode2.webp",
-  "alvanotable1": "icons/alvanotable1.webp",
-  "atlasmasteryazmerispirits": "icons/atlasmasteryazmerispirits.webp",
-  "atlasmasterybiome": "icons/atlasmasterybiome.webp",
-  "atlasmasterygeneric": "icons/atlasmasterygeneric.webp",
-  "atlasmasteryshrine": "icons/atlasmasteryshrine.webp",
-  "atlasmasterystrongbox": "icons/atlasmasterystrongbox.webp",
-  "azmerispiritsnode": "icons/azmerispiritsnode.webp",
-  "breachbossclaspedhands": "icons/breachbossclaspedhands.webp",
-  "breachnode2": "icons/breachnode2.webp",
-  "breachnodechaos": "icons/breachnodechaos.webp",
-  "breachnotable1": "icons/breachnotable1.webp",
-  "breachnotable2": "icons/breachnotable2.webp",
-  "breachnotable3": "icons/breachnotable3.webp",
-  "breachnotable4": "icons/breachnotable4.webp",
-  "breachnotable5": "icons/breachnotable5.webp",
-  "deliriumnode1": "icons/deliriumnode1.webp",
-  "deliriumnotable1": "icons/deliriumnotable1.webp",
-  "deliriumnotable2": "icons/deliriumnotable2.webp",
-  "deliriumnotable3": "icons/deliriumnotable3.webp",
-  "deliriumnotable4": "icons/deliriumnotable4.webp",
-  "deliriumnotable5": "icons/deliriumnotable5.webp",
-  "deliriumnotable6": "icons/deliriumnotable6.webp",
-  "deliriumnotable7": "icons/deliriumnotable7.webp",
-  "deliriumnotable8": "icons/deliriumnotable8.webp",
-  "exceptionalitemsbodyarmour": "icons/exceptionalitemsbodyarmour.webp",
-  "forestbiome": "icons/forestbiome.webp",
-  "forestbiomenode": "icons/forestbiomenode.webp",
-  "gemlinglevelallskillgems": "icons/gemlinglevelallskillgems.webp",
-  "grassbiome": "icons/grassbiome.webp",
-  "grassbiomenode": "icons/grassbiomenode.webp",
-  "hybridshrineazmerispirit": "icons/hybridshrineazmerispirit.webp",
-  "hybridstrongboxazmerispirit": "icons/hybridstrongboxazmerispirit.webp",
-  "hybridstrongboxshrines": "icons/hybridstrongboxshrines.webp",
-  "itemquantityandrarity": "icons/itemquantityandrarity.webp",
-  "kiracnotable4": "icons/kiracnotable4.webp",
-  "lightningdamagenode": "icons/lightningdamagenode.webp",
-  "mapsadditionalbreaches": "icons/mapsadditionalbreaches.webp",
-  "masteryblank": "icons/masteryblank.webp",
-  "modifiertier": "icons/modifiertier.webp",
-  "mountainbiome": "icons/mountainbiome.webp",
-  "mountainbiomenode": "icons/mountainbiomenode.webp",
-  "raremonstersnode": "icons/raremonstersnode.webp",
-  "raremonstersnotable": "icons/raremonstersnotable.webp",
-  "ritual": "icons/ritual.webp",
-  "ritualchancebloodfilledvessel": "icons/ritualchancebloodfilledvessel.webp",
-  "ritualnode1": "icons/ritualnode1.webp",
-  "ritualnotable": "icons/ritualnotable.webp",
-  "ritualnotable1": "icons/ritualnotable1.webp",
-  "ritualnotable2": "icons/ritualnotable2.webp",
-  "ritualnotable3": "icons/ritualnotable3.webp",
-  "ritualnotable4": "icons/ritualnotable4.webp",
-  "ritualreducedcostdeferrewards": "icons/ritualreducedcostdeferrewards.webp",
-  "ritualreducererollcost": "icons/ritualreducererollcost.webp",
-  "shrinesnode": "icons/shrinesnode.webp",
-  "strongboxnode1": "icons/strongboxnode1.webp",
-  "strongboxnotable1": "icons/strongboxnotable1.webp",
-  "strongboxnotable3": "icons/strongboxnotable3.webp",
-  "watchstonenotable1": "icons/watchstonenotable1.webp",
-  "waterbiome": "icons/waterbiome.webp",
-  "waterbiomenode": "icons/waterbiomenode.webp",
-  "wheelofdisablingritual": "icons/wheelofdisablingritual.webp",
-  "abysscrack": "icons/abysscrack.webp",
-  "abyssmonstersspawn": "icons/abyssmonstersspawn.webp",
-  "abyssnotable": "icons/abyssnotable.webp",
-  "abyssnotable1": "icons/abyssnotable1.webp",
-  "abyssnotable2": "icons/abyssnotable2.webp",
-  "abyssnotable3": "icons/abyssnotable3.webp",
-  "abyssnotable4": "icons/abyssnotable4.webp",
-  "abyssnotable5": "icons/abyssnotable5.webp",
-  "abyssnotable6": "icons/abyssnotable6.webp",
-  "abyssto4": "icons/abyssto4.webp",
-  "alvanotable2": "icons/alvanotable2.webp",
-  "alvanotable3": "icons/alvanotable3.webp",
-  "alvanotable4": "icons/alvanotable4.webp",
-  "anarchynotable1": "icons/anarchynotable1.webp",
-  "anarchynotable3": "icons/anarchynotable3.webp",
-  "atlasmasteryessence": "icons/atlasmasteryessence.webp",
-  "atlasmasteryrogueexile": "icons/atlasmasteryrogueexile.webp",
-  "atlasmasterystonecircles": "icons/atlasmasterystonecircles.webp",
-  "atlassabyssalnode": "icons/atlassabyssalnode.webp",
-  "blood2": "icons/blood2.webp",
-  "bossmapdrops": "icons/bossmapdrops.webp",
-  "bossnotabledropmoreitems": "icons/bossnotabledropmoreitems.webp",
-  "bossnotabledropmorewaystone": "icons/bossnotabledropmorewaystone.webp",
-  "bossnotabledroprareritems": "icons/bossnotabledroprareritems.webp",
-  "bossnotablegrantmoreexperience": "icons/bossnotablegrantmoreexperience.webp",
-  "bossnotablespawnbeyondmonsters": "icons/bossnotablespawnbeyondmonsters.webp",
-  "breachnotable6": "icons/breachnotable6.webp",
-  "breachnotable7": "icons/breachnotable7.webp",
-  "breachnotable8": "icons/breachnotable8.webp",
-  "citybiome": "icons/citybiome.webp",
-  "citybiomenode": "icons/citybiomenode.webp",
-  "desertbiome": "icons/desertbiome.webp",
-  "desertbiomenode": "icons/desertbiomenode.webp",
-  "disablingmasteralva": "icons/disablingmasteralva.webp",
-  "essencenode1": "icons/essencenode1.webp",
-  "essencenotable3": "icons/essencenotable3.webp",
-  "exceptionalitemsboots": "icons/exceptionalitemsboots.webp",
-  "exceptionalitemsgloves": "icons/exceptionalitemsgloves.webp",
-  "exceptionalitemshelmets": "icons/exceptionalitemshelmets.webp",
-  "exceptionalitemsweaponsshields": "icons/exceptionalitemsweaponsshields.webp",
-  "expeditiondannig": "icons/expeditiondannig.webp",
-  "expeditionnode1": "icons/expeditionnode1.webp",
-  "expeditionnotable1": "icons/expeditionnotable1.webp",
-  "expeditionnotable2": "icons/expeditionnotable2.webp",
-  "expeditionnotable3": "icons/expeditionnotable3.webp",
-  "expeditionnotable4": "icons/expeditionnotable4.webp",
-  "expeditionnotable5": "icons/expeditionnotable5.webp",
-  "expeditionspawnmissinglife": "icons/expeditionspawnmissinglife.webp",
-  "extremearchaeology": "icons/extremearchaeology.webp",
-  "gemlingskillsadditionalsupport": "icons/gemlingskillsadditionalsupport.webp",
-  "harvestnotable4": "icons/harvestnotable4.webp",
-  "hybridessencerogueexile": "icons/hybridessencerogueexile.webp",
-  "hybridessencestonecircle": "icons/hybridessencestonecircle.webp",
-  "hybridrogueexilestonecircle": "icons/hybridrogueexilestonecircle.webp",
-  "rarebreachmonsterblessing": "icons/rarebreachmonsterblessing.webp",
-  "shrines": "icons/shrines.webp",
-  "stonecircles": "icons/stonecircles.webp",
-  "stonecirclesnode": "icons/stonecirclesnode.webp",
-  "streamofconsciousnesskeystone": "icons/streamofconsciousnesskeystone.webp",
-  "swampbiome": "icons/swampbiome.webp",
-  "swampbiomenode": "icons/swampbiomenode.webp",
-  "vividprimalwildwisps": "icons/vividprimalwildwisps.webp",
-  "wheelofdisablingbreach": "icons/wheelofdisablingbreach.webp"
  }
 }

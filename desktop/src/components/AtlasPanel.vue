@@ -428,7 +428,9 @@ function iconFor(n: AtlasNode): string | null {
 function iconHalf(n: AtlasNode): { w: number; h: number } | null {
   const base = n.icon?.replace(/^.*\//, '').replace(/\.dds$/i, '').toLowerCase()
   const r = base ? ICON_RECTS[base] : null
-  return r ? { w: r[3] / 2, h: r[4] / 2 } : null
+  if (!r) return null
+  const [, , , w, h, scale] = r
+  return { w: w / scale, h: h / scale }
 }
 
 const canTake = (n: AtlasNode) => canAllocate(ATLAS_INDEX, allocated.value, n.hash)

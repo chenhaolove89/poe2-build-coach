@@ -81,8 +81,13 @@ for (let i = 0; i < count; i++) {
   const dims = webpSize(webp)
   sheets.push({ webp, ...dims })
   for (const [path, rect] of Object.entries(idx)) {
+    // The rect is ALREADY in this sheet's pixels -- verified against known art
+    // (a keystone frame is 109 px wide on the 512-wide sheet 0). The bundle's
+    // `scale: 2` instead means the sheet is twice the game's coordinate density:
+    // the on-canvas draw size is rect / scale. Multiplying the rect by scale
+    // samples outside the sheet and yields garbage crops.
     const scale = rect.scale ?? 1
-    index[path] = [i, rect.x * scale, rect.y * scale, rect.w * scale, rect.h * scale]
+    index[path] = [i, rect.x, rect.y, rect.w, rect.h, scale]
   }
 }
 
