@@ -34,6 +34,7 @@ import { AREAS, LAYOUT_LABEL, biomeLabel } from '../mapData'
 import { allocated as planAllocated, clearAllocated } from '../atlasPlan'
 import { atlasFocus } from '../atlasFocus'
 import { requestMapFocus } from '../mapFocus'
+import { ICON_URLS, ICON_RECTS } from '@poe2coach/data/atlas-art/icons'
 import { t, zhName } from '../i18n'
 import { nameZh } from '../nameZh'
 
@@ -411,6 +412,25 @@ function hexPoints(cx: number, cy: number, r: number): string {
   return pts.join(' ')
 }
 
+/**
+ * 节点的游戏图标。icon 字段是游戏内路径(AtlasTrees/ExpeditionNotable5.dds),按
+ * 小写基名查 fetch-atlas-sprites.mjs 抓回的图标包;没有条目的(极少数新节点)
+ * 返回 null,由形状语言兜底。
+ */
+function iconFor(n: AtlasNode): string | null {
+  // 普通节点保持纯点:575 个小图标铺满总览只会读成噪点,游戏总览也是点状。
+  if (n.kind === 'normal') return null
+  const base = n.icon?.replace(/^.*\//, '').replace(/\.dds$/i, '').toLowerCase()
+  return base ? ICON_URLS[base] ?? null : null
+}
+
+/** 图标的绘制尺寸:索引里存的是精灵图像素(2x),游戏/树坐标是它的一半。 */
+function iconHalf(n: AtlasNode): { w: number; h: number } | null {
+  const base = n.icon?.replace(/^.*\//, '').replace(/\.dds$/i, '').toLowerCase()
+  const r = base ? ICON_RECTS[base] : null
+  return r ? { w: r[3] / 2, h: r[4] / 2 } : null
+}
+
 const canTake = (n: AtlasNode) => canAllocate(ATLAS_INDEX, allocated.value, n.hash)
 
 function onResize() {
@@ -588,6 +608,17 @@ onBeforeUnmount(() => {
                 :stroke-width="allocated.has(n.hash) ? 2.5 : 1.2"
                 :stroke-dasharray="n.kind === 'mastery' ? '4 4' : undefined"
                 :class="{ fresh: justAdded.has(n.hash) }"
+              />
+              <image
+                v-if="iconFor(n)"
+                :x="n.x - (iconHalf(n)?.w ?? 0) / 2"
+                :y="n.y - (iconHalf(n)?.h ?? 0) / 2"
+                :width="iconHalf(n)?.w ?? 0"
+                :height="iconHalf(n)?.h ?? 0"
+                :href="iconFor(n)!"
+                :opacity="nodeOpacity(n)"
+                :style="allocated.has(n.hash) ? undefined : { filter: 'brightness(1.9)' }"
+                pointer-events="none"
               />
               <circle :cx="n.x" :cy="n.y" :r="hitRadius(n)" fill="transparent" stroke="none" />
               <circle
