@@ -25,6 +25,7 @@ import {
   atlasStatText,
   canAllocate,
   pathTo,
+  strategyBrief,
   subtreeProgress,
   unallocate,
   type AtlasNode,
@@ -35,6 +36,7 @@ import { allocated as planAllocated, clearAllocated } from '../atlasPlan'
 import { atlasFocus } from '../atlasFocus'
 import { requestMapFocus } from '../mapFocus'
 import { measuredBadgeFor } from '../farmMeasured'
+import TabletsCard from './TabletsCard.vue'
 import { ICON_URLS, ICON_RECTS, SPRITES, FRAMES, SHEET_SIZES } from '@poe2coach/data/atlas-art/icons'
 import { t, zhName } from '../i18n'
 import { nameZh } from '../nameZh'
@@ -363,6 +365,14 @@ function clearPlan() {
 
 const progress = computed(() => subtreeProgress(ATLAS_INDEX, ATLAS, allocated.value))
 const allocatedCount = computed(() => allocated.value.size)
+
+/**
+ * The plan's mechanics, strongest first — the same ranking the strategy card
+ * uses, here to lead the tablet card with the mechanics the plan actually farms.
+ */
+const subtreeRank = computed(() =>
+  strategyBrief(ATLAS, ATLAS_INDEX, allocated.value, AREAS).mechanics.map((m) => m.id),
+)
 
 const hoveredEffects = computed(() => (hovered.value ? hovered.value.stats.map(atlasStatText) : []))
 
@@ -841,6 +851,8 @@ onBeforeUnmount(() => {
             <p v-if="focusNodes.length === 0" class="dim small">{{ t('没有匹配的节点。') }}</p>
           </div>
         </div>
+
+        <TabletsCard :subtree-rank="subtreeRank" />
       </aside>
     </div>
 

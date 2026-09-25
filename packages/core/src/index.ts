@@ -82,3 +82,12 @@ export { emptyFollow, ingestChunk, currentAreaOf, resumeEvents } from './farm/fo
 export type { FollowState, LogChunk } from './farm/follow.js'
 export { campaignNameIndex, resolveCampaignZone, areaNameCandidates } from './campaign/names.js'
 export type { CampaignNameEntry, CampaignNameIndex, CampaignZoneRef } from './campaign/names.js'
+export { tabletText, splitTabletAffixes, tabletsForSubtree, tabletsRankedByPlan } from './tablets/data.js'
+export type {
+  TabletData,
+  TabletClass,
+  TabletAffix,
+  TabletUnique,
+  TabletText,
+  TabletLanguage,
+} from './tablets/data.js'

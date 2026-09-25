@@ -1,0 +1,4531 @@
+{
+ "source": "poe2db.tw tablet pages (us/cn/tw) — datamined game affix data, (c) GGG. Unique names from the official trade2 item index.",
+ "captured": "2026-09-25",
+ "genericFamilies": [
+  "MapAdditionalAzmeriWisp",
+  "MapAdditionalChests",
+  "MapAdditionalEssence",
+  "MapAdditionalExile",
+  "MapAdditionalModifier",
+  "MapAdditionalShrine",
+  "MapAdditionalSpirit",
+  "MapAdditionalStoneCircle",
+  "MapAdditionalStrongbox",
+  "MapAdditionalUniqueMonsterModifier",
+  "MapDroppedGoldIncrease",
+  "MapDroppedItemRarityIncrease",
+  "MapDroppedMapsIncrease",
+  "MapExperienceGainIncrease",
+  "MapMagicPackIncrease",
+  "MapMonsterEffectiveness",
+  "MapMonsterRarityIncrease",
+  "MapPackSizeIncrease",
+  "MapRarePackIncrease"
+ ],
+ "tablets": [
+  {
+   "id": "abyss",
+   "subtree": "Abyss",
+   "tradeType": "Abyss Tablet",
+   "name": {
+    "en": "Abyss Tablet",
+    "zh-Hans": "深渊石板",
+    "zh-Hant": "深淵碑牌"
+   },
+   "implicit": {
+    "en": "Adds Abysses to a Map",
+    "zh-Hans": "为一张地图增加 深渊",
+    "zh-Hant": "在地圖內加入一個 深淵"
+   },
+   "uses": 10,
+   "affixes": [
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterRarityIncrease"
+     ],
+     "name": {
+      "en": "Abounding",
+      "zh-Hans": "充满的",
+      "zh-Hant": "充盈的"
+     },
+     "text": {
+      "en": "Map has (15-20)% increased Monster Rarity",
+      "zh-Hans": "地图上的怪物稀有度提高 (15-20)%",
+      "zh-Hant": "地圖增加(15-20)%怪物稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalAzmeriWisp"
+     ],
+     "name": {
+      "en": "Azmeri's",
+      "zh-Hans": "阿兹莫里的",
+      "zh-Hant": "阿茲莫里的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap contains 1 additional Azmeri Spirits",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图包含 1 个额外的阿兹莫里之灵",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1個額外阿茲莫里魂靈"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedGoldIncrease"
+     ],
+     "name": {
+      "en": "Bountiful",
+      "zh-Hans": "丰厚的",
+      "zh-Hant": "慷慨的"
+     },
+     "text": {
+      "en": "(25-35)% increased Gold found in Map",
+      "zh-Hans": "地图内找到的金币数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖內所獲取的金幣數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapPackSizeIncrease"
+     ],
+     "name": {
+      "en": "Breeding",
+      "zh-Hans": "多产的",
+      "zh-Hant": "多產的"
+     },
+     "text": {
+      "en": "(5-7)% increased Pack Size in Map",
+      "zh-Hans": "地图内怪物群规模提高 (5-7)%",
+      "zh-Hant": "增加(5-7)%地圖內的怪物群大小"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapRarePackIncrease"
+     ],
+     "name": {
+      "en": "Brimming",
+      "zh-Hans": "盈满的",
+      "zh-Hant": "充滿的"
+     },
+     "text": {
+      "en": "Map has (25-35)% increased number of Rare Monsters",
+      "zh-Hans": "地图内稀有怪物数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖含有的稀有怪物數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterEffectiveness"
+     ],
+     "name": {
+      "en": "Challenger's",
+      "zh-Hans": "挑战者的",
+      "zh-Hant": "挑戰者的"
+     },
+     "text": {
+      "en": "Monsters have (10-15)% increased Effectiveness",
+      "zh-Hans": "怪物的效能提高 (10-15)%",
+      "zh-Hant": "增加(10-15)%怪物的效用"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedItemRarityIncrease"
+     ],
+     "name": {
+      "en": "Collector's",
+      "zh-Hans": "收藏家的",
+      "zh-Hant": "蒐集者的"
+     },
+     "text": {
+      "en": "(8-12)% increased Rarity of Items found in Map",
+      "zh-Hans": "地图内获取物品的稀有度提高 (8-12)%",
+      "zh-Hant": "增加(8-12)%地圖內找到的物品稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "Crystallised",
+      "zh-Hans": "结晶的",
+      "zh-Hant": "晶化的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Essences\n% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图包含 1 个额外的精华\n地图内找到的引路石数量提高 %",
+      "zh-Hant": "地圖內含有額外的1個精髓\n增加%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapExperienceGainIncrease"
+     ],
+     "name": {
+      "en": "Elevated",
+      "zh-Hans": "睿智的",
+      "zh-Hant": "昇華的"
+     },
+     "text": {
+      "en": "(12-18)% increased Experience gain in Map",
+      "zh-Hans": "地图内的经验值获取提高 (12-18)%",
+      "zh-Hant": "增加(12-18)%地圖內所獲取的經驗量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "Exiled",
+      "zh-Hans": "流放的",
+      "zh-Hant": "流亡的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap is inhabited by 1 additional Rogue Exiles",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图内会出现 1 个额外的盗贼流放者",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1名額外盜賊流亡者"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "Summoner's",
+      "zh-Hans": "召唤者的",
+      "zh-Hant": "召喚師的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Summoning Circles",
+      "zh-Hans": "地图包含 1 个额外的召唤法阵",
+      "zh-Hant": "地圖內含有額外的1個召喚法陣"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMagicPackIncrease"
+     ],
+     "name": {
+      "en": "Teeming",
+      "zh-Hans": "浇灌的",
+      "zh-Hant": "擁擠的"
+     },
+     "text": {
+      "en": "Map has (30-40)% increased Magic Monsters",
+      "zh-Hans": "地图内魔法怪物数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖含有的魔法怪物"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalChests"
+     ],
+     "name": {
+      "en": "Treasurer's",
+      "zh-Hans": "司库的",
+      "zh-Hant": "司庫的"
+     },
+     "text": {
+      "en": "Map contains (2-3) additional Rare Chests",
+      "zh-Hans": "地图包含 (2-3) 个额外的稀有宝箱",
+      "zh-Hant": "地圖內含有額外的(2-3)個稀有箱子"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "AbyssRareMonsterIncrease"
+     ],
+     "name": {
+      "en": "of Champions",
+      "zh-Hans": "冠军之",
+      "zh-Hant": "勇士之"
+     },
+     "text": {
+      "en": "(2-3) additional Rare Monsters are spawned from Abysses in Map",
+      "zh-Hans": "地图中的深渊额外生成 (2-3) 个稀有怪物",
+      "zh-Hant": "地圖內的深淵生成(2-3)隻額外稀有怪物"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalUniqueMonsterModifier"
+     ],
+     "name": {
+      "en": "of Contest",
+      "zh-Hans": "争辩之",
+      "zh-Hant": "挑戰之"
+     },
+     "text": {
+      "en": "Unique Monsters have 1 additional Rare Modifiers",
+      "zh-Hans": "传奇怪物额外具有 1 个词缀",
+      "zh-Hant": "傳奇怪物會擁有1個額外的詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "AbyssExtraModifiers"
+     ],
+     "name": {
+      "en": "of Dark Power",
+      "zh-Hans": "暗力之",
+      "zh-Hant": "幽暗之力之"
+     },
+     "text": {
+      "en": "(20-30)% increased chance for Abyssal monsters in Map to have Abyssal Modifiers",
+      "zh-Hans": "地图中的深渊怪物带有深渊词缀的几率提高 (20-30)%",
+      "zh-Hant": "地圖內的深淵怪物增加(20-30)%擁有深淵詞綴的機率"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "AbyssEnhancedMonstersPerChasm"
+     ],
+     "name": {
+      "en": "of Escalation",
+      "zh-Hans": "疾升之",
+      "zh-Hant": "升勢之"
+     },
+     "text": {
+      "en": "Abyssal Monsters have (8-12)% increased Effectiveness for each closed Pit, up to 100%",
+      "zh-Hans": "每关闭一个巨坑，深渊怪物的效能提高 (8-12)%，最高可达 100%",
+      "zh-Hant": "每有一個已關閉的坑洞，增加(8-12)%深淵怪物效用，最多100%"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "AbyssAdditionalChance"
+     ],
+     "name": {
+      "en": "of Hollows",
+      "zh-Hans": "空洞之",
+      "zh-Hant": "空殼之"
+     },
+     "text": {
+      "en": "Map contains 1 additional Abysses",
+      "zh-Hans": "地图额外包含 1 个深渊",
+      "zh-Hant": "地圖內含有額外1道深淵"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "AbyssExtraTickets"
+     ],
+     "name": {
+      "en": "of Ossification",
+      "zh-Hans": "骨化之",
+      "zh-Hant": "骨化之"
+     },
+     "text": {
+      "en": "(20-30)% increased chance for Desecrated Currency from Abysses in Map",
+      "zh-Hans": "地图中的深渊掉落渎灵通货的几率提高 (20-30)%",
+      "zh-Hant": "增加(20-30)%來自地圖內深淵的褻瀆通貨掉落機率"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "Abyss4AdditionalChance"
+     ],
+     "name": {
+      "en": "of Schisms",
+      "zh-Hans": "分立之",
+      "zh-Hant": "裂變之"
+     },
+     "text": {
+      "en": "Map has (20-40)% chance to contain four additional Abysses",
+      "zh-Hans": "地图有 (20-40)% 的几率额外包含四个深渊",
+      "zh-Hant": "地圖有(20-40)%機率包含4道額外深淵"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Shrines",
+      "zh-Hans": "殿堂之",
+      "zh-Hant": "神殿之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Shrines",
+      "zh-Hans": "地图包含神龛的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有神殿的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Spirits",
+      "zh-Hans": "万灵之",
+      "zh-Hant": "魂靈之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Azmeri Spirits",
+      "zh-Hans": "地图有阿兹莫里之灵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有阿茲莫里魂靈的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Strongboxes",
+      "zh-Hans": "保险箱之",
+      "zh-Hant": "保險箱之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Strongboxes",
+      "zh-Hans": "地图包含保险箱的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有保險箱的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of the Antiquarian",
+      "zh-Hans": "金石家之",
+      "zh-Hant": "收藏家之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Strongboxes",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的保险箱",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個保險箱"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapDroppedMapsIncrease"
+     ],
+     "name": {
+      "en": "of the Cartographer",
+      "zh-Hans": "制图师之",
+      "zh-Hant": "製圖師之"
+     },
+     "text": {
+      "en": "(30-40)% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图内找到的引路石数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "AbyssDepthsChance"
+     ],
+     "name": {
+      "en": "of the Depths",
+      "zh-Hans": "深处之",
+      "zh-Hant": "深淵之"
+     },
+     "text": {
+      "en": "Abysses in Map have (10-20)% increased chance to lead to an Abyssal Depths",
+      "zh-Hans": "地图中的深渊通往绝望深渊的几率提高 (10-20)%",
+      "zh-Hant": "地圖內的深淵增加有(10-20)%機率前往無盡深淵"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of the Devoted",
+      "zh-Hans": "奉献者之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Shrines",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的神龛",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個神殿"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "of the Essence",
+      "zh-Hans": "精华之",
+      "zh-Hant": "精髓之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Essences",
+      "zh-Hans": "地图包含精华的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有精髓的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "of the Exile",
+      "zh-Hans": "流放者之",
+      "zh-Hant": "流亡者之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Rogue Exiles",
+      "zh-Hans": "地图有盗贼流放者的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有盜賊流亡者的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "AbyssMonsterIncrease"
+     ],
+     "name": {
+      "en": "of the Horde",
+      "zh-Hans": "部落之",
+      "zh-Hant": "群突之"
+     },
+     "text": {
+      "en": "Abysses in Map spawn (20-30)% increased Monsters",
+      "zh-Hans": "地图中的深渊生成的怪物数量提高 (20-30)%",
+      "zh-Hant": "增加(20-30)%地圖內的深淵生成的怪物數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "of the Summoning",
+      "zh-Hans": "召唤之",
+      "zh-Hant": "召喚之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain a Summoning Circle",
+      "zh-Hans": "地图包含召唤法阵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有召喚法陣的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "AbyssIncreasedRewards"
+     ],
+     "name": {
+      "en": "of Treasures",
+      "zh-Hans": "珍宝之",
+      "zh-Hant": "寶藏之"
+     },
+     "text": {
+      "en": "Abyss Pits in Map are twice as likely to have Rewards",
+      "zh-Hans": "地图中的深渊巨坑有双倍几率有奖励",
+      "zh-Hant": "地圖內的深淵坑洞有兩倍機率含有獎勵"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalModifier"
+     ],
+     "name": {
+      "en": "of Undertaking",
+      "zh-Hans": "重担之",
+      "zh-Hant": "承諾之"
+     },
+     "text": {
+      "en": "Map has (1-2) additional random Modifiers",
+      "zh-Hans": "地图拥有 (1-2) 个额外的随机词缀",
+      "zh-Hant": "地圖有(1-2)個額外變動詞綴"
+     },
+     "generic": true
+    }
+   ]
+  },
+  {
+   "id": "breach",
+   "subtree": "Breach",
+   "tradeType": "Breach Tablet",
+   "name": {
+    "en": "Breach Tablet",
+    "zh-Hans": "裂隙石板",
+    "zh-Hant": "裂痕碑牌"
+   },
+   "implicit": {
+    "en": "Adds an Otherworldy Breach to a Map",
+    "zh-Hans": "为一张地图增加 异界裂隙",
+    "zh-Hant": "在地圖內加入一個 裂痕"
+   },
+   "uses": 10,
+   "affixes": [
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterRarityIncrease"
+     ],
+     "name": {
+      "en": "Abounding",
+      "zh-Hans": "充满的",
+      "zh-Hant": "充盈的"
+     },
+     "text": {
+      "en": "Map has (15-20)% increased Monster Rarity",
+      "zh-Hans": "地图上的怪物稀有度提高 (15-20)%",
+      "zh-Hant": "地圖增加(15-20)%怪物稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalAzmeriWisp"
+     ],
+     "name": {
+      "en": "Azmeri's",
+      "zh-Hans": "阿兹莫里的",
+      "zh-Hant": "阿茲莫里的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap contains 1 additional Azmeri Spirits",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图包含 1 个额外的阿兹莫里之灵",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1個額外阿茲莫里魂靈"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedGoldIncrease"
+     ],
+     "name": {
+      "en": "Bountiful",
+      "zh-Hans": "丰厚的",
+      "zh-Hant": "慷慨的"
+     },
+     "text": {
+      "en": "(25-35)% increased Gold found in Map",
+      "zh-Hans": "地图内找到的金币数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖內所獲取的金幣數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapPackSizeIncrease"
+     ],
+     "name": {
+      "en": "Breeding",
+      "zh-Hans": "多产的",
+      "zh-Hant": "多產的"
+     },
+     "text": {
+      "en": "(5-7)% increased Pack Size in Map",
+      "zh-Hans": "地图内怪物群规模提高 (5-7)%",
+      "zh-Hant": "增加(5-7)%地圖內的怪物群大小"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapRarePackIncrease"
+     ],
+     "name": {
+      "en": "Brimming",
+      "zh-Hans": "盈满的",
+      "zh-Hant": "充滿的"
+     },
+     "text": {
+      "en": "Map has (25-35)% increased number of Rare Monsters",
+      "zh-Hans": "地图内稀有怪物数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖含有的稀有怪物數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterEffectiveness"
+     ],
+     "name": {
+      "en": "Challenger's",
+      "zh-Hans": "挑战者的",
+      "zh-Hant": "挑戰者的"
+     },
+     "text": {
+      "en": "Monsters have (10-15)% increased Effectiveness",
+      "zh-Hans": "怪物的效能提高 (10-15)%",
+      "zh-Hant": "增加(10-15)%怪物的效用"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedItemRarityIncrease"
+     ],
+     "name": {
+      "en": "Collector's",
+      "zh-Hans": "收藏家的",
+      "zh-Hant": "蒐集者的"
+     },
+     "text": {
+      "en": "(8-12)% increased Rarity of Items found in Map",
+      "zh-Hans": "地图内获取物品的稀有度提高 (8-12)%",
+      "zh-Hant": "增加(8-12)%地圖內找到的物品稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "Crystallised",
+      "zh-Hans": "结晶的",
+      "zh-Hant": "晶化的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Essences\n% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图包含 1 个额外的精华\n地图内找到的引路石数量提高 %",
+      "zh-Hant": "地圖內含有額外的1個精髓\n增加%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapExperienceGainIncrease"
+     ],
+     "name": {
+      "en": "Elevated",
+      "zh-Hans": "睿智的",
+      "zh-Hant": "昇華的"
+     },
+     "text": {
+      "en": "(12-18)% increased Experience gain in Map",
+      "zh-Hans": "地图内的经验值获取提高 (12-18)%",
+      "zh-Hant": "增加(12-18)%地圖內所獲取的經驗量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "Exiled",
+      "zh-Hans": "流放的",
+      "zh-Hant": "流亡的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap is inhabited by 1 additional Rogue Exiles",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图内会出现 1 个额外的盗贼流放者",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1名額外盜賊流亡者"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "Summoner's",
+      "zh-Hans": "召唤者的",
+      "zh-Hant": "召喚師的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Summoning Circles",
+      "zh-Hans": "地图包含 1 个额外的召唤法阵",
+      "zh-Hant": "地圖內含有額外的1個召喚法陣"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMagicPackIncrease"
+     ],
+     "name": {
+      "en": "Teeming",
+      "zh-Hans": "浇灌的",
+      "zh-Hant": "擁擠的"
+     },
+     "text": {
+      "en": "Map has (30-40)% increased Magic Monsters",
+      "zh-Hans": "地图内魔法怪物数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖含有的魔法怪物"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalChests"
+     ],
+     "name": {
+      "en": "Treasurer's",
+      "zh-Hans": "司库的",
+      "zh-Hant": "司庫的"
+     },
+     "text": {
+      "en": "Map contains (2-3) additional Rare Chests",
+      "zh-Hans": "地图包含 (2-3) 个额外的稀有宝箱",
+      "zh-Hant": "地圖內含有額外的(2-3)個稀有箱子"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalUniqueMonsterModifier"
+     ],
+     "name": {
+      "en": "of Contest",
+      "zh-Hans": "争辩之",
+      "zh-Hant": "挑戰之"
+     },
+     "text": {
+      "en": "Unique Monsters have 1 additional Rare Modifiers",
+      "zh-Hans": "传奇怪物额外具有 1 个词缀",
+      "zh-Hant": "傳奇怪物會擁有1個額外的詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Shrines",
+      "zh-Hans": "殿堂之",
+      "zh-Hant": "神殿之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Shrines",
+      "zh-Hans": "地图包含神龛的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有神殿的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Spirits",
+      "zh-Hans": "万灵之",
+      "zh-Hant": "魂靈之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Azmeri Spirits",
+      "zh-Hans": "地图有阿兹莫里之灵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有阿茲莫里魂靈的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Strongboxes",
+      "zh-Hans": "保险箱之",
+      "zh-Hant": "保險箱之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Strongboxes",
+      "zh-Hans": "地图包含保险箱的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有保險箱的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of the Antiquarian",
+      "zh-Hans": "金石家之",
+      "zh-Hant": "收藏家之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Strongboxes",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的保险箱",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個保險箱"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapDroppedMapsIncrease"
+     ],
+     "name": {
+      "en": "of the Cartographer",
+      "zh-Hans": "制图师之",
+      "zh-Hant": "製圖師之"
+     },
+     "text": {
+      "en": "(30-40)% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图内找到的引路石数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "BreachBossChance"
+     ],
+     "name": {
+      "en": "of the Commander",
+      "zh-Hans": "指挥官之",
+      "zh-Hant": "指揮官之"
+     },
+     "text": {
+      "en": "Unstable Breaches in Map have (20-50)% increased chance to contain Vruun, Marshal of Xesht",
+      "zh-Hans": "地图中的不稳定裂隙包含薛斯的元帅弗伦的几率提高 (20-50)%",
+      "zh-Hant": "增加(20-50)%地圖內的不穩定裂痕含有烈許的統領．弗倫的機率"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of the Devoted",
+      "zh-Hans": "奉献者之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Shrines",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的神龛",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個神殿"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "of the Essence",
+      "zh-Hans": "精华之",
+      "zh-Hant": "精髓之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Essences",
+      "zh-Hans": "地图包含精华的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有精髓的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "of the Exile",
+      "zh-Hans": "流放者之",
+      "zh-Hant": "流亡者之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Rogue Exiles",
+      "zh-Hans": "地图有盗贼流放者的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有盜賊流亡者的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "BreachWombgiftLevelChance"
+     ],
+     "name": {
+      "en": "of the Flesh",
+      "zh-Hans": "血肉之",
+      "zh-Hant": "血肉之"
+     },
+     "text": {
+      "en": "Wombgifts have (10-30)% chance to drop one Level higher in Map",
+      "zh-Hans": "地图中掉落的孕育赠礼有 (10-30)% 的几率高一级",
+      "zh-Hant": "地圖內有(10-30)%機率掉落高一等級的胎贈"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "BreachHivebloodQuantity"
+     ],
+     "name": {
+      "en": "of the Flow",
+      "zh-Hans": "涨潮之",
+      "zh-Hant": "流動之"
+     },
+     "text": {
+      "en": "(30-60)% increased Quantity of Hiveblood found in Map",
+      "zh-Hans": "地图中虫巢之血的掉落数量提高 (30-60)%",
+      "zh-Hant": "增加(30-60)%地圖內找到的巢裔之血數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "BreachWombgiftQuantity"
+     ],
+     "name": {
+      "en": "of the Form",
+      "zh-Hans": "形态之",
+      "zh-Hant": "形體之"
+     },
+     "text": {
+      "en": "(30-60)% increased Quantity of Wombgifts found in Map",
+      "zh-Hans": "地图中孕育赠礼的掉落数量提高 (30-60)%",
+      "zh-Hant": "增加(30-60)%地圖內找到的胎贈數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "BreachRareMonsterPotency"
+     ],
+     "name": {
+      "en": "of the Hand",
+      "zh-Hans": "手之",
+      "zh-Hant": "手之"
+     },
+     "text": {
+      "en": "(5-20)% increased Effectiveness of Rare Breach Monsters in Map",
+      "zh-Hans": "地图中稀有裂隙怪物的效能提高 (5-20)%",
+      "zh-Hant": "增加(5-20)%地圖內稀有裂痕怪物的效用"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "BreachMonsterQuantity"
+     ],
+     "name": {
+      "en": "of the Horde",
+      "zh-Hans": "部落之",
+      "zh-Hant": "部落之"
+     },
+     "text": {
+      "en": "Breaches in Map have (5-15)% increased Pack Size",
+      "zh-Hans": "地图裂隙中的怪物群落规模提高 (5-15)%",
+      "zh-Hant": "增加(5-15)%地圖內裂痕的怪物群大小"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "BreachAdditionalRares"
+     ],
+     "name": {
+      "en": "of the Invasion",
+      "zh-Hans": "入侵之",
+      "zh-Hant": "入侵之"
+     },
+     "text": {
+      "en": "Unstable Breaches in Map spawn (1-2) additional Rare Monsters when Stabilised",
+      "zh-Hans": "地图中的不稳定裂隙在稳定时会生成 (1-2) 个额外的稀有怪物",
+      "zh-Hant": "地圖內的不穩定裂痕會在穩定後生成(1-2)名額外稀有怪物]"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "of the Summoning",
+      "zh-Hans": "召唤之",
+      "zh-Hant": "召喚之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain a Summoning Circle",
+      "zh-Hans": "地图包含召唤法阵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有召喚法陣的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalModifier"
+     ],
+     "name": {
+      "en": "of Undertaking",
+      "zh-Hans": "重担之",
+      "zh-Hant": "承諾之"
+     },
+     "text": {
+      "en": "Map has (1-2) additional random Modifiers",
+      "zh-Hans": "地图拥有 (1-2) 个额外的随机词缀",
+      "zh-Hant": "地圖有(1-2)個額外變動詞綴"
+     },
+     "generic": true
+    }
+   ]
+  },
+  {
+   "id": "delirium",
+   "subtree": "Delirium",
+   "tradeType": "Delirium Tablet",
+   "name": {
+    "en": "Delirium Tablet",
+    "zh-Hans": "惊悸迷雾石板",
+    "zh-Hant": "譫妄碑牌"
+   },
+   "implicit": {
+    "en": "Adds a Mirror of Delirium to a Map",
+    "zh-Hans": "为一张地图增加 惊悸迷雾之镜",
+    "zh-Hant": "在地圖內加入一個 譫妄之鏡"
+   },
+   "uses": 10,
+   "affixes": [
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterRarityIncrease"
+     ],
+     "name": {
+      "en": "Abounding",
+      "zh-Hans": "充满的",
+      "zh-Hant": "充盈的"
+     },
+     "text": {
+      "en": "Map has (15-20)% increased Monster Rarity",
+      "zh-Hans": "地图上的怪物稀有度提高 (15-20)%",
+      "zh-Hant": "地圖增加(15-20)%怪物稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalAzmeriWisp"
+     ],
+     "name": {
+      "en": "Azmeri's",
+      "zh-Hans": "阿兹莫里的",
+      "zh-Hant": "阿茲莫里的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap contains 1 additional Azmeri Spirits",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图包含 1 个额外的阿兹莫里之灵",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1個額外阿茲莫里魂靈"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedGoldIncrease"
+     ],
+     "name": {
+      "en": "Bountiful",
+      "zh-Hans": "丰厚的",
+      "zh-Hant": "慷慨的"
+     },
+     "text": {
+      "en": "(25-35)% increased Gold found in Map",
+      "zh-Hans": "地图内找到的金币数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖內所獲取的金幣數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapPackSizeIncrease"
+     ],
+     "name": {
+      "en": "Breeding",
+      "zh-Hans": "多产的",
+      "zh-Hant": "多產的"
+     },
+     "text": {
+      "en": "(5-7)% increased Pack Size in Map",
+      "zh-Hans": "地图内怪物群规模提高 (5-7)%",
+      "zh-Hant": "增加(5-7)%地圖內的怪物群大小"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapRarePackIncrease"
+     ],
+     "name": {
+      "en": "Brimming",
+      "zh-Hans": "盈满的",
+      "zh-Hant": "充滿的"
+     },
+     "text": {
+      "en": "Map has (25-35)% increased number of Rare Monsters",
+      "zh-Hans": "地图内稀有怪物数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖含有的稀有怪物數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterEffectiveness"
+     ],
+     "name": {
+      "en": "Challenger's",
+      "zh-Hans": "挑战者的",
+      "zh-Hant": "挑戰者的"
+     },
+     "text": {
+      "en": "Monsters have (10-15)% increased Effectiveness",
+      "zh-Hans": "怪物的效能提高 (10-15)%",
+      "zh-Hant": "增加(10-15)%怪物的效用"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedItemRarityIncrease"
+     ],
+     "name": {
+      "en": "Collector's",
+      "zh-Hans": "收藏家的",
+      "zh-Hant": "蒐集者的"
+     },
+     "text": {
+      "en": "(8-12)% increased Rarity of Items found in Map",
+      "zh-Hans": "地图内获取物品的稀有度提高 (8-12)%",
+      "zh-Hant": "增加(8-12)%地圖內找到的物品稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "Crystallised",
+      "zh-Hans": "结晶的",
+      "zh-Hant": "晶化的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Essences\n% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图包含 1 个额外的精华\n地图内找到的引路石数量提高 %",
+      "zh-Hant": "地圖內含有額外的1個精髓\n增加%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapExperienceGainIncrease"
+     ],
+     "name": {
+      "en": "Elevated",
+      "zh-Hans": "睿智的",
+      "zh-Hant": "昇華的"
+     },
+     "text": {
+      "en": "(12-18)% increased Experience gain in Map",
+      "zh-Hans": "地图内的经验值获取提高 (12-18)%",
+      "zh-Hant": "增加(12-18)%地圖內所獲取的經驗量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "Exiled",
+      "zh-Hans": "流放的",
+      "zh-Hant": "流亡的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap is inhabited by 1 additional Rogue Exiles",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图内会出现 1 个额外的盗贼流放者",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1名額外盜賊流亡者"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "Summoner's",
+      "zh-Hans": "召唤者的",
+      "zh-Hant": "召喚師的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Summoning Circles",
+      "zh-Hans": "地图包含 1 个额外的召唤法阵",
+      "zh-Hant": "地圖內含有額外的1個召喚法陣"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMagicPackIncrease"
+     ],
+     "name": {
+      "en": "Teeming",
+      "zh-Hans": "浇灌的",
+      "zh-Hant": "擁擠的"
+     },
+     "text": {
+      "en": "Map has (30-40)% increased Magic Monsters",
+      "zh-Hans": "地图内魔法怪物数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖含有的魔法怪物"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalChests"
+     ],
+     "name": {
+      "en": "Treasurer's",
+      "zh-Hans": "司库的",
+      "zh-Hant": "司庫的"
+     },
+     "text": {
+      "en": "Map contains (2-3) additional Rare Chests",
+      "zh-Hans": "地图包含 (2-3) 个额外的稀有宝箱",
+      "zh-Hant": "地圖內含有額外的(2-3)個稀有箱子"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalUniqueMonsterModifier"
+     ],
+     "name": {
+      "en": "of Contest",
+      "zh-Hans": "争辩之",
+      "zh-Hant": "挑戰之"
+     },
+     "text": {
+      "en": "Unique Monsters have 1 additional Rare Modifiers",
+      "zh-Hans": "传奇怪物额外具有 1 个词缀",
+      "zh-Hant": "傳奇怪物會擁有1個額外的詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumFogDissipationDelay"
+     ],
+     "name": {
+      "en": "of Eternity",
+      "zh-Hans": "永恒之",
+      "zh-Hant": "永恆之"
+     },
+     "text": {
+      "en": "Delirium Fog in Map lasts (6-12) additional seconds before dissipating",
+      "zh-Hans": "地图内的惊悸迷雾在消散前额外持续 (6-12) 秒",
+      "zh-Hant": "地圖內含有的譫妄迷霧會在消散前額外持續(6-12)秒"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumRareMonsterPause"
+     ],
+     "name": {
+      "en": "of Freeze Time",
+      "zh-Hans": "凝时之",
+      "zh-Hant": "冰凍時間之"
+     },
+     "text": {
+      "en": "Slaying Rare Monsters in Map pauses the Delirium Mirror Timer for (3-5) seconds",
+      "zh-Hans": "击败地图内的稀有怪物使惊悸迷雾之镜的倒计时暂停 (3-5) 秒",
+      "zh-Hant": "地圖內的譫妄迷霧在擊殺稀有怪物時會暫停(3-5)秒"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumDifficultyIncrease"
+     ],
+     "name": {
+      "en": "of Madness",
+      "zh-Hans": "疯狂之",
+      "zh-Hant": "瘋狂之"
+     },
+     "text": {
+      "en": "Delirium Fog in Map applies (15-30)% increased Deliriousness to Players",
+      "zh-Hans": "地图中的惊悸迷雾使玩家的亢奋度提高 (15-30)%",
+      "zh-Hant": "地圖中的譫妄會增加(15-30)%玩家的譫妄程度"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumDoodadsIncrease"
+     ],
+     "name": {
+      "en": "of Mirrors",
+      "zh-Hans": "镜面之",
+      "zh-Hant": "鏡子之"
+     },
+     "text": {
+      "en": "Delirium Fog in Map spawns (15-30)% increased Fracturing Mirrors",
+      "zh-Hans": "地图内的惊悸迷雾生成的破溃之镜数量提高 (15-30)%",
+      "zh-Hant": "增加(15-30)%地圖內的譫妄生成破碎之鏡"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumPackSizeIncrease"
+     ],
+     "name": {
+      "en": "of Persecution",
+      "zh-Hans": "纷扰之",
+      "zh-Hant": "迫害之"
+     },
+     "text": {
+      "en": "Delirium Monsters in Map have (15-30)% increased Pack Size",
+      "zh-Hans": "地图内惊悸迷雾怪物的怪物群规模提高 (15-30)%",
+      "zh-Hant": "增加(15-30)%地圖內的譫妄怪物怪物群大小"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumBossChance"
+     ],
+     "name": {
+      "en": "of Phobia",
+      "zh-Hans": "畏惧之",
+      "zh-Hant": "恐懼症之"
+     },
+     "text": {
+      "en": "Delirium Encounters in Map are (15-30)% more likely to spawn Unique Bosses",
+      "zh-Hans": "地图内的惊悸迷雾遭遇战生成传奇首领的几率总增 (15-30)%",
+      "zh-Hant": "地圖內的譫妄有(15-30)%更多機率生成傳奇頭目"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumAdditionalShardsChance"
+     ],
+     "name": {
+      "en": "of Shattering",
+      "zh-Hans": "碎离之",
+      "zh-Hant": "碎裂之"
+     },
+     "text": {
+      "en": "Delirium Fog in Map spawns (12-26)% increased Mirror Shards",
+      "zh-Hans": "地图中的惊悸迷雾生成的破溃之镜碎片数量提高 (12-26)%",
+      "zh-Hant": "地圖中的譫妄迷霧增加(12-26)%裂鏡碎片的生成量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Shrines",
+      "zh-Hans": "殿堂之",
+      "zh-Hant": "神殿之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Shrines",
+      "zh-Hans": "地图包含神龛的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有神殿的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Spirits",
+      "zh-Hans": "万灵之",
+      "zh-Hant": "魂靈之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Azmeri Spirits",
+      "zh-Hans": "地图有阿兹莫里之灵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有阿茲莫里魂靈的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Strongboxes",
+      "zh-Hans": "保险箱之",
+      "zh-Hant": "保險箱之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Strongboxes",
+      "zh-Hans": "地图包含保险箱的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有保險箱的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of the Antiquarian",
+      "zh-Hans": "金石家之",
+      "zh-Hant": "收藏家之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Strongboxes",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的保险箱",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個保險箱"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapDroppedMapsIncrease"
+     ],
+     "name": {
+      "en": "of the Cartographer",
+      "zh-Hans": "制图师之",
+      "zh-Hant": "製圖師之"
+     },
+     "text": {
+      "en": "(30-40)% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图内找到的引路石数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of the Devoted",
+      "zh-Hans": "奉献者之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Shrines",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的神龛",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個神殿"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "of the Essence",
+      "zh-Hans": "精华之",
+      "zh-Hant": "精髓之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Essences",
+      "zh-Hans": "地图包含精华的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有精髓的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "of the Exile",
+      "zh-Hans": "流放者之",
+      "zh-Hant": "流亡者之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Rogue Exiles",
+      "zh-Hans": "地图有盗贼流放者的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有盜賊流亡者的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumMonsterSplinterIncrease"
+     ],
+     "name": {
+      "en": "of the Simulacrum",
+      "zh-Hans": "拟像之",
+      "zh-Hant": "幻像異界之"
+     },
+     "text": {
+      "en": "(15-30)% increased Stack size of Simulacrum Splinters found in Map",
+      "zh-Hans": "地图内的梦魇拟像裂片堆叠数量提高 (15-30)%",
+      "zh-Hant": "增加(15-30)%地圖內掉落的幻像斷片數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "of the Summoning",
+      "zh-Hans": "召唤之",
+      "zh-Hant": "召喚之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain a Summoning Circle",
+      "zh-Hans": "地图包含召唤法阵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有召喚法陣的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "DeliriumFogPersistence"
+     ],
+     "name": {
+      "en": "of the Unending",
+      "zh-Hans": "无尽之",
+      "zh-Hant": "無休止之"
+     },
+     "text": {
+      "en": "Delirium Fog in Map dissipates (20-30)% slower",
+      "zh-Hans": "地图内惊悸迷雾消散速度减慢 (20-30)%",
+      "zh-Hant": "減少(20-30)%地圖內的譫妄迷霧消散速度"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalModifier"
+     ],
+     "name": {
+      "en": "of Undertaking",
+      "zh-Hans": "重担之",
+      "zh-Hant": "承諾之"
+     },
+     "text": {
+      "en": "Map has (1-2) additional random Modifiers",
+      "zh-Hans": "地图拥有 (1-2) 个额外的随机词缀",
+      "zh-Hant": "地圖有(1-2)個額外變動詞綴"
+     },
+     "generic": true
+    }
+   ]
+  },
+  {
+   "id": "expedition",
+   "subtree": "Expedition",
+   "tradeType": "Expedition Tablet",
+   "name": {
+    "en": "Expedition Tablet",
+    "zh-Hans": "先祖秘藏石板",
+    "zh-Hant": "探險碑牌"
+   },
+   "implicit": {
+    "en": "Adds a Kalguuran Expedition to a Map",
+    "zh-Hans": "为一张地图增加 卡古兰先祖秘藏",
+    "zh-Hant": "在地圖內加入一個 卡爾葛墓地"
+   },
+   "uses": 10,
+   "affixes": [
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterRarityIncrease"
+     ],
+     "name": {
+      "en": "Abounding",
+      "zh-Hans": "充满的",
+      "zh-Hant": "充盈的"
+     },
+     "text": {
+      "en": "Map has (15-20)% increased Monster Rarity",
+      "zh-Hans": "地图上的怪物稀有度提高 (15-20)%",
+      "zh-Hant": "地圖增加(15-20)%怪物稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalAzmeriWisp"
+     ],
+     "name": {
+      "en": "Azmeri's",
+      "zh-Hans": "阿兹莫里的",
+      "zh-Hant": "阿茲莫里的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap contains 1 additional Azmeri Spirits",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图包含 1 个额外的阿兹莫里之灵",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1個額外阿茲莫里魂靈"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedGoldIncrease"
+     ],
+     "name": {
+      "en": "Bountiful",
+      "zh-Hans": "丰厚的",
+      "zh-Hant": "慷慨的"
+     },
+     "text": {
+      "en": "(25-35)% increased Gold found in Map",
+      "zh-Hans": "地图内找到的金币数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖內所獲取的金幣數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapPackSizeIncrease"
+     ],
+     "name": {
+      "en": "Breeding",
+      "zh-Hans": "多产的",
+      "zh-Hant": "多產的"
+     },
+     "text": {
+      "en": "(5-7)% increased Pack Size in Map",
+      "zh-Hans": "地图内怪物群规模提高 (5-7)%",
+      "zh-Hant": "增加(5-7)%地圖內的怪物群大小"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapRarePackIncrease"
+     ],
+     "name": {
+      "en": "Brimming",
+      "zh-Hans": "盈满的",
+      "zh-Hant": "充滿的"
+     },
+     "text": {
+      "en": "Map has (25-35)% increased number of Rare Monsters",
+      "zh-Hans": "地图内稀有怪物数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖含有的稀有怪物數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterEffectiveness"
+     ],
+     "name": {
+      "en": "Challenger's",
+      "zh-Hans": "挑战者的",
+      "zh-Hant": "挑戰者的"
+     },
+     "text": {
+      "en": "Monsters have (10-15)% increased Effectiveness",
+      "zh-Hans": "怪物的效能提高 (10-15)%",
+      "zh-Hant": "增加(10-15)%怪物的效用"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedItemRarityIncrease"
+     ],
+     "name": {
+      "en": "Collector's",
+      "zh-Hans": "收藏家的",
+      "zh-Hant": "蒐集者的"
+     },
+     "text": {
+      "en": "(8-12)% increased Rarity of Items found in Map",
+      "zh-Hans": "地图内获取物品的稀有度提高 (8-12)%",
+      "zh-Hant": "增加(8-12)%地圖內找到的物品稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "Crystallised",
+      "zh-Hans": "结晶的",
+      "zh-Hant": "晶化的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Essences\n% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图包含 1 个额外的精华\n地图内找到的引路石数量提高 %",
+      "zh-Hant": "地圖內含有額外的1個精髓\n增加%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapExperienceGainIncrease"
+     ],
+     "name": {
+      "en": "Elevated",
+      "zh-Hans": "睿智的",
+      "zh-Hant": "昇華的"
+     },
+     "text": {
+      "en": "(12-18)% increased Experience gain in Map",
+      "zh-Hans": "地图内的经验值获取提高 (12-18)%",
+      "zh-Hant": "增加(12-18)%地圖內所獲取的經驗量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "Exiled",
+      "zh-Hans": "流放的",
+      "zh-Hant": "流亡的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap is inhabited by 1 additional Rogue Exiles",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图内会出现 1 个额外的盗贼流放者",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1名額外盜賊流亡者"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "Summoner's",
+      "zh-Hans": "召唤者的",
+      "zh-Hant": "召喚師的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Summoning Circles",
+      "zh-Hans": "地图包含 1 个额外的召唤法阵",
+      "zh-Hant": "地圖內含有額外的1個召喚法陣"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMagicPackIncrease"
+     ],
+     "name": {
+      "en": "Teeming",
+      "zh-Hans": "浇灌的",
+      "zh-Hant": "擁擠的"
+     },
+     "text": {
+      "en": "Map has (30-40)% increased Magic Monsters",
+      "zh-Hans": "地图内魔法怪物数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖含有的魔法怪物"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalChests"
+     ],
+     "name": {
+      "en": "Treasurer's",
+      "zh-Hans": "司库的",
+      "zh-Hant": "司庫的"
+     },
+     "text": {
+      "en": "Map contains (2-3) additional Rare Chests",
+      "zh-Hans": "地图包含 (2-3) 个额外的稀有宝箱",
+      "zh-Hant": "地圖內含有額外的(2-3)個稀有箱子"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionUnearthedRares"
+     ],
+     "name": {
+      "en": "of Ancient Evil",
+      "zh-Hans": "古恶之",
+      "zh-Hant": "遠古邪惡之"
+     },
+     "text": {
+      "en": "The first (1-2) unearthed Runic Monsters will be Rare Monsters in Map",
+      "zh-Hans": "地图内最先被开掘的 (1-2) 个符文怪物将为稀有怪物",
+      "zh-Hant": "地圖中前(1-2)名出土的符文怪物會是稀有怪物"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "Expedition2RunicModPassoverChance"
+     ],
+     "name": {
+      "en": "of Ancient Fiends",
+      "zh-Hans": "古魔之",
+      "zh-Hant": "遠古惡魔之"
+     },
+     "text": {
+      "en": "Verisium Remnants have +(25-35)% chance to add an additional Runic Modifier in Map",
+      "zh-Hans": "地图内的维金残片有 +(25-35)% 的几率添加一个额外的符文词缀",
+      "zh-Hant": "地圖中的維里西姆遺物擁有+(25-35)%機率添加一條額外符文詞綴"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalUniqueMonsterModifier"
+     ],
+     "name": {
+      "en": "of Contest",
+      "zh-Hans": "争辩之",
+      "zh-Hant": "挑戰之"
+     },
+     "text": {
+      "en": "Unique Monsters have 1 additional Rare Modifiers",
+      "zh-Hans": "传奇怪物额外具有 1 个词缀",
+      "zh-Hant": "傳奇怪物會擁有1個額外的詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionLogbookIncrease"
+     ],
+     "name": {
+      "en": "of Knowledge",
+      "zh-Hans": "知识之",
+      "zh-Hant": "知識之"
+     },
+     "text": {
+      "en": "(15-25)% increased Quantity of Expedition Logbooks dropped by Runic Monsters in Map",
+      "zh-Hans": "地图内符文怪物掉落的先祖秘藏日志数量提高 (15-25)%",
+      "zh-Hant": "增加(15-25)%地圖內的探險事件所生成的符文怪物掉落的探險日誌數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionIncreasedMonsterRarity"
+     ],
+     "name": {
+      "en": "of Power",
+      "zh-Hans": "暴击之",
+      "zh-Hant": "力量之"
+     },
+     "text": {
+      "en": "(15-25)% increased Expedition Monster Rarity in Map\nexpedition elite pack size +% [20]",
+      "zh-Hans": "地图内的先祖秘藏怪物稀有度提高 (15-25)%\nexpedition elite pack size +% [20]",
+      "zh-Hant": "增加(15-25)%地圖中的探險怪物稀有度\nexpedition elite pack size +% [20]"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionFrozenBosses"
+     ],
+     "name": {
+      "en": "of Preservation",
+      "zh-Hans": "保存之",
+      "zh-Hant": "護存之"
+     },
+     "text": {
+      "en": "Expeditions contain (1-2) Additional Bosses encased in ice in Map",
+      "zh-Hans": "地图内的先祖秘藏额外包含 (1-2) 个被坚冰包裹的首领",
+      "zh-Hant": "地圖中的探險含有(1-2)個額外封存於冰霜中的頭目"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionChanceForVerisiumRemnant"
+     ],
+     "name": {
+      "en": "of Remnants",
+      "zh-Hans": "残片之",
+      "zh-Hant": "遺物之"
+     },
+     "text": {
+      "en": "Expeditions have +(30-40)% Surpassing chance to contain an additional Verisium Remnant",
+      "zh-Hans": "先祖秘藏有 +(30-40)% 的溢出几率包含一个额外的维金残片",
+      "zh-Hant": "探險擁有+(30-40)%滿溢機率含有額外一個維里西姆遺物"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionRunicMonsters"
+     ],
+     "name": {
+      "en": "of Runes",
+      "zh-Hans": "符文之",
+      "zh-Hant": "符文之"
+     },
+     "text": {
+      "en": "Map contains (15-25)% increased number of Runic Monster Markers",
+      "zh-Hans": "地图内符文怪物标记的数量提高 (15-25)%",
+      "zh-Hant": "增加(15-25)%地圖內含有的符文怪物印記的數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionAdditionalSentinels"
+     ],
+     "name": {
+      "en": "of Sentinels",
+      "zh-Hans": "哨卫之",
+      "zh-Hant": "守望之"
+     },
+     "text": {
+      "en": "Expeditions contain (1-2) Additional Verisium Sentries in Map",
+      "zh-Hans": "地图内的先祖秘藏额外包含 (1-2) 个维金哨兵",
+      "zh-Hant": "地圖中的探險含有(1-2)個額外維里西姆守望"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Shrines",
+      "zh-Hans": "殿堂之",
+      "zh-Hant": "神殿之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Shrines",
+      "zh-Hans": "地图包含神龛的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有神殿的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Spirits",
+      "zh-Hans": "万灵之",
+      "zh-Hant": "魂靈之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Azmeri Spirits",
+      "zh-Hans": "地图有阿兹莫里之灵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有阿茲莫里魂靈的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Strongboxes",
+      "zh-Hans": "保险箱之",
+      "zh-Hant": "保險箱之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Strongboxes",
+      "zh-Hans": "地图包含保险箱的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有保險箱的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of the Antiquarian",
+      "zh-Hans": "金石家之",
+      "zh-Hant": "收藏家之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Strongboxes",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的保险箱",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個保險箱"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapDroppedMapsIncrease"
+     ],
+     "name": {
+      "en": "of the Cartographer",
+      "zh-Hans": "制图师之",
+      "zh-Hant": "製圖師之"
+     },
+     "text": {
+      "en": "(30-40)% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图内找到的引路石数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionExplosionRadius"
+     ],
+     "name": {
+      "en": "of the Demolition",
+      "zh-Hans": "爆破之",
+      "zh-Hant": "拆除之"
+     },
+     "text": {
+      "en": "(5-10)% increased Expedition Explosive Area of Effect in Map",
+      "zh-Hans": "地图内先祖秘藏爆炸范围提高 (5-10)%",
+      "zh-Hant": "(5-10)% increased Expedition Explosive Area of Effect in Map"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of the Devoted",
+      "zh-Hans": "奉献者之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Shrines",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的神龛",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個神殿"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "of the Essence",
+      "zh-Hans": "精华之",
+      "zh-Hant": "精髓之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Essences",
+      "zh-Hans": "地图包含精华的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有精髓的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "of the Exile",
+      "zh-Hans": "流放者之",
+      "zh-Hant": "流亡者之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Rogue Exiles",
+      "zh-Hans": "地图有盗贼流放者的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有盜賊流亡者的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionVaalRemnants"
+     ],
+     "name": {
+      "en": "of the Past",
+      "zh-Hans": "过往之",
+      "zh-Hant": "過去之"
+     },
+     "text": {
+      "en": "Expeditions contain (1-2) Vaal Relics in Map",
+      "zh-Hans": "地图内的先祖秘藏包含 (1-2) 个瓦尔遗物",
+      "zh-Hant": "Expeditions contain (1-2) Vaal Relics in Map"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "of the Summoning",
+      "zh-Hans": "召唤之",
+      "zh-Hant": "召喚之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain a Summoning Circle",
+      "zh-Hans": "地图包含召唤法阵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有召喚法陣的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionBuriedStrongboxes"
+     ],
+     "name": {
+      "en": "of Treasure",
+      "zh-Hans": "财宝之",
+      "zh-Hant": "珍寶之"
+     },
+     "text": {
+      "en": "Expeditions contain (1-2) buried Strongboxes in Map",
+      "zh-Hans": "地图内的先祖秘藏包含 (1-2) 个埋藏的保险箱",
+      "zh-Hant": "地圖中的探險含有(1-2)個埋藏的保險箱"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionChanceForTwinnedElites"
+     ],
+     "name": {
+      "en": "of Twins",
+      "zh-Hans": "双子之",
+      "zh-Hant": "雙子之"
+     },
+     "text": {
+      "en": "Expeditions have +(30-40)% Surpassing chance to Duplicate Runic Monsters in Map",
+      "zh-Hans": "地图内的先祖秘藏有 +(30-40)% 的溢出几率复制符文怪物",
+      "zh-Hant": "探險擁有+(30-40)%滿溢機率複製地圖中的符文怪物"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalModifier"
+     ],
+     "name": {
+      "en": "of Undertaking",
+      "zh-Hans": "重担之",
+      "zh-Hant": "承諾之"
+     },
+     "text": {
+      "en": "Map has (1-2) additional random Modifiers",
+      "zh-Hans": "地图拥有 (1-2) 个额外的随机词缀",
+      "zh-Hant": "地圖有(1-2)個額外變動詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "ExpeditionIncreasedVerisium"
+     ],
+     "name": {
+      "en": "of Verisium",
+      "zh-Hans": "维金之",
+      "zh-Hant": "維里西姆之"
+     },
+     "text": {
+      "en": "Monsters from Verisium Remnants drop (15-25)% increased Verisium",
+      "zh-Hans": "维金残片生成的怪物掉落的维金数量提高 (15-25)%",
+      "zh-Hant": "增加(15-25)%維里西姆遺物怪物掉落的維里西姆"
+     },
+     "generic": false
+    }
+   ]
+  },
+  {
+   "id": "irradiated",
+   "subtree": null,
+   "tradeType": "Irradiated Tablet",
+   "name": {
+    "en": "Irradiated Tablet",
+    "zh-Hans": "能量辐照石板",
+    "zh-Hant": "輻照碑牌"
+   },
+   "implicit": {
+    "en": "Adds Irradiated to a Map",
+    "zh-Hans": "为一张地图增加 能量辐照",
+    "zh-Hant": "在地圖內加入 照耀 區域"
+   },
+   "uses": 10,
+   "affixes": [
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterRarityIncrease"
+     ],
+     "name": {
+      "en": "Abounding",
+      "zh-Hans": "充满的",
+      "zh-Hant": "充盈的"
+     },
+     "text": {
+      "en": "Map has (15-20)% increased Monster Rarity",
+      "zh-Hans": "地图上的怪物稀有度提高 (15-20)%",
+      "zh-Hant": "地圖增加(15-20)%怪物稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalAzmeriWisp"
+     ],
+     "name": {
+      "en": "Azmeri's",
+      "zh-Hans": "阿兹莫里的",
+      "zh-Hant": "阿茲莫里的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap contains 1 additional Azmeri Spirits",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图包含 1 个额外的阿兹莫里之灵",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1個額外阿茲莫里魂靈"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedGoldIncrease"
+     ],
+     "name": {
+      "en": "Bountiful",
+      "zh-Hans": "丰厚的",
+      "zh-Hant": "慷慨的"
+     },
+     "text": {
+      "en": "(25-35)% increased Gold found in Map",
+      "zh-Hans": "地图内找到的金币数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖內所獲取的金幣數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapPackSizeIncrease"
+     ],
+     "name": {
+      "en": "Breeding",
+      "zh-Hans": "多产的",
+      "zh-Hant": "多產的"
+     },
+     "text": {
+      "en": "(5-7)% increased Pack Size in Map",
+      "zh-Hans": "地图内怪物群规模提高 (5-7)%",
+      "zh-Hant": "增加(5-7)%地圖內的怪物群大小"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapRarePackIncrease"
+     ],
+     "name": {
+      "en": "Brimming",
+      "zh-Hans": "盈满的",
+      "zh-Hant": "充滿的"
+     },
+     "text": {
+      "en": "Map has (25-35)% increased number of Rare Monsters",
+      "zh-Hans": "地图内稀有怪物数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖含有的稀有怪物數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterEffectiveness"
+     ],
+     "name": {
+      "en": "Challenger's",
+      "zh-Hans": "挑战者的",
+      "zh-Hant": "挑戰者的"
+     },
+     "text": {
+      "en": "Monsters have (10-15)% increased Effectiveness",
+      "zh-Hans": "怪物的效能提高 (10-15)%",
+      "zh-Hant": "增加(10-15)%怪物的效用"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedItemRarityIncrease"
+     ],
+     "name": {
+      "en": "Collector's",
+      "zh-Hans": "收藏家的",
+      "zh-Hant": "蒐集者的"
+     },
+     "text": {
+      "en": "(8-12)% increased Rarity of Items found in Map",
+      "zh-Hans": "地图内获取物品的稀有度提高 (8-12)%",
+      "zh-Hant": "增加(8-12)%地圖內找到的物品稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "Crystallised",
+      "zh-Hans": "结晶的",
+      "zh-Hant": "晶化的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Essences\n% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图包含 1 个额外的精华\n地图内找到的引路石数量提高 %",
+      "zh-Hant": "地圖內含有額外的1個精髓\n增加%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapExperienceGainIncrease"
+     ],
+     "name": {
+      "en": "Elevated",
+      "zh-Hans": "睿智的",
+      "zh-Hant": "昇華的"
+     },
+     "text": {
+      "en": "(12-18)% increased Experience gain in Map",
+      "zh-Hans": "地图内的经验值获取提高 (12-18)%",
+      "zh-Hant": "增加(12-18)%地圖內所獲取的經驗量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "Exiled",
+      "zh-Hans": "流放的",
+      "zh-Hant": "流亡的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap is inhabited by 1 additional Rogue Exiles",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图内会出现 1 个额外的盗贼流放者",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1名額外盜賊流亡者"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "Summoner's",
+      "zh-Hans": "召唤者的",
+      "zh-Hant": "召喚師的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Summoning Circles",
+      "zh-Hans": "地图包含 1 个额外的召唤法阵",
+      "zh-Hant": "地圖內含有額外的1個召喚法陣"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMagicPackIncrease"
+     ],
+     "name": {
+      "en": "Teeming",
+      "zh-Hans": "浇灌的",
+      "zh-Hant": "擁擠的"
+     },
+     "text": {
+      "en": "Map has (30-40)% increased Magic Monsters",
+      "zh-Hans": "地图内魔法怪物数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖含有的魔法怪物"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalChests"
+     ],
+     "name": {
+      "en": "Treasurer's",
+      "zh-Hans": "司库的",
+      "zh-Hant": "司庫的"
+     },
+     "text": {
+      "en": "Map contains (2-3) additional Rare Chests",
+      "zh-Hans": "地图包含 (2-3) 个额外的稀有宝箱",
+      "zh-Hant": "地圖內含有額外的(2-3)個稀有箱子"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalUniqueMonsterModifier"
+     ],
+     "name": {
+      "en": "of Contest",
+      "zh-Hans": "争辩之",
+      "zh-Hant": "挑戰之"
+     },
+     "text": {
+      "en": "Unique Monsters have 1 additional Rare Modifiers",
+      "zh-Hans": "传奇怪物额外具有 1 个词缀",
+      "zh-Hant": "傳奇怪物會擁有1個額外的詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Shrines",
+      "zh-Hans": "殿堂之",
+      "zh-Hant": "神殿之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Shrines",
+      "zh-Hans": "地图包含神龛的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有神殿的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Spirits",
+      "zh-Hans": "万灵之",
+      "zh-Hant": "魂靈之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Azmeri Spirits",
+      "zh-Hans": "地图有阿兹莫里之灵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有阿茲莫里魂靈的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Strongboxes",
+      "zh-Hans": "保险箱之",
+      "zh-Hant": "保險箱之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Strongboxes",
+      "zh-Hans": "地图包含保险箱的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有保險箱的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of the Antiquarian",
+      "zh-Hans": "金石家之",
+      "zh-Hant": "收藏家之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Strongboxes",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的保险箱",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個保險箱"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapDroppedMapsIncrease"
+     ],
+     "name": {
+      "en": "of the Cartographer",
+      "zh-Hans": "制图师之",
+      "zh-Hant": "製圖師之"
+     },
+     "text": {
+      "en": "(30-40)% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图内找到的引路石数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of the Devoted",
+      "zh-Hans": "奉献者之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Shrines",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的神龛",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個神殿"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "of the Essence",
+      "zh-Hans": "精华之",
+      "zh-Hant": "精髓之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Essences",
+      "zh-Hans": "地图包含精华的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有精髓的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "of the Exile",
+      "zh-Hans": "流放者之",
+      "zh-Hant": "流亡者之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Rogue Exiles",
+      "zh-Hans": "地图有盗贼流放者的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有盜賊流亡者的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "of the Summoning",
+      "zh-Hans": "召唤之",
+      "zh-Hant": "召喚之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain a Summoning Circle",
+      "zh-Hans": "地图包含召唤法阵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有召喚法陣的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalModifier"
+     ],
+     "name": {
+      "en": "of Undertaking",
+      "zh-Hans": "重担之",
+      "zh-Hant": "承諾之"
+     },
+     "text": {
+      "en": "Map has (1-2) additional random Modifiers",
+      "zh-Hans": "地图拥有 (1-2) 个额外的随机词缀",
+      "zh-Hant": "地圖有(1-2)個額外變動詞綴"
+     },
+     "generic": true
+    }
+   ]
+  },
+  {
+   "id": "temple",
+   "subtree": "Incursion",
+   "tradeType": "Temple Tablet",
+   "name": {
+    "en": "Temple Tablet",
+    "zh-Hans": "神庙石板",
+    "zh-Hant": "神廟碑牌"
+   },
+   "implicit": {
+    "en": "Adds Vaal Beacons to a Map",
+    "zh-Hans": "为一张地图增加 瓦尔灯塔",
+    "zh-Hant": "在地圖內加入 瓦爾烽塔"
+   },
+   "uses": 10,
+   "affixes": [
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterRarityIncrease"
+     ],
+     "name": {
+      "en": "Abounding",
+      "zh-Hans": "充满的",
+      "zh-Hant": "充盈的"
+     },
+     "text": {
+      "en": "Map has (15-20)% increased Monster Rarity",
+      "zh-Hans": "地图上的怪物稀有度提高 (15-20)%",
+      "zh-Hant": "地圖增加(15-20)%怪物稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalAzmeriWisp"
+     ],
+     "name": {
+      "en": "Azmeri's",
+      "zh-Hans": "阿兹莫里的",
+      "zh-Hant": "阿茲莫里的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap contains 1 additional Azmeri Spirits",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图包含 1 个额外的阿兹莫里之灵",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1個額外阿茲莫里魂靈"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedGoldIncrease"
+     ],
+     "name": {
+      "en": "Bountiful",
+      "zh-Hans": "丰厚的",
+      "zh-Hant": "慷慨的"
+     },
+     "text": {
+      "en": "(25-35)% increased Gold found in Map",
+      "zh-Hans": "地图内找到的金币数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖內所獲取的金幣數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapPackSizeIncrease"
+     ],
+     "name": {
+      "en": "Breeding",
+      "zh-Hans": "多产的",
+      "zh-Hant": "多產的"
+     },
+     "text": {
+      "en": "(5-7)% increased Pack Size in Map",
+      "zh-Hans": "地图内怪物群规模提高 (5-7)%",
+      "zh-Hant": "增加(5-7)%地圖內的怪物群大小"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapRarePackIncrease"
+     ],
+     "name": {
+      "en": "Brimming",
+      "zh-Hans": "盈满的",
+      "zh-Hant": "充滿的"
+     },
+     "text": {
+      "en": "Map has (25-35)% increased number of Rare Monsters",
+      "zh-Hans": "地图内稀有怪物数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖含有的稀有怪物數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterEffectiveness"
+     ],
+     "name": {
+      "en": "Challenger's",
+      "zh-Hans": "挑战者的",
+      "zh-Hant": "挑戰者的"
+     },
+     "text": {
+      "en": "Monsters have (10-15)% increased Effectiveness",
+      "zh-Hans": "怪物的效能提高 (10-15)%",
+      "zh-Hant": "增加(10-15)%怪物的效用"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedItemRarityIncrease"
+     ],
+     "name": {
+      "en": "Collector's",
+      "zh-Hans": "收藏家的",
+      "zh-Hant": "蒐集者的"
+     },
+     "text": {
+      "en": "(8-12)% increased Rarity of Items found in Map",
+      "zh-Hans": "地图内获取物品的稀有度提高 (8-12)%",
+      "zh-Hant": "增加(8-12)%地圖內找到的物品稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "Crystallised",
+      "zh-Hans": "结晶的",
+      "zh-Hant": "晶化的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Essences\n% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图包含 1 个额外的精华\n地图内找到的引路石数量提高 %",
+      "zh-Hant": "地圖內含有額外的1個精髓\n增加%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapExperienceGainIncrease"
+     ],
+     "name": {
+      "en": "Elevated",
+      "zh-Hans": "睿智的",
+      "zh-Hant": "昇華的"
+     },
+     "text": {
+      "en": "(12-18)% increased Experience gain in Map",
+      "zh-Hans": "地图内的经验值获取提高 (12-18)%",
+      "zh-Hant": "增加(12-18)%地圖內所獲取的經驗量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "Exiled",
+      "zh-Hans": "流放的",
+      "zh-Hant": "流亡的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap is inhabited by 1 additional Rogue Exiles",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图内会出现 1 个额外的盗贼流放者",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1名額外盜賊流亡者"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "Summoner's",
+      "zh-Hans": "召唤者的",
+      "zh-Hant": "召喚師的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Summoning Circles",
+      "zh-Hans": "地图包含 1 个额外的召唤法阵",
+      "zh-Hant": "地圖內含有額外的1個召喚法陣"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMagicPackIncrease"
+     ],
+     "name": {
+      "en": "Teeming",
+      "zh-Hans": "浇灌的",
+      "zh-Hant": "擁擠的"
+     },
+     "text": {
+      "en": "Map has (30-40)% increased Magic Monsters",
+      "zh-Hans": "地图内魔法怪物数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖含有的魔法怪物"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalChests"
+     ],
+     "name": {
+      "en": "Treasurer's",
+      "zh-Hans": "司库的",
+      "zh-Hant": "司庫的"
+     },
+     "text": {
+      "en": "Map contains (2-3) additional Rare Chests",
+      "zh-Hans": "地图包含 (2-3) 个额外的稀有宝箱",
+      "zh-Hant": "地圖內含有額外的(2-3)個稀有箱子"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalUniqueMonsterModifier"
+     ],
+     "name": {
+      "en": "of Contest",
+      "zh-Hans": "争辩之",
+      "zh-Hant": "挑戰之"
+     },
+     "text": {
+      "en": "Unique Monsters have 1 additional Rare Modifiers",
+      "zh-Hans": "传奇怪物额外具有 1 个词缀",
+      "zh-Hant": "傳奇怪物會擁有1個額外的詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Shrines",
+      "zh-Hans": "殿堂之",
+      "zh-Hant": "神殿之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Shrines",
+      "zh-Hans": "地图包含神龛的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有神殿的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Spirits",
+      "zh-Hans": "万灵之",
+      "zh-Hant": "魂靈之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Azmeri Spirits",
+      "zh-Hans": "地图有阿兹莫里之灵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有阿茲莫里魂靈的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Strongboxes",
+      "zh-Hans": "保险箱之",
+      "zh-Hant": "保險箱之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Strongboxes",
+      "zh-Hans": "地图包含保险箱的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有保險箱的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of the Antiquarian",
+      "zh-Hans": "金石家之",
+      "zh-Hant": "收藏家之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Strongboxes",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的保险箱",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個保險箱"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapDroppedMapsIncrease"
+     ],
+     "name": {
+      "en": "of the Cartographer",
+      "zh-Hans": "制图师之",
+      "zh-Hant": "製圖師之"
+     },
+     "text": {
+      "en": "(30-40)% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图内找到的引路石数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of the Devoted",
+      "zh-Hans": "奉献者之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Shrines",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的神龛",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個神殿"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "of the Essence",
+      "zh-Hans": "精华之",
+      "zh-Hant": "精髓之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Essences",
+      "zh-Hans": "地图包含精华的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有精髓的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "of the Exile",
+      "zh-Hans": "流放者之",
+      "zh-Hant": "流亡者之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Rogue Exiles",
+      "zh-Hans": "地图有盗贼流放者的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有盜賊流亡者的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "of the Summoning",
+      "zh-Hans": "召唤之",
+      "zh-Hant": "召喚之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain a Summoning Circle",
+      "zh-Hans": "地图包含召唤法阵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有召喚法陣的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalModifier"
+     ],
+     "name": {
+      "en": "of Undertaking",
+      "zh-Hans": "重担之",
+      "zh-Hant": "承諾之"
+     },
+     "text": {
+      "en": "Map has (1-2) additional random Modifiers",
+      "zh-Hans": "地图拥有 (1-2) 个额外的随机词缀",
+      "zh-Hant": "地圖有(1-2)個額外變動詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "IncursionBossChance"
+     ],
+     "name": {
+      "en": "TowerIncursionBossChance",
+      "zh-Hans": "TowerIncursionBossChance",
+      "zh-Hant": "TowerIncursionBossChance"
+     },
+     "text": {
+      "en": "(10-25)% chance to add a Vaal Beacon Unique Monster to the Map",
+      "zh-Hans": "有 (10-25)% 的几率为地图增加一个瓦尔灯塔传奇怪物",
+      "zh-Hant": "有(10-25)%機率為地圖新增一名瓦爾烽塔傳奇怪物"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "IncursionExtraPacks"
+     ],
+     "name": {
+      "en": "TowerIncursionExtraPacks",
+      "zh-Hans": "TowerIncursionExtraPacks",
+      "zh-Hant": "TowerIncursionExtraPacks"
+     },
+     "text": {
+      "en": "1 extra packs of Monsters around Vaal Beacons in Map",
+      "zh-Hans": "地图中的瓦尔灯塔附近出现 1 个额外怪物群落",
+      "zh-Hant": "地圖內的瓦爾烽塔周遭擁有額外1群怪物"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "IncursionExtraPacks"
+     ],
+     "name": {
+      "en": "TowerIncursionExtraPacksChance",
+      "zh-Hans": "TowerIncursionExtraPacksChance",
+      "zh-Hant": "TowerIncursionExtraPacksChance"
+     },
+     "text": {
+      "en": "(30-60)% chance for an extra packs of Monsters around Vaal Beacons in Map",
+      "zh-Hans": "地图中的瓦尔灯塔附近有 (30-60)% 的几率出现一个额外怪物群落",
+      "zh-Hant": "有(30-60)%機率擁有一群額外怪物在地圖內的瓦爾烽塔周遭"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "IncursionPackSize"
+     ],
+     "name": {
+      "en": "TowerIncursionPackSize",
+      "zh-Hans": "TowerIncursionPackSize",
+      "zh-Hant": "TowerIncursionPackSize"
+     },
+     "text": {
+      "en": "(10-30)% increased Pack Size for Monsters around Vaal Beacons in Map",
+      "zh-Hans": "地图中的瓦尔灯塔附近的怪物群落规模提高 (10-30)%",
+      "zh-Hant": "增加(10-30)%地圖內瓦爾烽塔周遭的怪物群大小"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "IncursionRareChestChance"
+     ],
+     "name": {
+      "en": "TowerIncursionRareChestChance",
+      "zh-Hans": "TowerIncursionRareChestChance",
+      "zh-Hant": "TowerIncursionRareChestChance"
+     },
+     "text": {
+      "en": "(30-60)% increased chance Vaal Beacon Chests are Rare in Map",
+      "zh-Hans": "地图中的瓦尔灯塔宝箱为稀有的几率提高 (30-60)%",
+      "zh-Hant": "增加(30-60)%地圖內瓦爾烽塔的寶箱為稀有的機率"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "IncursionSecondaryEncounters"
+     ],
+     "name": {
+      "en": "TowerIncursionSecondaryEncounters",
+      "zh-Hans": "TowerIncursionSecondaryEncounters",
+      "zh-Hant": "TowerIncursionSecondaryEncounters"
+     },
+     "text": {
+      "en": "(25-50)% increased chance Vaal Beacons summon additional Monsters in Map",
+      "zh-Hans": "地图中的瓦尔灯塔召唤额外怪物的几率提高 (25-50)%",
+      "zh-Hant": "增加(25-50)%地圖內的瓦爾烽塔召喚額外怪物的機率"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "IncursionTokenChance"
+     ],
+     "name": {
+      "en": "TowerIncursionTokenChance",
+      "zh-Hans": "TowerIncursionTokenChance",
+      "zh-Hant": "TowerIncursionTokenChance"
+     },
+     "text": {
+      "en": "(5-10)% chance to gain an additional Crystal from Vaal Beacons in Map",
+      "zh-Hans": "有 (5-10)% 的几率从地图中的瓦尔灯塔获得一个额外的水晶",
+      "zh-Hant": "有(5-10)%機率從地圖內的瓦爾烽塔獲得額外一個額外水晶"
+     },
+     "generic": false
+    }
+   ]
+  },
+  {
+   "id": "overseer",
+   "subtree": null,
+   "tradeType": "Overseer Tablet",
+   "name": {
+    "en": "Overseer Tablet",
+    "zh-Hans": "霸主石板",
+    "zh-Hant": "總督碑牌"
+   },
+   "implicit": {
+    "en": "Empowers the Map Boss of a Map",
+    "zh-Hans": "强化 一张地图中的 地图首领",
+    "zh-Hant": "強化 地圖的頭目"
+   },
+   "uses": 10,
+   "affixes": [
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterRarityIncrease"
+     ],
+     "name": {
+      "en": "Abounding",
+      "zh-Hans": "充满的",
+      "zh-Hant": "充盈的"
+     },
+     "text": {
+      "en": "Map has (15-20)% increased Monster Rarity",
+      "zh-Hans": "地图上的怪物稀有度提高 (15-20)%",
+      "zh-Hant": "地圖增加(15-20)%怪物稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalAzmeriWisp"
+     ],
+     "name": {
+      "en": "Azmeri's",
+      "zh-Hans": "阿兹莫里的",
+      "zh-Hant": "阿茲莫里的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap contains 1 additional Azmeri Spirits",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图包含 1 个额外的阿兹莫里之灵",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1個額外阿茲莫里魂靈"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedGoldIncrease"
+     ],
+     "name": {
+      "en": "Bountiful",
+      "zh-Hans": "丰厚的",
+      "zh-Hant": "慷慨的"
+     },
+     "text": {
+      "en": "(25-35)% increased Gold found in Map",
+      "zh-Hans": "地图内找到的金币数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖內所獲取的金幣數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapPackSizeIncrease"
+     ],
+     "name": {
+      "en": "Breeding",
+      "zh-Hans": "多产的",
+      "zh-Hant": "多產的"
+     },
+     "text": {
+      "en": "(5-7)% increased Pack Size in Map",
+      "zh-Hans": "地图内怪物群规模提高 (5-7)%",
+      "zh-Hant": "增加(5-7)%地圖內的怪物群大小"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapRarePackIncrease"
+     ],
+     "name": {
+      "en": "Brimming",
+      "zh-Hans": "盈满的",
+      "zh-Hant": "充滿的"
+     },
+     "text": {
+      "en": "Map has (25-35)% increased number of Rare Monsters",
+      "zh-Hans": "地图内稀有怪物数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖含有的稀有怪物數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterEffectiveness"
+     ],
+     "name": {
+      "en": "Challenger's",
+      "zh-Hans": "挑战者的",
+      "zh-Hant": "挑戰者的"
+     },
+     "text": {
+      "en": "Monsters have (10-15)% increased Effectiveness",
+      "zh-Hans": "怪物的效能提高 (10-15)%",
+      "zh-Hant": "增加(10-15)%怪物的效用"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedItemRarityIncrease"
+     ],
+     "name": {
+      "en": "Collector's",
+      "zh-Hans": "收藏家的",
+      "zh-Hant": "蒐集者的"
+     },
+     "text": {
+      "en": "(8-12)% increased Rarity of Items found in Map",
+      "zh-Hans": "地图内获取物品的稀有度提高 (8-12)%",
+      "zh-Hant": "增加(8-12)%地圖內找到的物品稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "Crystallised",
+      "zh-Hans": "结晶的",
+      "zh-Hant": "晶化的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Essences\n% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图包含 1 个额外的精华\n地图内找到的引路石数量提高 %",
+      "zh-Hant": "地圖內含有額外的1個精髓\n增加%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapExperienceGainIncrease"
+     ],
+     "name": {
+      "en": "Elevated",
+      "zh-Hans": "睿智的",
+      "zh-Hant": "昇華的"
+     },
+     "text": {
+      "en": "(12-18)% increased Experience gain in Map",
+      "zh-Hans": "地图内的经验值获取提高 (12-18)%",
+      "zh-Hant": "增加(12-18)%地圖內所獲取的經驗量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "Exiled",
+      "zh-Hans": "流放的",
+      "zh-Hant": "流亡的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap is inhabited by 1 additional Rogue Exiles",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图内会出现 1 个额外的盗贼流放者",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1名額外盜賊流亡者"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "Summoner's",
+      "zh-Hans": "召唤者的",
+      "zh-Hant": "召喚師的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Summoning Circles",
+      "zh-Hans": "地图包含 1 个额外的召唤法阵",
+      "zh-Hant": "地圖內含有額外的1個召喚法陣"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMagicPackIncrease"
+     ],
+     "name": {
+      "en": "Teeming",
+      "zh-Hans": "浇灌的",
+      "zh-Hant": "擁擠的"
+     },
+     "text": {
+      "en": "Map has (30-40)% increased Magic Monsters",
+      "zh-Hans": "地图内魔法怪物数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖含有的魔法怪物"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalChests"
+     ],
+     "name": {
+      "en": "Treasurer's",
+      "zh-Hans": "司库的",
+      "zh-Hant": "司庫的"
+     },
+     "text": {
+      "en": "Map contains (2-3) additional Rare Chests",
+      "zh-Hans": "地图包含 (2-3) 个额外的稀有宝箱",
+      "zh-Hant": "地圖內含有額外的(2-3)個稀有箱子"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapBossAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Compartments",
+      "zh-Hans": "暗格之",
+      "zh-Hant": "隔間之"
+     },
+     "text": {
+      "en": "Map contains (1-2) additional Strongboxes",
+      "zh-Hans": "地图包含 (1-2) 个额外的保险箱",
+      "zh-Hant": "地圖內含有額外的(1-2)個保險箱"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapBossExperience"
+     ],
+     "name": {
+      "en": "of Conquering",
+      "zh-Hans": "征服之",
+      "zh-Hant": "克服之"
+     },
+     "text": {
+      "en": "Map Bosses grant (40-80)% increased Experience",
+      "zh-Hans": "地图首领提供的经验值提高 (40-80)%",
+      "zh-Hant": "增加(40-80)%地圖頭目賦予的經驗"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalUniqueMonsterModifier"
+     ],
+     "name": {
+      "en": "of Contest",
+      "zh-Hans": "争辩之",
+      "zh-Hant": "挑戰之"
+     },
+     "text": {
+      "en": "Unique Monsters have 1 additional Rare Modifiers",
+      "zh-Hans": "传奇怪物额外具有 1 个词缀",
+      "zh-Hant": "傳奇怪物會擁有1個額外的詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapBossAdditionalEssence"
+     ],
+     "name": {
+      "en": "of Crystals",
+      "zh-Hans": "水晶之",
+      "zh-Hant": "晶石之"
+     },
+     "text": {
+      "en": "Map contains (1-2) additional Essences",
+      "zh-Hans": "地图包含 (1-2) 个额外的精华",
+      "zh-Hant": "地圖內含有額外的(1-2)個精髓"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapBossQuantity"
+     ],
+     "name": {
+      "en": "of Hoards",
+      "zh-Hans": "囤积之",
+      "zh-Hant": "囤物之"
+     },
+     "text": {
+      "en": "(13-20)% increased Quantity of Items dropped by Map Bosses",
+      "zh-Hans": "地图首领掉落的物品数量提高 (13-20)%",
+      "zh-Hant": "增加(13-20)%地圖頭目的掉落物品數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapBossWaystoneChance"
+     ],
+     "name": {
+      "en": "of Pathways",
+      "zh-Hans": "路途之",
+      "zh-Hant": "路途之"
+     },
+     "text": {
+      "en": "(18-30)% increased Quantity of Waystones dropped by Map Bosses",
+      "zh-Hans": "地图首领掉落的引路石数量提高 (18-30)%",
+      "zh-Hant": "增加(18-30)%地圖頭目掉落的換界石數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Shrines",
+      "zh-Hans": "殿堂之",
+      "zh-Hant": "神殿之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Shrines",
+      "zh-Hans": "地图包含神龛的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有神殿的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Spirits",
+      "zh-Hans": "万灵之",
+      "zh-Hant": "魂靈之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Azmeri Spirits",
+      "zh-Hans": "地图有阿兹莫里之灵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有阿茲莫里魂靈的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Strongboxes",
+      "zh-Hans": "保险箱之",
+      "zh-Hant": "保險箱之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Strongboxes",
+      "zh-Hans": "地图包含保险箱的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有保險箱的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of the Antiquarian",
+      "zh-Hans": "金石家之",
+      "zh-Hant": "收藏家之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Strongboxes",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的保险箱",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個保險箱"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapDroppedMapsIncrease"
+     ],
+     "name": {
+      "en": "of the Cartographer",
+      "zh-Hans": "制图师之",
+      "zh-Hant": "製圖師之"
+     },
+     "text": {
+      "en": "(30-40)% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图内找到的引路石数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of the Devoted",
+      "zh-Hans": "奉献者之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Shrines",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的神龛",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個神殿"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "of the Essence",
+      "zh-Hans": "精华之",
+      "zh-Hant": "精髓之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Essences",
+      "zh-Hans": "地图包含精华的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有精髓的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "of the Exile",
+      "zh-Hans": "流放者之",
+      "zh-Hant": "流亡者之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Rogue Exiles",
+      "zh-Hans": "地图有盗贼流放者的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有盜賊流亡者的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "of the Summoning",
+      "zh-Hans": "召唤之",
+      "zh-Hant": "召喚之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain a Summoning Circle",
+      "zh-Hans": "地图包含召唤法阵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有召喚法陣的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapBossRarity"
+     ],
+     "name": {
+      "en": "of Treasure",
+      "zh-Hans": "财宝之",
+      "zh-Hant": "寶藏之"
+     },
+     "text": {
+      "en": "(35-60)% increased Rarity of Items dropped by Map Bosses",
+      "zh-Hans": "地图首领掉落的物品稀有度提高 (35-60)%",
+      "zh-Hant": "增加(35-60)%地圖頭目掉落物品的稀有度"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalModifier"
+     ],
+     "name": {
+      "en": "of Undertaking",
+      "zh-Hans": "重担之",
+      "zh-Hant": "承諾之"
+     },
+     "text": {
+      "en": "Map has (1-2) additional random Modifiers",
+      "zh-Hans": "地图拥有 (1-2) 个额外的随机词缀",
+      "zh-Hant": "地圖有(1-2)個額外變動詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapBossAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Wisps",
+      "zh-Hans": "鬼灵之",
+      "zh-Hant": "妖精之"
+     },
+     "text": {
+      "en": "Map contains (1-2) additional Azmeri Spirits",
+      "zh-Hans": "地图包含 (1-2) 个额外的阿兹莫里之灵",
+      "zh-Hant": "地圖內含有額外的(1-2)個阿茲莫里魂靈"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapBossAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Worship",
+      "zh-Hans": "崇敬之",
+      "zh-Hant": "崇拜之"
+     },
+     "text": {
+      "en": "Map contains (1-2) additional Shrines",
+      "zh-Hans": "地图包含 (1-2) 个额外的神龛",
+      "zh-Hant": "地圖內含有額外的(1-2)個神殿"
+     },
+     "generic": false
+    }
+   ]
+  },
+  {
+   "id": "ritual",
+   "subtree": "Ritual",
+   "tradeType": "Ritual Tablet",
+   "name": {
+    "en": "Ritual Tablet",
+    "zh-Hans": "驱灵仪式石板",
+    "zh-Hant": "祭祀碑牌"
+   },
+   "implicit": {
+    "en": "Adds Ritual Altars to a Map",
+    "zh-Hans": "为一张地图增加 驱灵祭坛",
+    "zh-Hant": "在地圖內加入 祭祀神壇"
+   },
+   "uses": 10,
+   "affixes": [
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterRarityIncrease"
+     ],
+     "name": {
+      "en": "Abounding",
+      "zh-Hans": "充满的",
+      "zh-Hant": "充盈的"
+     },
+     "text": {
+      "en": "Map has (15-20)% increased Monster Rarity",
+      "zh-Hans": "地图上的怪物稀有度提高 (15-20)%",
+      "zh-Hant": "地圖增加(15-20)%怪物稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalAzmeriWisp"
+     ],
+     "name": {
+      "en": "Azmeri's",
+      "zh-Hans": "阿兹莫里的",
+      "zh-Hant": "阿茲莫里的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap contains 1 additional Azmeri Spirits",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图包含 1 个额外的阿兹莫里之灵",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1個額外阿茲莫里魂靈"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedGoldIncrease"
+     ],
+     "name": {
+      "en": "Bountiful",
+      "zh-Hans": "丰厚的",
+      "zh-Hant": "慷慨的"
+     },
+     "text": {
+      "en": "(25-35)% increased Gold found in Map",
+      "zh-Hans": "地图内找到的金币数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖內所獲取的金幣數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapPackSizeIncrease"
+     ],
+     "name": {
+      "en": "Breeding",
+      "zh-Hans": "多产的",
+      "zh-Hant": "多產的"
+     },
+     "text": {
+      "en": "(5-7)% increased Pack Size in Map",
+      "zh-Hans": "地图内怪物群规模提高 (5-7)%",
+      "zh-Hant": "增加(5-7)%地圖內的怪物群大小"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapRarePackIncrease"
+     ],
+     "name": {
+      "en": "Brimming",
+      "zh-Hans": "盈满的",
+      "zh-Hant": "充滿的"
+     },
+     "text": {
+      "en": "Map has (25-35)% increased number of Rare Monsters",
+      "zh-Hans": "地图内稀有怪物数量提高 (25-35)%",
+      "zh-Hant": "增加(25-35)%地圖含有的稀有怪物數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMonsterEffectiveness"
+     ],
+     "name": {
+      "en": "Challenger's",
+      "zh-Hans": "挑战者的",
+      "zh-Hant": "挑戰者的"
+     },
+     "text": {
+      "en": "Monsters have (10-15)% increased Effectiveness",
+      "zh-Hans": "怪物的效能提高 (10-15)%",
+      "zh-Hant": "增加(10-15)%怪物的效用"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapDroppedItemRarityIncrease"
+     ],
+     "name": {
+      "en": "Collector's",
+      "zh-Hans": "收藏家的",
+      "zh-Hant": "蒐集者的"
+     },
+     "text": {
+      "en": "(8-12)% increased Rarity of Items found in Map",
+      "zh-Hans": "地图内获取物品的稀有度提高 (8-12)%",
+      "zh-Hant": "增加(8-12)%地圖內找到的物品稀有度"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "Crystallised",
+      "zh-Hans": "结晶的",
+      "zh-Hant": "晶化的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Essences\n% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图包含 1 个额外的精华\n地图内找到的引路石数量提高 %",
+      "zh-Hant": "地圖內含有額外的1個精髓\n增加%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapExperienceGainIncrease"
+     ],
+     "name": {
+      "en": "Elevated",
+      "zh-Hans": "睿智的",
+      "zh-Hant": "昇華的"
+     },
+     "text": {
+      "en": "(12-18)% increased Experience gain in Map",
+      "zh-Hans": "地图内的经验值获取提高 (12-18)%",
+      "zh-Hant": "增加(12-18)%地圖內所獲取的經驗量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "Exiled",
+      "zh-Hans": "流放的",
+      "zh-Hant": "流亡的"
+     },
+     "text": {
+      "en": "% increased Quantity of Waystones found in Map\nMap is inhabited by 1 additional Rogue Exiles",
+      "zh-Hans": "地图内找到的引路石数量提高 %\n地图内会出现 1 个额外的盗贼流放者",
+      "zh-Hant": "增加%地圖內找到的換界石數量\n地圖內含有1名額外盜賊流亡者"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "Summoner's",
+      "zh-Hans": "召唤者的",
+      "zh-Hant": "召喚師的"
+     },
+     "text": {
+      "en": "Map contains 1 additional Summoning Circles",
+      "zh-Hans": "地图包含 1 个额外的召唤法阵",
+      "zh-Hant": "地圖內含有額外的1個召喚法陣"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapMagicPackIncrease"
+     ],
+     "name": {
+      "en": "Teeming",
+      "zh-Hans": "浇灌的",
+      "zh-Hant": "擁擠的"
+     },
+     "text": {
+      "en": "Map has (30-40)% increased Magic Monsters",
+      "zh-Hans": "地图内魔法怪物数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖含有的魔法怪物"
+     },
+     "generic": true
+    },
+    {
+     "gen": 1,
+     "families": [
+      "MapAdditionalChests"
+     ],
+     "name": {
+      "en": "Treasurer's",
+      "zh-Hans": "司库的",
+      "zh-Hant": "司庫的"
+     },
+     "text": {
+      "en": "Map contains (2-3) additional Rare Chests",
+      "zh-Hans": "地图包含 (2-3) 个额外的稀有宝箱",
+      "zh-Hant": "地圖內含有額外的(2-3)個稀有箱子"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalUniqueMonsterModifier"
+     ],
+     "name": {
+      "en": "of Contest",
+      "zh-Hans": "争辩之",
+      "zh-Hant": "挑戰之"
+     },
+     "text": {
+      "en": "Unique Monsters have 1 additional Rare Modifiers",
+      "zh-Hans": "传奇怪物额外具有 1 个词缀",
+      "zh-Hant": "傳奇怪物會擁有1個額外的詞綴"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualDeferCostIncrease"
+     ],
+     "name": {
+      "en": "of Devotion",
+      "zh-Hans": "奉献之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "Deferring Favours at Ritual Altars in Map costs (20-30)% reduced Tribute",
+      "zh-Hans": "地图内在驱灵祭坛延时恩典消耗的贡品降低 (20-30)%",
+      "zh-Hant": "減少(20-30)%地圖內的祭祀神壇所需的貢禮數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualOmenChance"
+     ],
+     "name": {
+      "en": "of Omens",
+      "zh-Hans": "预兆之",
+      "zh-Hant": "徵兆之"
+     },
+     "text": {
+      "en": "Ritual Favours in Map have (35-70)% increased chance to be Omens",
+      "zh-Hans": "地图内驱灵恩典为预兆的几率提高 (35-70)%",
+      "zh-Hant": "增加(35-70)%地圖內的祭祀神壇獎勵為預兆的機率"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualAdditionalReroll"
+     ],
+     "name": {
+      "en": "of Prayers",
+      "zh-Hans": "祈祷之",
+      "zh-Hant": "祈禱之"
+     },
+     "text": {
+      "en": "Ritual Altars in Map allow rerolling Favours (1-3) additional times",
+      "zh-Hans": "地图内的驱灵祭坛可以额外重置恩典 (1-3) 次",
+      "zh-Hant": "地圖內的祭祀神壇可以額外重骰(1-3)次"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualTributeIncrease"
+     ],
+     "name": {
+      "en": "of Sacrifice",
+      "zh-Hans": "牺牲之",
+      "zh-Hant": "犧牲之"
+     },
+     "text": {
+      "en": "Monsters Sacrificed at Ritual Altars in Map grant (18-30)% increased Tribute",
+      "zh-Hans": "地图内在驱灵祭坛献祭怪物提供的贡品提高 (18-30)%",
+      "zh-Hant": "增加(18-30)%在地圖內的祭祀神壇所獻祭的怪物提供的貢禮數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of Shrines",
+      "zh-Hans": "殿堂之",
+      "zh-Hant": "神殿之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Shrines",
+      "zh-Hans": "地图包含神龛的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有神殿的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalSpirit"
+     ],
+     "name": {
+      "en": "of Spirits",
+      "zh-Hans": "万灵之",
+      "zh-Hant": "魂靈之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Azmeri Spirits",
+      "zh-Hans": "地图有阿兹莫里之灵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有阿茲莫里魂靈的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of Strongboxes",
+      "zh-Hans": "保险箱之",
+      "zh-Hant": "保險箱之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Strongboxes",
+      "zh-Hans": "地图包含保险箱的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有保險箱的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStrongbox"
+     ],
+     "name": {
+      "en": "of the Antiquarian",
+      "zh-Hans": "金石家之",
+      "zh-Hant": "收藏家之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Strongboxes",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的保险箱",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個保險箱"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualDeferSpeed"
+     ],
+     "name": {
+      "en": "of the Appeal",
+      "zh-Hans": "请愿之",
+      "zh-Hant": "吸引之"
+     },
+     "text": {
+      "en": "Favours Deferred at Ritual Altars in Map reappear (25-40)% sooner",
+      "zh-Hans": "地图内驱灵祭坛上延时的恩典重现速度加快 (25-40)%",
+      "zh-Hant": "地圖內的祭祀神壇所延遲的恩惠之物出現速度加快(25-40)%"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapDroppedMapsIncrease"
+     ],
+     "name": {
+      "en": "of the Cartographer",
+      "zh-Hans": "制图师之",
+      "zh-Hant": "製圖師之"
+     },
+     "text": {
+      "en": "(30-40)% increased Quantity of Waystones found in Map",
+      "zh-Hans": "地图内找到的引路石数量提高 (30-40)%",
+      "zh-Hant": "增加(30-40)%地圖內找到的換界石數量"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualMagicMonsters"
+     ],
+     "name": {
+      "en": "of the Cult",
+      "zh-Hans": "密会之",
+      "zh-Hant": "邪教之"
+     },
+     "text": {
+      "en": "Revived Monsters from Ritual Altars in Map have (25-40)% increased chance to be Rare",
+      "zh-Hans": "地图内的驱灵祭坛再生怪物为稀有怪物的几率提高 (25-40)%",
+      "zh-Hant": "地圖內的祭祀神壇所復活的怪物增加(25-40)%為稀有怪物的機率"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalShrine"
+     ],
+     "name": {
+      "en": "of the Devoted",
+      "zh-Hans": "奉献者之",
+      "zh-Hant": "奉獻之"
+     },
+     "text": {
+      "en": "% reduced Pack Size in Map\n% increased Quantity of Waystones found in Map\nMap contains 1 additional Shrines",
+      "zh-Hans": "地图内怪物群规模降低 %\n地图内找到的引路石数量提高 %\n地图包含 1 个额外的神龛",
+      "zh-Hant": "減少%地圖內的怪物群大小\n增加%地圖內找到的換界石數量\n地圖內含有額外的1個神殿"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualRerollCostIncrease"
+     ],
+     "name": {
+      "en": "of the Dogma",
+      "zh-Hans": "教义之",
+      "zh-Hant": "教條之"
+     },
+     "text": {
+      "en": "Rerolling Favours at Ritual Altars in Map costs (20-30)% reduced Tribute",
+      "zh-Hans": "地图内在驱灵祭坛重置恩典消耗的贡品降低 (20-30)%",
+      "zh-Hant": "減少(20-30)%地圖內的祭祀神壇重骰所需的貢禮數量"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalEssence"
+     ],
+     "name": {
+      "en": "of the Essence",
+      "zh-Hans": "精华之",
+      "zh-Hant": "精髓之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Essences",
+      "zh-Hans": "地图包含精华的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有精髓的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalExile"
+     ],
+     "name": {
+      "en": "of the Exile",
+      "zh-Hans": "流放者之",
+      "zh-Hant": "流亡者之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain Rogue Exiles",
+      "zh-Hans": "地图有盗贼流放者的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內含有盜賊流亡者的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualRareMonsters"
+     ],
+     "name": {
+      "en": "of the Foundling",
+      "zh-Hans": "养子之",
+      "zh-Hant": "棄兒之"
+     },
+     "text": {
+      "en": "Revived Monsters from Ritual Altars in Map have (35-70)% increased chance to be Magic",
+      "zh-Hans": "地图内驱灵祭坛再生怪物为魔法怪物的几率提高 (35-70)%",
+      "zh-Hant": "地圖內的祭祀神壇所復活的怪物增加(35-70)%為魔法怪物的機率"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "RitualChanceForNoCost"
+     ],
+     "name": {
+      "en": "of the Occult",
+      "zh-Hans": "密教之",
+      "zh-Hant": "玄秘之"
+     },
+     "text": {
+      "en": "Favours Rerolled at Ritual Altars in Map have (3-6)% chance to cost no Tribute",
+      "zh-Hans": "地图内在驱灵祭坛重置恩典有 (3-6)% 几率不消耗贡品",
+      "zh-Hant": "地圖內的祭祀神壇有(3-6)%機率不消耗貢禮"
+     },
+     "generic": false
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalStoneCircle"
+     ],
+     "name": {
+      "en": "of the Summoning",
+      "zh-Hans": "召唤之",
+      "zh-Hant": "召喚之"
+     },
+     "text": {
+      "en": "Map has (70-100)% increased chance to contain a Summoning Circle",
+      "zh-Hans": "地图包含召唤法阵的几率提高 (70-100)%",
+      "zh-Hant": "增加(70-100)%地圖內有含有召喚法陣的機率"
+     },
+     "generic": true
+    },
+    {
+     "gen": 2,
+     "families": [
+      "MapAdditionalModifier"
+     ],
+     "name": {
+      "en": "of Undertaking",
+      "zh-Hans": "重担之",
+      "zh-Hant": "承諾之"
+     },
+     "text": {
+      "en": "Map has (1-2) additional random Modifiers",
+      "zh-Hans": "地图拥有 (1-2) 个额外的随机词缀",
+      "zh-Hant": "地圖有(1-2)個額外變動詞綴"
+     },
+     "generic": true
+    }
+   ]
+  }
+ ],
+ "uniques": [
+  {
+   "name": "Clear Skies",
+   "tradeType": "Delirium Tablet"
+  },
+  {
+   "name": "Cruel Hegemony",
+   "tradeType": "Overseer Tablet"
+  },
+  {
+   "name": "Forgotten By Time",
+   "tradeType": "Expedition Tablet"
+  },
+  {
+   "name": "Freedom of Faith",
+   "tradeType": "Ritual Tablet"
+  },
+  {
+   "name": "Mastered Domain",
+   "tradeType": "Irradiated Tablet"
+  },
+  {
+   "name": "Season of the Hunt",
+   "tradeType": "Overseer Tablet"
+  },
+  {
+   "name": "The Grand Project",
+   "tradeType": "Irradiated Tablet"
+  },
+  {
+   "name": "Unforeseen Consequences",
+   "tradeType": "Abyss Tablet"
+  },
+  {
+   "name": "Visions of Paradise",
+   "tradeType": "Irradiated Tablet"
+  },
+  {
+   "name": "Wraeclast Besieged",
+   "tradeType": "Breach Tablet"
+  }
+ ]
+}
