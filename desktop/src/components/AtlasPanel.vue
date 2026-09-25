@@ -106,17 +106,32 @@ let observer: ResizeObserver | null = null
 let dragging = false
 let lastX = 0
 let lastY = 0
+// 拖拽意图:按下时先不捕获指针。pointer capture 会把后续的 click 事件重定向到
+// 画布本身,节点的点击处理器就永远收不到了——正是"点节点没反应"的根源。改为
+// 移动超过阈值才捕获,纯点击(按下原地抬起)不捕获,click 正常落到节点上。
+let dragStart: { x: number; y: number; id: number } | null = null
+const DRAG_THRESHOLD = 4
 
 function onPointerDown(e: PointerEvent) {
-  dragging = true
   touched = true
+  dragging = false
+  dragStart = { x: e.clientX, y: e.clientY, id: e.pointerId }
   lastX = e.clientX
   lastY = e.clientY
-  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
 }
 
 function onPointerMove(e: PointerEvent) {
-  if (!dragging) return
+  if (!dragStart || e.pointerId !== dragStart.id) return
+  if (!dragging) {
+    const moved = Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y)
+    if (moved < DRAG_THRESHOLD) return
+    dragging = true
+    try {
+      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    } catch {
+      /* capture can fail on a detached target — panning still works while held */
+    }
+  }
   tx.value += e.clientX - lastX
   ty.value += e.clientY - lastY
   lastX = e.clientX
@@ -124,11 +139,13 @@ function onPointerMove(e: PointerEvent) {
 }
 
 function onPointerUp(e: PointerEvent) {
+  if (!dragStart || e.pointerId !== dragStart.id) return
   dragging = false
+  dragStart = null
   try {
     ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
   } catch {
-    /* capture already gone */
+    /* never captured — a plain click */
   }
 }
 
@@ -164,6 +181,15 @@ function nodeRadius(n: AtlasNode): number {
   const world = KIND_RADIUS[n.kind] ?? 22
   const screen = Math.min(22, Math.max(1.5, world * k))
   return screen / k
+}
+
+/**
+ * The click target: at overview zoom the visible dot is a few pixels, far below
+ * what a mouse can reliably hit, so every node carries a transparent circle kept
+ * at ~9 px on screen regardless of zoom.
+ */
+function hitRadius(n: AtlasNode): number {
+  return Math.max(nodeRadius(n), 9 / (scale.value || 1))
 }
 
 /** Label size in world units, likewise pinned to a readable screen size. */
@@ -283,6 +309,15 @@ function onNodeMove(e: MouseEvent) {
   if (rect) pointer.value = { x: e.clientX - rect.left, y: e.clientY - rect.top }
 }
 
+// 本轮点击新分配的节点:短暂脉冲,让"哪里变了"在总览缩放下也一眼可见。
+// 计时令牌防串:连续点击时只清自己那一批。
+const justAdded = ref<Set<number>>(new Set())
+let pulseToken = 0
+
+function nodeLabel(n: AtlasNode): string {
+  return zhName(n.name) ?? n.name
+}
+
 function clickNode(n: AtlasNode) {
   if (n.kind === 'mastery') {
     notice.value = t('精通位是树的标记点,不能投入天赋点。')
@@ -290,7 +325,13 @@ function clickNode(n: AtlasNode) {
   }
   notice.value = null
   if (allocated.value.has(n.hash)) {
+    const before = allocated.value.size
     allocated.value = unallocate(ATLAS_INDEX, allocated.value, n.hash)
+    const removed = before - allocated.value.size
+    notice.value =
+      t('已取消 ') +
+      nodeLabel(n) +
+      (removed > 1 ? t(',连带取消后面挂着的 ') + (removed - 1) + t(' 个节点') : '')
     return
   }
   const path = pathTo(ATLAS_INDEX, allocated.value, n.hash)
@@ -301,6 +342,16 @@ function clickNode(n: AtlasNode) {
   const next = new Set(allocated.value)
   for (const h of path) next.add(h)
   allocated.value = next
+  notice.value =
+    t('已投入 ') +
+    nodeLabel(n) +
+    (path.length > 1 ? t(',自动补上通往它的路径 ') + (path.length - 1) + t(' 个节点') : '')
+  const mine = new Set(path)
+  justAdded.value = mine
+  const token = ++pulseToken
+  window.setTimeout(() => {
+    if (pulseToken === token) justAdded.value = new Set()
+  }, 1100)
 }
 
 function clearPlan() {
@@ -478,7 +529,13 @@ onBeforeUnmount(() => {
                 vector-effect="non-scaling-stroke"
                 :stroke-width="allocated.has(n.hash) ? 2.5 : 1.2"
                 :stroke-dasharray="n.kind === 'mastery' ? '4 4' : undefined"
+                :class="{ fresh: justAdded.has(n.hash) }"
               />
+              <!--
+                点击热区:总览缩放下真实节点只有 3~6px,鼠标几乎点不中。这里垫一个
+                屏幕上至少 ~18px 的透明圆来接收点击(它也让 hover 提示更容易唤出)。
+              -->
+              <circle :cx="n.x" :cy="n.y" :r="hitRadius(n)" fill="transparent" stroke="none" />
               <circle
                 v-if="allocated.has(n.hash)"
                 :cx="n.x"
@@ -763,6 +820,24 @@ onBeforeUnmount(() => {
 }
 .node {
   cursor: pointer;
+}
+/* 新投入的节点闪一下:总览缩放下连线很细,不闪根本看不出刚才那次点击改了哪。 */
+circle.fresh {
+  animation: fresh-pulse 1s ease-out;
+}
+@keyframes fresh-pulse {
+  0% {
+    stroke: #ffffff;
+    stroke-width: 6;
+    fill-opacity: 1;
+  }
+  60% {
+    stroke: #ffffff;
+    stroke-width: 3;
+  }
+  100% {
+    stroke-width: 1.2;
+  }
 }
 .node.hit circle:first-child {
   stroke: #f4e6c0;
