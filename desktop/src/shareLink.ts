@@ -101,11 +101,19 @@ export function shareLinkFor(id: string): string {
 /** Desktop talks to the API through the Tauri HTTP plugin; browser preview uses plain fetch. */
 async function httpJson(url: string, init?: RequestInit): Promise<Record<string, unknown>> {
   const doFetch = isDesktopRuntime() ? tauriFetch : fetch
+  // One network-level retry: the flaky leg here is the TLS handshake, which fails
+  // before anything is sent, so a retry can never double-submit a share. HTTP
+  // error responses are NOT retried — those are real answers.
   let res: Response
   try {
     res = await doFetch(url, init)
-  } catch (cause) {
-    throw new ShareLinkError('连不上分享服务 —— 检查网络后重试。', cause)
+  } catch (first) {
+    await new Promise((r) => window.setTimeout(r, 400))
+    try {
+      res = await doFetch(url, init)
+    } catch (cause) {
+      throw new ShareLinkError('连不上分享服务 —— 检查网络后重试。', cause instanceof Error ? cause : first)
+    }
   }
   const body = (await res.json().catch(() => ({}))) as Record<string, unknown>
   if (!res.ok || body.ok !== true) {
