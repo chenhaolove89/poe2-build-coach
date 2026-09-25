@@ -8,8 +8,12 @@ Type=simple
 WorkingDirectory=/opt/poe2coach-share/share-server
 Environment=PORT=3000
 Environment=HOSTNAME=127.0.0.1
+# 默认驱动 sqlite(零依赖,数据在 SHARE_DB_PATH)。生产切 MySQL 时写
+# /opt/poe2coach-share/db.env(0600, root): SHARE_DB=mysql + MYSQL_* 凭证,
+# 本文件里的 EnvironmentFile 会覆盖上面的默认值。文件可缺省(- 前缀)。
 Environment=SHARE_DB=sqlite
 Environment=SHARE_DB_PATH=/opt/poe2coach-share/data/share.db
+EnvironmentFile=-/opt/poe2coach-share/db.env
 # Node 路径按服务器实际安装位置调整（nvm 装的话通常是 /home/<user>/.nvm/...）
 ExecStart=/usr/bin/node server.js
 Restart=always

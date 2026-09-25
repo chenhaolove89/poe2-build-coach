@@ -1,15 +1,19 @@
 /**
  * The store the routes talk to, selected by SHARE_DB.
  *
- * `sqlite` is the built-in default. When the host's own database service is
- * known (the point of 统一接入), its driver lands in `drivers/` and a line here
- * routes to it — the API and pages never change.
+ * `sqlite` is the built-in default and the fallback for a bare host. `mysql` is
+ * the 统一接入 driver: the host already runs MySQL 8 for the kids-english
+ * server, so production runs on it — same machine, same mysql2 library, one
+ * more database. Adding another backend is a file in `drivers/` plus a line
+ * here; the API and pages never change.
  */
 import type { ShareRow, ShareStore } from './store'
 import { sqliteStore } from './drivers/sqlite'
+import { mysqlStore } from './drivers/mysql'
 
 const factories: Record<string, () => ShareStore> = {
   sqlite: sqliteStore,
+  mysql: mysqlStore,
 }
 
 const name = process.env.SHARE_DB ?? 'sqlite'
