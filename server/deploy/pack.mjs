@@ -47,12 +47,16 @@ rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
 cpSync(standalone, out, { recursive: true })
 if (existsSync(nestedEntry)) {
-  // Flatten <project>/ back one level, keeping the hoisted node_modules alongside.
-  for (const name of existsSync(path.join(out, 'server', '.next')) ? ['.next', 'server.js', 'package.json'] : []) {
+  // Next 16 nests next/@next/@swc inside <project>/node_modules, one level below
+  // the hoisted react tree — so flattening must MERGE the two node_modules, not
+  // just move the entry files, or the flattened root cannot resolve next at all.
+  const nestedDir = path.join(out, 'server')
+  for (const name of existsSync(path.join(nestedDir, '.next')) ? ['.next', 'server.js', 'package.json'] : []) {
     rmSync(path.join(out, name), { recursive: true, force: true })
-    renameSync(path.join(out, 'server', name), path.join(out, name))
+    renameSync(path.join(nestedDir, name), path.join(out, name))
   }
-  rmSync(path.join(out, 'server'), { recursive: true, force: true })
+  cpSync(path.join(nestedDir, 'node_modules'), path.join(out, 'node_modules'), { recursive: true })
+  rmSync(nestedDir, { recursive: true, force: true })
 }
 // Client assets live outside the standalone output; the runtime resolves them here.
 cpSync(path.join(serverDir, '.next', 'static'), path.join(out, '.next', 'static'), { recursive: true })
